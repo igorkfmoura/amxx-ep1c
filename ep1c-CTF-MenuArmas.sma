@@ -4,7 +4,7 @@
 #include <fun>
 
 #define PLUGIN  "ep1c-CTF-MenuArmas"
-#define VERSION "1.0"
+#define VERSION "0.2"
 #define AUTHOR  "SHERMAN & lonewolf"
 
 #define PREFIX_MENUS "\r[ep1c gaming Brasil]"
@@ -90,16 +90,18 @@ public NewRound(id)
 {
 	g_bAllowBuy = true;
 	remove_task(6311);
-
-	client_print(0, print_chat, "(NewRound) g_bAllowBuy: %d", g_bAllowBuy);
 }
 
 public RoundStart(id)
 {
 	new Float:fBuyTimeSeconds = 60 * get_pcvar_float(g_pCvarBuyTime);
-	new Float:fRoundTime = 60 * get_pcvar_float(g_pCvarRoundTime);
-	client_print(0, print_chat, "(RoundStart) fBuyTimeSeconds: %.2f, fRoundTime: %.2f", fBuyTimeSeconds, fRoundTime);
+	if (fBuyTimeSeconds < 0)
+	{
+	  return;
+	}
 
+	new Float:fRoundTime = 60 * get_pcvar_float(g_pCvarRoundTime);
+	
 	if (fBuyTimeSeconds < fRoundTime)
 	{
 		set_task(fBuyTimeSeconds, "DisableBuy", 6311);
@@ -109,7 +111,6 @@ public RoundStart(id)
 public DisableBuy(id)
 {
 	g_bAllowBuy = false;
-	client_print(0, print_chat, "(DisableBuy) g_bAllowBuy: %d", g_bAllowBuy);
 	for (new i = 1; i < MaxClients; ++i)
 	{
 		if (!is_user_alive(i) || !g_bInBuyZone[i])
@@ -119,7 +120,7 @@ public DisableBuy(id)
   		new keys;
 		new newmenu;
 		player_menu_info(i, menu, newmenu, keys);
-		client_print(i, print_chat, "(DisableBuy) newmenu: %d", newmenu);
+		
 		if (newmenu >= 0 && newmenu == g_iMenu[i])
 		{
 			g_iMenu[i] = -1;
@@ -137,9 +138,8 @@ public player_inBuyZone(id)
 		return;
 	
 	new bool:bInBuyZone = bool:read_data(1);
-	g_bInBuyZone[id] = bInBuyZone;
-
-	if (bInBuyZone == false)
+	
+	if (bInBuyZone != g_bInBuyZone[id])
 	{
 		g_bInBuyZone[id] = bInBuyZone;
 
@@ -148,13 +148,20 @@ public player_inBuyZone(id)
 		new newmenu;
 
 		player_menu_info(id, menu, newmenu, keys);
-		client_print(id, print_chat, "(player_inBuyZone) newmenu: %d", newmenu);
-
-		if (newmenu >= 0 && newmenu == g_iMenu[id])
+		
+		if (newmenu < 0 || newmenu != g_iMenu[id])
 		{
-			g_iMenu[id] = -1;
-			menu_destroy(newmenu);
-			//ShowMenuGuns(id);
+			return;
+		}
+
+		g_iMenu[id] = -1;
+		menu_destroy(newmenu);
+		if (bInBuyZone)
+		{
+			ShowMenuGuns(id);
+		}
+		else
+		{
 			client_cmd(id, "slot10");
 			GivePlayerWeapons(id);
 		}
@@ -185,8 +192,7 @@ public GiveItems(id)
 			new newmenu;
 
 			player_menu_info(id, menu, newmenu, keys);
-			client_print(id, print_chat, "(GiveItems) newmenu: %d", newmenu);
-
+			
 			if (newmenu >= 0)
 			{
 				menu_destroy(newmenu);
@@ -215,7 +221,6 @@ public ShowMenuGuns(id)
 
 	new xMenu = menu_create(szTitle, "_ShowMenuGuns");
 	g_iMenu[id] = xMenu;
-	client_print(id, print_chat, "(ShowMenuGuns) xMenu: %d", xMenu);
 
 	static szItem[48];
 	new iSecondary = g_iSecondary[id];
@@ -261,8 +266,6 @@ public _ShowMenuGuns(id, menu, item)
 
 		return PLUGIN_HANDLED;
 	}
-
-	client_print_color(id, print_team_default, "%d", item);
 
 	new iLen = sizeof(g_xPrimaryWeapons);
 	if (item < iLen && g_bAllowBuy)
