@@ -3,7 +3,9 @@
 #include <amxmodx>
 #include <fakemeta>
 #include <engine>
-#include <reapi>
+#include <hamsandwich>
+// #include <reapi>
+#include <cstrike>
 #include <jctf>
 
 const ADMIN_RETURN =				ADMIN_RCON	// access required for admins to return flags (full list in includes/amxconst.inc)
@@ -65,7 +67,8 @@ new const CONSOLE_PREFIX[] =			"[CTF] "
 #define task_set(%1)				set_task(%1)
 #define task_remove(%1)				remove_task(%1)
 
-#define get_opTeam(%1)				(%1 == TEAM_BLUE ? TEAM_RED : (%1 == TEAM_RED ? TEAM_BLUE : 0))
+// #define get_opTeam(%1)				(%1 == TEAM_BLUE ? TEAM_RED : (%1 == TEAM_RED ? TEAM_BLUE : 0))
+#define get_opTeam(%1)				(%1 == CS_TEAM_CT ? CS_TEAM_T : (%1 == CS_TEAM_T ? CS_TEAM_CT : 0))
 
 #define VERSION					"1.32o"
 #define AUTHOR					"Digi"
@@ -155,33 +158,6 @@ new const g_szSounds[][][] =
 	{ NULL, "red_team_scores", "blue_team_scores" }
 }
 
-new const g_szListWeapons[][ STRUCT_WEAPONS ] = 
-{
-	{ "SIG-Sauer P228", "weapon_p228", "MSG_TYPE_WEAPON_1", WEAPON_P228, 52 },
-	{ "Beretta 92", "weapon_elite", "MSG_TYPE_WEAPON_1", WEAPON_ELITE, 120 },
-	{ "FN Five-seven", "weapon_fiveseven", "MSG_TYPE_WEAPON_1", WEAPON_FIVESEVEN, 100 },
-	{ "USP .45 Tactical", "weapon_usp", "MSG_TYPE_WEAPON_1", WEAPON_USP, 100 },
-	{ "Glock 18", "weapon_glock18", "MSG_TYPE_WEAPON_1", WEAPON_GLOCK18, 120 },
-	{ "Desert Eagle", "weapon_deagle", "MSG_TYPE_WEAPON_1", WEAPON_DEAGLE, 35 },
-	
-	{ "M3 Super 90", "weapon_m3", "MSG_TYPE_WEAPON_2", WEAPON_M3, 32 },
-	{ "XM1014", "weapon_xm1014", "MSG_TYPE_WEAPON_2", WEAPON_XM1014, 32 },
-	
-	{ "MAC-10", "weapon_mac10", "MSG_TYPE_WEAPON_3", WEAPON_MAC10, 100 },
-	{ "UMP45", "weapon_ump45", "MSG_TYPE_WEAPON_3", WEAPON_UMP45, 100 },
-	{ "MP5", "weapon_mp5navy", "MSG_TYPE_WEAPON_3", WEAPON_MP5N, 120 },
-	{ "Steyr TMP", "weapon_tmp", "MSG_TYPE_WEAPON_3", WEAPON_TMP, 120 },
-	{ "P90", "weapon_p90", "MSG_TYPE_WEAPON_3", WEAPON_P90, 100 },
-	
-	{ "AUG", "weapon_aug", "MSG_TYPE_WEAPON_4", WEAPON_AUG, 90 },
-	{ "Galil", "weapon_galil", "MSG_TYPE_WEAPON_4", WEAPON_GALIL, 90 },
-	{ "Famas", "weapon_famas", "MSG_TYPE_WEAPON_4", WEAPON_FAMAS, 90 },
-	{ "Colt M4A1 Carbine", "weapon_m4a1", "MSG_TYPE_WEAPON_4", WEAPON_M4A1, 90 },
-	{ "AK-47", "weapon_ak47", "MSG_TYPE_WEAPON_4", WEAPON_AK47, 90 },
-	{ "SG-552", "weapon_sg552", "MSG_TYPE_WEAPON_4", WEAPON_SG552, 90 },
-	{ "FN M249", "weapon_m249", "MSG_TYPE_WEAPON_4", WEAPON_M249, 200 }
-}
-
 new const g_szRemoveEntities[][] =
 {
 	"armoury_entity",
@@ -203,7 +179,6 @@ new g_iSync[4]
 new g_iFlagHolder[3]
 new g_iFlagEntity[3]
 new g_iBaseEntity[3]
-new g_iTeam[33]
 new Float:g_fFlagDropped[3]
 
 new bool:g_bRestarting
@@ -236,6 +211,44 @@ new gHook_EntSpawn
 new gSpr_regeneration
 new g_iForwardReturn
 new g_iFW_flag
+
+new const g_szWeaponEntity[][24] =
+{
+	NULL,
+	"weapon_p228",
+	"weapon_shield",
+	"weapon_scout",
+	"weapon_hegrenade",
+	"weapon_xm1014",
+	"weapon_c4",
+	"weapon_mac10",
+	"weapon_aug",
+	"weapon_smokegrenade",
+	"weapon_elite",
+	"weapon_fiveseven",
+	"weapon_ump45",
+	"weapon_sg550",
+	"weapon_galil",
+	"weapon_famas",
+	"weapon_usp",
+	"weapon_glock18",
+	"weapon_awp",
+	"weapon_mp5navy",
+	"weapon_m249",
+	"weapon_m3",
+	"weapon_m4a1",
+	"weapon_tmp",
+	"weapon_g3sg1",
+	"weapon_flashbang",
+	"weapon_deagle",
+	"weapon_sg552",
+	"weapon_ak47",
+	"weapon_knife",
+	"weapon_p90",
+	"item_kevlar",
+	"item_assaultsuit",
+	NULL
+}
 
 public plugin_precache()
 {
@@ -298,10 +311,17 @@ public plugin_init()
 	register_event_ex("DeathMsg", "event_playerKilled", RegisterEvent_Global)
 	register_event_ex("TeamInfo", "player_joinTeam", RegisterEvent_Global)
 	
-	RegisterHookChain(RG_HandleMenu_ChooseAppearance, "pfn_ChooseAppearance")
-	RegisterHookChain(RG_CBasePlayer_Spawn, "pfn_PlayerSpawn", true)
-	RegisterHookChain(RG_CBasePlayer_TraceAttack, "pfn_TraceAttack")
-	
+    
+	RegisterHam(Ham_Spawn, "player", "player_spawn", 1)
+	RegisterHam(Ham_TakeDamage, "player", "player_damage")
+
+	for (new w = CSW_P228; w <= CSW_P90; w++)
+	{
+		RegisterHam(Ham_Weapon_PrimaryAttack, g_szWeaponEntity[w], "player_useWeapon", 1)
+	}
+
+	RegisterHam(Ham_Weapon_SecondaryAttack, g_szWeaponEntity[CSW_KNIFE], "player_useWeapon", 1)
+
 	register_clcmd("ctf_moveflag", "admin_cmd_moveFlag", ADMIN_RCON, "<red/blue> - Moves team's flag base to your origin (for map management)")
 	register_clcmd("ctf_save", "admin_cmd_saveFlags", ADMIN_RCON)
 	register_clcmd("ctf_return", "admin_cmd_returnFlag", ADMIN_RETURN)
@@ -312,11 +332,14 @@ public plugin_init()
 	register_clcmd("radio2", "player_hook_dropflag")
 	register_clcmd("radio3", "player_hook_dropflag")
 	
-	gMsg_HostagePos = get_user_msgid("HostagePos")
-	gMsg_HostageK = get_user_msgid("HostageK")
+	// gMsg_HostagePos = get_user_msgid("HostagePos")
+	// gMsg_HostageK = get_user_msgid("HostageK")
 	gMsg_RoundTime = get_user_msgid("RoundTime")
 	gMsg_TeamScore = get_user_msgid("TeamScore")
 	
+	register_message(gMsg_HostageK, "msg_block")
+	register_message(gMsg_HostagePos, "msg_block")
+
 	register_message(gMsg_RoundTime, "msg_roundTime")
 	register_message(gMsg_TeamScore, "msg_teamScore")
 	
@@ -340,9 +363,20 @@ public plugin_init()
 	g_iSync[3] = CreateHudSyncObj()
 	
 	g_iMaxPlayers = get_maxplayers()
-	set_member_game(m_GameDesc, fmt("%c%c%c%c %c%s %c%c %s", 106, 67, 84, 70, 118, VERSION, 98, 121, AUTHOR))
+    
+	register_forward(FM_GetGameDescription, "game_description")
+
 	register_dictionary("jctf.txt")
 }
+
+
+public game_description()
+{
+	forward_return(FMV_STRING, "[PEGA BANDEIRA]")
+
+	return FMRES_SUPERCEDE
+}
+
 
 public plugin_cfg()
 {
@@ -415,7 +449,8 @@ public plugin_end()
 public native_get_flagcarrier(iPlugin, iParams)
 {
 	new id = get_param(1)
-	return g_iFlagHolder[get_opTeam(g_iTeam[id])] == id
+	new iTeam = cs_get_user_team(id)
+	return g_iFlagHolder[get_opTeam(iTeam)] == id
 }
 
 public jctf_flag(iEvent, iPlayer, iFlagTeam, bool:bAssist)
@@ -554,6 +589,12 @@ public flag_think(ent)
 		else if(g_iFlagHolder[iFlagTeam] == FLAG_HOLD_DROPPED)
 			iStatus = 2
 		
+		if (!gMsg_HostagePos)
+		{
+			gMsg_HostagePos = get_user_msgid("HostagePos")
+			gMsg_HostageK = get_user_msgid("HostageK")
+		}
+
 		message_begin(MSG_BROADCAST, gMsg_HostagePos)
 		write_byte(0)
 		write_byte(iFlagTeam)
@@ -584,7 +625,8 @@ public flag_think(ent)
 
 	for(id = 1; id <= g_iMaxPlayers; id++)
 	{
-		if(!is_user_connected(id) || g_iTeam[id] == TEAM_NONE)
+		new iTeam = cs_get_user_team(id)
+		if(!is_user_connected(id) || iTeam == TEAM_NONE)
 			continue
 		
 		/* Check flag proximity for pickup */
@@ -597,7 +639,7 @@ public flag_think(ent)
 		}
 		
 		/* If iFlagTeam's flag is stolen or dropped, constantly warn team players */
-		if(iStatus && g_iTeam[id] == iFlagTeam)
+		if(iStatus && iTeam == iFlagTeam)
 		{
 			set_hudmessage(HUD_HELP2)
 			ShowSyncHudMsg(id, g_iSync[0], "%L", id, (iStatus == 1 ? "HUD_ENEMYHASFLAG" : "HUD_RETURNYOURFLAG"))
@@ -614,19 +656,25 @@ public task_think(ent)
 	set_hudmessage(HUD_RESPAWN)
 	for(i = 1; i <= g_iMaxPlayers; i++)
 	{
-		if(is_user_connected(i) && (TEAM_RED <= g_iTeam[i] <= TEAM_BLUE) && !g_bAlive[i] && g_bRespawned[i])
+		new iTeam = cs_get_user_team(i)
+		if(is_user_connected(i) && (TEAM_RED <= iTeam <= TEAM_BLUE) && !g_bAlive[i] && g_bRespawned[i])
 		{
 			ShowSyncHudMsg(i, g_iSync[1], "%L", i, "RESPAWNING_IN", g_bRespawn[i])
 			
 			if(g_bRespawn[i] <= 0)
 			{
 				g_bRespawned[i] = false
-				rg_round_respawn(i)
+
+				entity_set_int(i, EV_INT_deadflag, DEAD_RESPAWNABLE)
+				entity_set_int(i, EV_INT_iuser1, 0)
+				call_think(i)
+				entity_spawn(i)
+				entity_set_float(i, EV_FL_health, 100.0)
 			}
 			g_bRespawn[i]--
 		}
 		
-		if(is_user_connected(i) && (TEAM_RED <= g_iTeam[i] <= TEAM_BLUE) && g_bAlive[i] && g_bProtected[i])
+		if(is_user_connected(i) && (TEAM_RED <= iTeam <= TEAM_BLUE) && g_bAlive[i] && g_bProtected[i])
 		{
 			ShowSyncHudMsg(i, g_iSync[1], "%L", i, "PROTECTION_LEFT", g_bProtecting[i])
 		
@@ -674,23 +722,28 @@ public flag_touch(ent, id)
 	if(!g_bAlive[id])
 		return
 
+	client_print(id, print_chat, "(flag_touch) 1")
 	new iFlagTeam = (g_iFlagEntity[TEAM_BLUE] == ent ? TEAM_BLUE : TEAM_RED)
 
 	if(1 <= g_iFlagHolder[iFlagTeam] <= g_iMaxPlayers) // if flag is carried we don't care
 		return
 
+	client_print(id, print_chat, "(flag_touch) 2")
 	new Float:fGameTime = get_gametime()
 	
 	if(g_fLastDrop[id] > fGameTime)
 		return
 	
-	new iTeam = g_iTeam[id]
+	client_print(id, print_chat, "(flag_touch) 3")
+	new iTeam = cs_get_user_team(id)
 	
 	if(!(TEAM_RED <= iTeam <= TEAM_BLUE))
 		return
 	
 	new iFlagTeamOp = get_opTeam(iFlagTeam)
 	
+	client_print(id, print_chat, "(flag_touch) 4")
+
 	if(iTeam == iFlagTeam) // If the PLAYER is on the same team as the FLAG
 	{
 		if(g_iFlagHolder[iFlagTeam] == FLAG_HOLD_DROPPED) // if the team's flag is dropped, return it to base
@@ -703,11 +756,14 @@ public flag_touch(ent, id)
 			new iAssists = 0
 			for(new i = 1; i <= g_iMaxPlayers; i++)
 			{
-				if(is_user_connected(i) && i != id && g_bAssisted[i][iFlagTeam] && g_iTeam[i] == iFlagTeam)
+				if(is_user_connected(i) && i != id && g_bAssisted[i][iFlagTeam])
 				{
-					ExecuteForward(g_iFW_flag, g_iForwardReturn, FLAG_RETURNED, i, iFlagTeam, true)
+					if (cs_get_user_team(i) == iFlagTeam)
+					{
+						ExecuteForward(g_iFW_flag, g_iForwardReturn, FLAG_RETURNED, i, iFlagTeam, true)
 					
-					iAssists++
+						iAssists++
+					}
 				}
 				g_bAssisted[i][iFlagTeam] = false
 			}
@@ -736,7 +792,7 @@ public flag_touch(ent, id)
 
 			for(new i = 1; i <= g_iMaxPlayers; i++)
 			{
-				if(is_user_connected(i) && i != id && g_iTeam[i] == iTeam)
+				if(is_user_connected(i) && i != id && cs_get_user_team(i) == iTeam)
 				{
 					if(g_bAssisted[i][iFlagTeamOp])
 					{
@@ -840,19 +896,19 @@ public base_think(ent)
 		return
 	
 	static id
-	static Float:iHealth
+	static iHealth
 	
 	id = -1
 	
 	while((id = find_ent_in_sphere(id, g_fFlagBase[iFlagTeam], BASE_HEAL_DISTANCE)) != 0)
 	{
-		if(1 <= id <= g_iMaxPlayers && g_bAlive[id] && g_iTeam[id] == iFlagTeam)
+		if(1 <= id <= g_iMaxPlayers && g_bAlive[id] && cs_get_user_team(id) == iFlagTeam)
 		{
-			iHealth = get_entvar(id, var_health)
+			iHealth = get_user_health(id)
 			
 			if(iHealth < 100.0)
 			{
-				set_entvar(id, var_health, iHealth + 1.0)
+				entity_set_float(id, EV_FL_health, iHealth + 1.0)
 				player_healingEffect(id)
 			}
 		}
@@ -870,8 +926,6 @@ public client_putinserver(id)
 	g_bProtected[id] = false
 	g_bRespawned[id] = false
 	g_bAdrenaline[id] = 0
-	
-	g_iTeam[id] = TEAM_SPEC
 }
 
 public client_disconnected(id)
@@ -879,7 +933,6 @@ public client_disconnected(id)
 	player_dropFlag(id)
 	task_remove(id)
 	
-	g_iTeam[id] = TEAM_NONE
 	g_bAlive[id] = false
 	g_bRespawned[id] = false
 	g_bAdrenaline[id] = 0
@@ -905,14 +958,23 @@ public player_joinTeam()
 	id = read_data(1)
 	read_data(2, szTeam, charsmax(szTeam))
 	
-	switch(szTeam[0])
-	{
-		case 'T': g_iTeam[id] = TEAM_RED
-		case 'C': g_iTeam[id] = TEAM_BLUE
-		case 'U': g_iTeam[id] = TEAM_NONE
-		default: g_iTeam[id] = TEAM_SPEC
-	}
 	g_bRespawned[id] = false
+}
+
+public player_useWeapon(ent)
+{
+	if(!is_valid_ent(ent))
+		return HAM_IGNORED
+
+	new id = entity_get_edict(ent, EV_ENT_owner)
+
+	if(1 <= id <= g_iMaxPlayers && g_bAlive[id])
+	{
+		if(g_bProtected[id])
+			player_removeProtection(id, "PROTECTION_WEAPONUSE")
+	}
+
+	return HAM_IGNORED
 }
 
 public pfn_PlayerSpawn(id)
@@ -922,7 +984,7 @@ public pfn_PlayerSpawn(id)
 	if(!g_bAlive[id])
 		return
 	
-	set_member(id, m_iRadioMessages, false)
+	// set_member(id, m_iRadioMessages, false)
 	
 	task_remove(id - TASK_EQUIPAMENT)
 	task_set(0.1, "player_spawnEquipament", id - TASK_EQUIPAMENT)
@@ -931,61 +993,46 @@ public pfn_PlayerSpawn(id)
 	g_bRespawned[id] = false
 	g_bProtecting[id] = get_pcvar_num(pCvar_ctf_protection)
 	
-	rg_set_user_rendering(id, kRenderFxNone, {0, 0, 0}, kRenderTransAdd, 100.0)
+	set_rendering(id, kRenderFxNone, 0, 0, 0, kRenderTransAdd, 100);
 }
 
 public player_spawnEquipament(id)
 {
-	id += TASK_EQUIPAMENT
+	// id += TASK_EQUIPAMENT
 
-	if(!g_bAlive[id])
-		return
+	// if(!g_bAlive[id])
+	// 	return
 	
-	rg_remove_all_items(id)
+	// rg_remove_all_items(id)
 	
-	new pistol = random_num(0, 5)
-	new rifles = random_num(6, 19)
+	// new pistol = random_num(0, 5)
+	// new rifles = random_num(6, 19)
 	
-	rg_give_item(id, "weapon_knife")
+	// rg_give_item(id, "weapon_knife")
 	
-	rg_give_item(id, g_szListWeapons[pistol][WEAPON_ENT])
-	rg_set_user_bpammo(id, g_szListWeapons[pistol][WEAPON_CSW], g_szListWeapons[pistol][WEAPON_AMMO])
+	// rg_give_item(id, g_szListWeapons[pistol][WEAPON_ENT])
+	// rg_set_user_bpammo(id, g_szListWeapons[pistol][WEAPON_CSW], g_szListWeapons[pistol][WEAPON_AMMO])
 	
-	rg_give_item(id, g_szListWeapons[rifles][WEAPON_ENT])
-	rg_set_user_bpammo(id, g_szListWeapons[rifles][WEAPON_CSW], g_szListWeapons[rifles][WEAPON_AMMO])
+	// rg_give_item(id, g_szListWeapons[rifles][WEAPON_ENT])
+	// rg_set_user_bpammo(id, g_szListWeapons[rifles][WEAPON_CSW], g_szListWeapons[rifles][WEAPON_AMMO])
 	
-	client_print_color(id, id, "%s%L.", CHAT_PREFIX, id, "MSG_GIVE_WEAPON", id, g_szListWeapons[pistol][WEAPON_TYPE], 
-	g_szListWeapons[pistol][WEAPON_NAME], id, g_szListWeapons[rifles][WEAPON_TYPE], g_szListWeapons[rifles][WEAPON_NAME])
+	// client_print_color(id, id, "%s%L.", CHAT_PREFIX, id, "MSG_GIVE_WEAPON", id, g_szListWeapons[pistol][WEAPON_TYPE], 
+	// g_szListWeapons[pistol][WEAPON_NAME], id, g_szListWeapons[rifles][WEAPON_TYPE], g_szListWeapons[rifles][WEAPON_NAME])
 }
 
 public player_removeProtection(id, szLang[])
 {
-	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE))
+	new iTeam = cs_get_user_team(id);
+	if(!(TEAM_RED <= iTeam <= TEAM_BLUE))
 		return
 	
 	g_bProtected[id] = false
-	rg_set_user_rendering(id)
+	set_rendering(id)
 	
 	set_hudmessage(HUD_PROTECTION)
 	ShowSyncHudMsg(id, g_iSync[1], "%L", id, szLang)
 }
 
-public pfn_TraceAttack(const id, pevAttacker)
-{
-	if(1 <= pevAttacker <= g_iMaxPlayers)
-	{
-		if(g_bProtected[pevAttacker])
-		{
-			player_removeProtection(pevAttacker, "PROTECTION_WEAPONUSE")
-		}
-		
-		if(g_bProtected[id])
-		{
-			return HC_SUPERCEDE
-		}
-	}
-	return HC_CONTINUE
-}
 
 public event_playerKilled()
 {
@@ -1003,9 +1050,10 @@ public event_playerKilled()
 	
 	if(1 <= k <= g_iMaxPlayers)
 	{
-		if(v == g_iFlagHolder[g_iTeam[k]])
+		new iTeam = cs_get_user_team(k)
+		if(v == g_iFlagHolder[iTeam])
 		{
-			g_bAssisted[k][g_iTeam[k]] = true
+			g_bAssisted[k][iTeam] = true
 		}
 	}
 	
@@ -1286,10 +1334,3 @@ game_announce(iEvent, iFlagTeam, szName[])
 	}
 }
 
-rg_set_user_rendering(id, fx = kRenderFxNone, {Float,_}:color[3] = {0.0,0.0,0.0}, render = kRenderNormal, Float:amount = 0.0)
-{
-	set_entvar(id, var_renderfx, fx)
-	set_entvar(id, var_rendercolor, color)
-	set_entvar(id, var_rendermode, render)
-	set_entvar(id, var_renderamt, amount)
-}
