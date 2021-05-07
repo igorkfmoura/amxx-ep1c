@@ -1,182 +1,212 @@
-/* Anti Decompiler :) */
-#pragma compress 1
-
 #include <amxmodx>
 #include <amxmisc>
 #include <hamsandwich>
-#include <fakemeta_util>
+
+#include <fakemeta>
 #include <cstrike>
 #include <engine>
 #include <fun>
 
-// Infos
-new const MOD_TITLE[] =			"Captura Bandeira 2021"					/* Please don't modify. */
-new const MOD_AUTHOR[] =		"Digi || SKVD || yRestrict || MOISES nPQ"				/* If you make major changes, add " & YourName" at the end */
-new const MOD_VERSION[] =		"5.1.B"									/* If you make major changes, add "custom" at the end but do not modify the actual version number! */
+new const MOD_TITLE[] =			"Just Capture the Flag"	/* Please don't modify. */
+new const MOD_AUTHOR[] =		"Digi & lonewolf"		/* If you make major changes, add " & YourName" at the end */
+new const MOD_VERSION[] =		"1.32c.1"			/* If you make major changes, add "custom" at the end but do not modify the actual version number! */
 
-// Features
-#define FEATURE_BUY				true
-#define FEATURE_BUYC4			false
 #define FEATURE_ADRENALINE		true
-#define FLAG_IGNORE_BOTS		false
 
-#if FEATURE_BUY == true && FEATURE_BUYC4 == true 
-#define FEATURE_C4 true
-#else
-#define FEATURE_C4 false
-#endif
+#define REWARD_RETURN				500,		0,		10
+#define REWARD_RETURN_ASSIST			500,		0,		10
 
-// [REWARD FOR]				[MONEY]	[FRAGS]	[ADRENALINE]
-#define REWARD_RETURN					1000,		0,		10
-#define REWARD_RETURN_ASSIST			 500,		0,		5
-#define REWARD_CAPTURE					3000,		2,		20
-#define REWARD_CAPTURE_ASSIST			2000,		0,		10
-#define REWARD_CAPTURE_TEAM				1100,		0,		5
-#define REWARD_STEAL					 500,		0,		5
-#define REWARD_PICKUP					 500,		0,		5
-#define PENALTY_DROP				   -1500,		0,	   -15
-#define REWARD_KILL						 500,		0,		5
-#define REWARD_KILLCARRIER				 700,		0,		3
-#define PENALTY_SUICIDE					-800,		0,		-20
-#define PENALTY_TEAMKILL			   -1000,		0,		-20
+#define REWARD_CAPTURE				3000,		3,		25
+#define REWARD_CAPTURE_ASSIST			3000,		3,		25
+#define REWARD_CAPTURE_TEAM			1000,		0,		10
 
-// Consts
-const ADMIN_RETURN =				ADMIN_RCON		// access required for admins to return flags (full list in includes/amxconst.inc)
-const ADMIN_RETURNWAIT =			15				// time the flag needs to stay dropped before it can be returned by command
-const ITEM_MEDKIT_GIVE =			25				// medkit award health for picking up
+#define REWARD_STEAL				1000,		1,		10
+#define REWARD_PICKUP				500,		1,		5
+#define PENALTY_DROP				-1500,	-1,		-10
 
-new const bool: CHAT_SHOW_COMMANDS =	false		// show commands (like /buy) in chat, true or false
-new const bool: ITEM_DROP_AMMO =		true		// toggle if killed players drop ammo items
-new const bool: ITEM_DROP_MEDKIT =		true		// toggle if killed players drop medkit items
+#define REWARD_KILL				0,		0,		5
+#define REWARD_KILLCARRIER			500,		1,		10
 
-// Feature Adrenaline
+#define PENALTY_SUICIDE				0,		0,		-20
+#define PENALTY_TEAMKILL			0,		0,		-20
+
+/*
+	Advanced configuration
+*/
+
+const ADMIN_RETURN =				ADMIN_RCON	// access required for admins to return flags (full list in includes/amxconst.inc)
+const ADMIN_RETURNWAIT =			15		// time the flag needs to stay dropped before it can be returned by command
+
+new const bool:CHAT_SHOW_COMMANDS =		false		// show commands (like /buy) in chat, true or false
+
+const ITEM_MEDKIT_GIVE =			25		// medkit award health for picking up
+
+new const bool:ITEM_DROP_AMMO =		false		// toggle if killed players drop ammo items
+new const bool:ITEM_DROP_MEDKIT =		true		// toggle if killed players drop medkit items
+
 #if FEATURE_ADRENALINE == true
-new const ITEM_MODEL_ADRENALINE[] =		"models/can.mdl"
-new const SND_GETADRENALINE[] =			"items/medshot4.wav"
-new const SND_ADRENALINE[] =			"ambience/des_wind3.wav"
-new const MENU_ADRENALINE[] =			"menu_adrenaline"
-new const BUY_ITEM_AVAILABLE2[] =		"y"
-new const MENU_KEYS_ADRENALINE =		(1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<9)
-new const bool:ITEM_DROP_ADRENALINE =	true				// toggle if killed players drop adrenaline items
+new const bool:ITEM_DROP_ADRENALINE =	true		// toggle if killed players drop adrenaline items
+const ITEM_ADRENALINE_GIVE =			5		// adrenaline reaward for picking up adrenaline
 
-const ITEM_ADRENALINE_GIVE =			5					// adrenaline reaward for picking up adrenaline
-const Float:SPEED_ADRENALINE =			1.3					// speed while using "speed" adrenaline combo (this and SPEED_FLAG are cumulative)
-const Float:BERSERKER_SPEED1 =			0.7					// primary weapon shooting speed percent while in berserk
-const Float:BERSERKER_SPEED2 =			0.3					// secondary weapon shooting speed percent while in berserk
-const Float:BERSERKER_DAMAGE =			2.0					// weapon damage percent while in berserk
-const INSTANTSPAWN_COST =				10					// instant spawn (/spawn) adrenaline cost
-const ITEM_ADRENALINE =					2 					// item adrenaline
-const ADRENALINE_SPEED =				1
-const ADRENALINE_BERSERK =				2
-const ADRENALINE_REGENERATE =			3
-const ADRENALINE_INVISIBILITY =			4
-#endif 
+const Float:SPEED_ADRENALINE =		1.3		// speed while using "speed" adrenaline combo (this and SPEED_FLAG are cumulative)
 
-// Feature C4
-#if FEATURE_C4 == true
-new const C4_RADIUS[] =				"600"							// c4 explosion radius (must be string!)
-new const C4_DEFUSETIME =			3								// c4 defuse time
-new const GRENADE[] =				"grenade" 						// Grenade
-new const SND_C4DISARMED[] =		"weapons/c4_disarmed.wav"
-#endif // FEATURE_C4
+const Float:BERSERKER_SPEED1 =		0.7		// primary weapon shooting speed percent while in berserk
+const Float:BERSERKER_SPEED2 =		0.3		// secondary weapon shooting speed percent while in berserk
+const Float:BERSERKER_DAMAGE =		2.0		// weapon damage percent while in berserk
 
-// Feature Buy
-#if FEATURE_BUY == true
-new const WHITESPACE[] =			" "
-new const MENU_BUY[] =				"menu_buy"
-new const MENU_KEYS_BUY =			(1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<4)|(1<<5)|(1<<6)|(1<<7)|(1<<8)|(1<<9)
-new const BUY_ITEM_DISABLED[] =		"r"
-new const BUY_ITEM_AVAILABLE[] =	"w"
-#endif
+const INSTANTSPAWN_COST =			50		// instant spawn (/spawn) adrenaline cost
 
-// Local Files
-new const FLAG_SAVELOCATION[] =			"maps/%s.ctf" 			// you can change where .ctf files are saved/loaded from
+#endif // FEATURE_ADRENALINE
 
-// Class Names
-new const INFO_TARGET[] =				"info_target"
+const REGENERATE_EXTRAHP =			50		// extra max HP for regeneration and flag healing
+
+const Float:SPEED_FLAG =			1.0		// speed while carying the enemy flag
+
+new const Float:BASE_HEAL_DISTANCE =	96.0		// healing distance for flag
+
+new const FLAG_SAVELOCATION[] =		"maps/%s.ctf" // you can change where .ctf files are saved/loaded from
+
+#define FLAG_IGNORE_BOTS			true		// set to true if you don't want bots to pick up flags
+
+new const INFO_TARGET[] =			"info_target"
 new const ITEM_CLASSNAME[] =			"ctf_item"
-new const BASE_CLASSNAME[] =			"ctf_flagbase"
-new const FLAG_CLASSNAME[] =			"ctf_flag"
-new const WEAPONBOX[] =					"weaponbox"
-new const PLAYER[] =					"player"
+new const WEAPONBOX[] =				"weaponbox"
 
-// Itens
-new const FLAG_MODEL[] =				"models/ctf_flag_ep1c.mdl"
-new const ITEM_MODEL_AMMO[] =			"models/w_chainammo.mdl"
-new const ITEM_MODEL_MEDKIT[] =			"models/w_medkit.mdl"
-new const SND_GETAMMO[] =				"items/9mmclip1.wav"
-new const SND_GETMEDKIT[] =				"items/smallmedkit1.wav"
+new const Float:ITEM_HULL_MIN[3] =		{-1.0, -1.0, 0.0}
+new const Float:ITEM_HULL_MAX[3] =		{1.0, 1.0, 10.0}
 
-// Float Const
-new const Float:ITEM_HULL_MIN[3] =			{-1.0, -1.0, 0.0}
-new const Float:ITEM_HULL_MAX[3] =			{1.0, 1.0, 10.0}
-new const Float:BASE_THINK =				0.25
-new const Float:FLAG_THINK =				0.1
-new const Float:FLAG_HULL_MIN[3] =			{-2.0, -2.0, 0.0}
-new const Float:FLAG_HULL_MAX[3] =			{2.0, 2.0, 16.0}
-new const Float:FLAG_SPAWN_VELOCITY[3] =	{0.0, 0.0, -500.0}
-new const Float:FLAG_SPAWN_ANGLES[3] =		{0.0, 0.0, 0.0}
-new const Float:FLAG_DROP_VELOCITY[3] =		{0.0, 0.0, 50.0}
-new const Float:FLAG_PICKUPDISTANCE =		80.0
-new const Float:BASE_HEAL_DISTANCE =		96.0					// healing distance for flag
-const Float:SPEED_FLAG =			0.9								// speed while carying the enemy flag
-
-// Constas
-const FLAG_SKIPTHINK =				20			/* FLAG_THINK * FLAG_SKIPTHINK = 2.0 seconds ! */
-const REGENERATE_EXTRAHP =			50			// extra max HP for regeneration and flag healing
 const ITEM_AMMO =					0
-const ITEM_MEDKIT =					1
+const ITEM_MEDKIT =				1
+
+#if FEATURE_ADRENALINE == true
+
+const ITEM_ADRENALINE =				2
+
+#endif // FEATURE_ADRENALINE
+
+new const ITEM_MODEL_AMMO[] =			"models/w_chainammo.mdl"
+new const ITEM_MODEL_MEDKIT[] =		"models/w_medkit.mdl"
+
+#if FEATURE_ADRENALINE == true
+
+new const ITEM_MODEL_ADRENALINE[] =		"models/can.mdl"
+
+#endif // FEATURE_ADRENALINE
+
+new const BASE_CLASSNAME[] =			"ctf_flagbase"
+new const Float:BASE_THINK =			0.25
+
+new const FLAG_CLASSNAME[] =			"ctf_flag"
+new const FLAG_MODEL[] =			"models/th_jctf.mdl"
+
+new const Float:FLAG_THINK =			0.1
+const FLAG_SKIPTHINK =				20 /* FLAG_THINK * FLAG_SKIPTHINK = 2.0 seconds ! */
+
+new const Float:FLAG_HULL_MIN[3] =		{-2.0, -2.0, 0.0}
+new const Float:FLAG_HULL_MAX[3] =		{2.0, 2.0, 16.0}
+
+new const Float:FLAG_SPAWN_VELOCITY[3] =	{0.0, 0.0, -500.0}
+new const Float:FLAG_SPAWN_ANGLES[3] =	{0.0, 0.0, 0.0}
+
+new const Float:FLAG_DROP_VELOCITY[3] =	{0.0, 0.0, 50.0}
+
+new const Float:FLAG_PICKUPDISTANCE =	80.0
+
 const FLAG_LIGHT_RANGE =			12
 const FLAG_LIGHT_LIFE =				5
 const FLAG_LIGHT_DECAY =			1
+
 const FLAG_ANI_DROPPED =			0
 const FLAG_ANI_STAND =				1
 const FLAG_ANI_BASE =				2
+
 const FLAG_HOLD_BASE =				33
 const FLAG_HOLD_DROPPED =			34
+
+#if FEATURE_ADRENALINE == true
+
+const ADRENALINE_SPEED =			1
+const ADRENALINE_BERSERK =			2
+const ADRENALINE_REGENERATE =			3
+const ADRENALINE_INVISIBILITY =		4
+
+new const MENU_ADRENALINE[] =			"menu_adrenaline"
+new const MENU_KEYS_ADRENALINE =		(1<<0)|(1<<1)|(1<<2)|(1<<3)|(1<<9)
+
+#endif // FEATURE_ADRENALINE
+
+
+
+new const SND_GETAMMO[] =			"items/9mmclip1.wav"
+new const SND_GETMEDKIT[] =			"items/smallmedkit1.wav"
+
+#if FEATURE_ADRENALINE == true
+
+new const SND_GETADRENALINE[] =		"items/medshot4.wav"
+new const SND_ADRENALINE[] =			"ambience/des_wind3.wav"
+
+#endif // FEATURE_ADRENALINE
+
+new const CHAT_PREFIX[] =			"^x03[^x04 CTF^x03 ]^x01 "
+new const CONSOLE_PREFIX[] =			"[ CTF ] "
+
 const FADE_OUT =					0x0000
-const FADE_IN =						0x0001
+const FADE_IN =					0x0001
 const FADE_MODULATE =				0x0002
 const FADE_STAY =					0x0004
+
 const m_iUserPrefs =				510
-const m_flNextPrimaryAttack =		46
+const m_flNextPrimaryAttack =			46
 const m_flNextSecondaryAttack =		47
 
-// Prefix
-new const CHAT_PREFIX[] =			"^x04[ep1c]^x01 "
-new const CONSOLE_PREFIX[] =		"[ep1c] "
-
-// Huds
+new const PLAYER[] =				"player"
+new const SEPARATOR[] =				" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 #define NULL					""
-#define HUD_HELP					255, 255, 0, -1.0, 0.2, 2, 1.0, 1.5, .fadeintime = 0.03
-#define HUD_HELP2					255, 255, 0, -1.0, 0.25, 2, 1.0, 1.5, .fadeintime = 0.03
-#define HUD_HELP3	 				255, 51, 153, -1.0, 0.25, 2, 1.0, 1.5, .fadeintime = 0.03
+
+#define HUD_HINT					255, 255, 255, 0.15, -0.3, 0, 0.0, 10.0, 2.0, 10.0, 4
+#define HUD_HELP					255, 255, 0, -1.0, 0.2, 2, 0.1, 2.0, 0.01, 2.0, 2
+#define HUD_HELP2					255, 255, 0, -1.0, 0.25, 2, 0.1, 2.0, 0.01, 2.0, 3
 #define HUD_ANNOUNCE				-1.0, 0.3, 0, 0.0, 3.0, 0.1, 1.0, 4
-#define HUD_RESPAWN					51, 153, 255, -1.0, 0.6, 2, 1.0, 0.8, .fadeintime = 0.06
-#define HUD_PROTECTION				255, 255, 0, -1.0, 0.6, 2, 1.0, 0.8, .fadeintime = 0.03
-#define HUD_ADRENALINE				0, 153, 255, -1.0, -0.05, 0, 0.0, 1.0, 0.0, 0.0, 1
-#define TASK_HUDRANK 				1234569
+#define HUD_RESPAWN				0, 255, 0, -1.0, 0.6, 2, 0.5, 0.1, 0.0, 1.0, 1
+#define HUD_PROTECTION				255, 255, 0, -1.0, 0.6, 2, 0.5, 0.1, 0.0, 1.0, 1
+#define HUD_ADRENALINE				255, 255, 255, -1.0, -0.1, 0, 0.0, 600.0, 0.0, 0.0, 1
 
-// Entitys
-#define entity_create(%1) 				create_entity(%1)
-#define entity_spawn(%1)				DispatchSpawn(%1)
-#define entity_think(%1)				call_think(%1)
-#define entity_remove(%1)				remove_entity(%1)
-#define weapon_remove(%1)				call_think(%1)
-#define task_set(%1)					set_task(%1)
-#define task_remove(%1)					remove_task(%1)
-#define player_hasFlag(%1)				(g_iFlagHolder[TEAM_RED] == %1 || g_iFlagHolder[TEAM_BLUE] == %1)
+#define entity_create(%1) 			create_entity(%1)
+#define entity_spawn(%1)			DispatchSpawn(%1)
+#define entity_think(%1)			call_think(%1)
+#define entity_remove(%1)			remove_entity(%1)
+#define weapon_remove(%1)			call_think(%1)
+
+#define task_set(%1)				set_task(%1)
+#define task_remove(%1)				remove_task(%1)
+
+#define player_hasFlag(%1)			(g_iFlagHolder[TEAM_RED] == %1 || g_iFlagHolder[TEAM_BLUE] == %1)
+
 #define player_allowChangeTeam(%1)		set_pdata_int(%1, 125, get_pdata_int(%1, 125) & ~(1<<8))
-#define gen_color(%1,%2)				%1 == TEAM_RED ? %2 : 0, 0, %1 == TEAM_RED ? 0 : %2
-#define get_opTeam(%1)					(%1 == TEAM_BLUE ? TEAM_RED : (%1 == TEAM_RED ? TEAM_BLUE : 0))
 
-// Enuns
-enum { x, y, z }
-enum { pitch, yaw, roll }
+#define gen_color(%1,%2)			%1 == TEAM_RED ? %2 : 0, 0, %1 == TEAM_RED ? 0 : %2
+
+#define get_opTeam(%1)				(%1 == TEAM_BLUE ? TEAM_RED : (%1 == TEAM_RED ? TEAM_BLUE : 0))
+
+enum
+{
+	x,
+	y,
+	z
+}
+
+enum
+{
+	pitch,
+	yaw,
+	roll
+}
+
 enum (+= 64)
 {
 	TASK_RESPAWN = 64,
 	TASK_PROTECTION,
+	TASK_DAMAGEPROTECTION,
 	TASK_EQUIPAMENT,
 	TASK_PUTINSERVER,
 	TASK_TEAMBALANCE,
@@ -184,11 +214,47 @@ enum (+= 64)
 	TASK_DEFUSE,
 	TASK_CHECKHP
 }
-enum { TEAM_NONE = 0, TEAM_RED, TEAM_BLUE, TEAM_SPEC }
-new const g_szCSTeams[][] = { NULL, "TERRORIST", "CT", "SPECTATOR" }
-new const g_szTeamName[][] = { NULL, "Red", "Blue", "Spectator" }
-new const g_szMLTeamName[][] = { NULL, "TEAM_RED", "TEAM_BLUE", "TEAM_SPEC" }
-new const g_szMLFlagTeam[][] = { NULL, "FLAG_RED", "FLAG_BLUE", NULL }
+
+enum
+{
+	TEAM_NONE = 0,
+	TEAM_RED,
+	TEAM_BLUE,
+	TEAM_SPEC
+}
+
+new const g_szCSTeams[][] =
+{
+	NULL,
+	"TERRORIST",
+	"CT",
+	"SPECTATOR"
+}
+
+new const g_szTeamName[][] =
+{
+	NULL,
+	"Red",
+	"Blue",
+	"Spectator"
+}
+
+new const g_szMLTeamName[][] =
+{
+	NULL,
+	"TEAM_RED",
+	"TEAM_BLUE",
+	"TEAM_SPEC"
+}
+
+new const g_szMLFlagTeam[][] =
+{
+	NULL,
+	"FLAG_RED",
+	"FLAG_BLUE",
+	NULL
+}
+
 enum
 {
 	FLAG_STOLEN = 0,
@@ -200,6 +266,7 @@ enum
 	FLAG_AUTORETURN,
 	FLAG_ADMINRETURN
 }
+
 enum
 {
 	EVENT_TAKEN = 0,
@@ -215,35 +282,22 @@ new const g_szSounds[][][] =
 	{NULL, "red_flag_returned", "blue_flag_returned"},
 	{NULL, "red_team_scores", "blue_team_scores"}
 }
+
 #if FEATURE_ADRENALINE == true
-#endif // FEATURE_ADRENALINE
-#if FEATURE_BUY == true
-enum
-{
-	no_weapon,
-	primary,
-	secondary,
-	he,
-	flash,
-	smoke,
-	armor,
-	nvg
-}
-new const g_szRebuyCommands[][] =
+new const g_szAdrenalineUseML[][] =
 {
 	NULL,
-	"PrimaryWeapon",
-	"SecondaryWeapon",
-	"HEGrenade",
-	"Flashbang",
-	"SmokeGrenade",
-	"Armor",
-	"NightVision"
+	"ADR_SPEED",
+	"ADR_BERSERK",
+	"ADR_REGENERATE",
+	"ADR_INVISIBILITY"
 }
+#endif // FEATURE_ADRENALINE
 
-#endif // FEATURE_BUY
 new const g_szRemoveEntities[][] =
 {
+	"func_buyzone",
+	"armoury_entity",
 	"func_bomb_target",
 	"info_bomb_target",
 	"hostage_entity",
@@ -252,16 +306,12 @@ new const g_szRemoveEntities[][] =
 	"info_hostage_rescue",
 	"info_vip_start",
 	"func_vip_safetyzone",
-	"func_escapezone"
-}
-new const g_szRemoveEntities2[][] =
-{
-	"func_buyzone",
-	"armoury_entity",
+	"func_escapezone",
 	"info_map_parameters",
 	"player_weaponstrip",
 	"game_player_equip"
 }
+
 enum
 {
 	ZERO = 0,
@@ -299,12 +349,13 @@ enum
 	W_VESTHELM,
 	W_NVG
 }
+
 new const g_iClip[] =
 {
-	0,			// (unknown)
-	13,			// P228
-	0,			// SHIELD (not used)
-	10,			// SCOUT
+	0,		// (unknown)
+	13,		// P228
+	0,		// SHIELD (not used)
+	10,		// SCOUT
 	0,   		// HEGRENADE (not used)
 	7,   		// XM1014
 	0,   		// C4 (not used)
@@ -332,10 +383,11 @@ new const g_iClip[] =
 	30,  		// AK47
 	0,   		// KNIFE (not used)
 	50,  		// P90
-	0,			// Kevlar (not used)
-	0,			// Kevlar + Helm (not used)
-	0			// NVG (not used)
+	0,		// Kevlar (not used)
+	0,		// Kevlar + Helm (not used)
+	0		// NVG (not used)
 }
+
 new const g_iBPAmmo[] =
 {
 	0,		// (unknown)
@@ -345,112 +397,35 @@ new const g_iBPAmmo[] =
 	0,		// HEGRENADE (not used)
 	32,		// XM1014
 	0,		// C4 (not used)
-	100,	// MAC10
+	100,		// MAC10
 	90,		// AUG
 	0,		// SMOKEGRENADE (not used)
-	120,	// ELITE
-	100,	// FIVESEVEN
-	100,	// UMP45
+	120,		// ELITE
+	100,		// FIVESEVEN
+	100,		// UMP45
 	90,		// SG550
 	90,		// GALIL
 	90,		// FAMAS
-	100,	// USP
-	120,	// GLOCK18
+	100,		// USP
+	120,		// GLOCK18
 	30,		// AWP
-	120,	// MP5NAVY
-	200,	// M249
+	120,		// MP5NAVY
+	200,		// M249
 	32,		// M3
 	90,		// M4A1
-	120,	// TMP
+	120,		// TMP
 	90,		// G3SG1
 	0,		// FLASHBANG (not used)
 	35,		// DEAGLE
 	90,		// SG552
 	90,		// AK47
 	0,		// KNIFE (not used)
-	100,	// P90
+	100,		// P90
 	0,		// Kevlar (not used)
 	0,		// Kevlar + Helm (not used)
 	0		// NVG (not used)
 }
-#if FEATURE_BUY == true
-new const g_iWeaponPrice[] =
-{
-	0,			// (unknown)
-	600,		// P228
-	5000,		// SHIELD
-	5000,		// SCOUT
-	300,		// HEGRENADE
-	2000,		// XM1014
-	12000,		// C4
-	1400,		// MAC10
-	2300,		// AUG
-	300,		// SMOKEGRENADE
-	650,		// ELITE
-	600,		// FIVESEVEN
-	1700,		// UMP45
-	6500,		// SG550
-	2500,		// GALIL
-	2500,		// FAMAS
-	500,		// USP
-	400,		// GLOCK18
-	6000,		// AWP
-	1500,		// MP5NAVY
-	3000,		// M249
-	1700,		// M3
-	3000,		// M4A1
-	1400,		// TMP
-	7000,		// G3SG1
-	200,		// FLASHBANG
-	700,		// DEAGLE
-	2300,		// SG552
-	3000,		// AK47
-	0,			// KNIFE (not used)
-	2000,		// P90
-	500,		// Kevlar
-	1000,		// Kevlar + Helm
-	1000		// NVG
-}
-#endif // FEATURE_BUY
-#if FEATURE_BUY == true && FEATURE_ADRENALINE == true
-new const g_iWeaponAdrenaline[] =
-{
-	0,		// (unknown)
-	0,		// P228
-	50,		// SHIELD
-	10,		// SCOUT
-	0,		// HEGRENADE
-	0,		// XM1014
-	100,		// C4
-	0,		// MAC10
-	0,		// AUG
-	0,		// SMOKEGRENADE
-	0,		// ELITE
-	0,		// FIVESEVEN
-	0,		// UMP45
-	50,		// SG550
-	0,		// GALIL
-	0,		// FAMAS
-	0,		// USP
-	0,		// GLOCK18
-	40,		// AWP
-	0,		// MP5NAVY
-	15,		// M249
-	0,		// M3
-	0,		// M4A1
-	0,		// TMP
-	15,		// G3SG1
-	0,		// FLASHBANG
-	0,		// DEAGLE
-	0,		// SG552
-	0,		// AK47
-	0,		// KNIFE (not used)
-	0,		// P90
-	0,		// Kevlar
-	0,		// Kevlar + Helm
-	0		// NVG
-}
-#endif // FEATURE_ADRENALINE
+
 new const Float:g_fWeaponRunSpeed[] = // CONFIGURABLE - weapon running speed (edit the numbers in the list)
 {
 	150.0,	// Zoomed speed with any weapon
@@ -488,45 +463,7 @@ new const Float:g_fWeaponRunSpeed[] = // CONFIGURABLE - weapon running speed (ed
 	0.0,		// Kevlar + Helm (not used)
 	0.0		// NVG (not used)
 }
-#if FEATURE_BUY == true
-new const g_iWeaponSlot[] =
-{
-	0,		// none
-	2,		// P228
-	1,		// SHIELD
-	1,		// SCOUT
-	4,		// HEGRENADE
-	1,		// XM1014
-	5,		// C4
-	1,		// MAC10
-	1,		// AUG
-	4,		// SMOKEGRENADE
-	2,		// ELITE
-	2,		// FIVESEVEN
-	1,		// UMP45
-	1,		// SG550
-	1,		// GALIL
-	1,		// FAMAS
-	2,		// USP
-	2,		// GLOCK18
-	1,		// AWP
-	1,		// MP5NAVY
-	1,		// M249
-	1,		// M3
-	1,		// M4A1
-	1,		// TMP
-	1,		// G3SG1
-	4,		// FLASHBANG
-	2,		// DEAGLE
-	1,		// SG552
-	1,		// AK47
-	3,		// KNIFE (not used)
-	1,		// P90
-	0,		// Kevlar
-	0,		// Kevlar + Helm
-	0		// NVG
-}
-#endif // FEATURE_BUY
+
 new const g_szWeaponEntity[][24] =
 {
 	NULL,
@@ -564,87 +501,17 @@ new const g_szWeaponEntity[][24] =
 	"item_assaultsuit",
 	NULL
 }
-#if FEATURE_BUY == true
-new const g_szWeaponCommands[][] =
-{
-	{NULL,		NULL},
-	{"p228",		"228compact"},
-	{"shield",		NULL},
-	{"scout",		NULL},
-	{"hegren",		NULL},
-	{"xm1014",		"autoshotgun"},
-	{NULL,		NULL},
-	{"mac10",		NULL},
-	{"aug",		"bullpup"},
-	{"sgren",		NULL},
-	{"elites",		NULL},
-	{"fiveseven",	"fn57"},
-	{"ump45",		"sm"},
-	{"sg550",		"krieg550"},
-	{"galil",		"defender"},
-	{"famas",		"clarion"},
-	{"usp",		"km45"},
-	{"glock",		"9x19mm"},
-	{"awp",		"magnum"},
-	{"mp5",		"mp"},
-	{"m249",		NULL},
-	{"m3",		"12gauge"},
-	{"m4a1",		NULL},
-	{"tmp",		NULL},
-	{"g3sg1",		"d3au1"},
-	{"flash",		NULL},
-	{"deagle",		"nighthawk"},
-	{"sg552",		"krieg552"},
-	{"ak47",		"cv47"},
-	{NULL,		NULL},
-	{"p90",		"c90"},
-	{"vest",		NULL},
-	{"vesthelm",	NULL},
-	{"nvgs",		NULL}
-}
-#endif // FEATURE_BUY
 
-enum xDataGuns
-{
-	xGunName[20], xGunGiveCSW, xGunGiveId[20], xAmmoClip, xAmmoBackPack
-}
-
-new const xGunsPrimary[][xDataGuns] =
-{
-	{ "M4a1", CSW_M4A1, "weapon_m4a1", 30, 90 },
-	{ "Ak 47", CSW_AK47, "weapon_ak47", 30, 90 },
-	//{ "AWP", CSW_AWP, "weapon_awp", 10, 30 },
-	{ "Famas", CSW_FAMAS, "weapon_famas", 25, 90 },
-	{ "Aug", CSW_AUG, "weapon_aug", 30, 90 },
-	{ "Galil", CSW_GALI, "weapon_galil", 35, 90 },
-	//{ "Scout", CSW_SCOUT, "weapon_scout", 10, 90 },
-	{ "M3-12", CSW_M3, "weapon_m3", 10, 90 },
-	{ "RAMBAO", CSW_M249, "weapon_m249", 10, 90 }, 
-	{ "P90", CSW_P90, "weapon_p90", 10, 90 }, 
-	{ "MP5", CSW_MP5NAVY, "weapon_mp5navy", 10, 90 }, 
-	{ "XM-12", CSW_XM1014, "weapon_xm1014", 10, 90 },
-}
-new xAction[33];
-
-/*--------------------------------------*/
-/*---------------[ VARS ]---------------*/
 new g_iMaxPlayers
 new g_szMap[32]
+new g_szGame[16]
+new g_iTeam[33]
 new g_iScore[3]
 new g_iFlagHolder[3]
 new g_iFlagEntity[3]
 new g_iBaseEntity[3]
 new Float:g_fFlagDropped[3]
-#if FEATURE_BUY == true
-new g_iMenu[33]
-new g_iRebuy[33][8]
-new g_iAutobuy[33][64]
-new g_iRebuyWeapons[33][8]
-new pCvar_ctf_nospam_flash
-new pCvar_ctf_nospam_he
-new pCvar_ctf_nospam_smoke
-new gMsg_BuyClose
-#endif // FEATURE_BUY
+
 new g_iMaxArmor[33]
 new g_iMaxHealth[33]
 new g_iAdrenaline[33]
@@ -661,23 +528,24 @@ new bool:g_bAssisted[33][3]
 new bool:g_bProtected[33]
 new bool:g_bRestarted[33]
 new bool:g_bFirstSpawn[33]
+
 new Float:g_fFlagBase[3][3]
 new Float:g_fFlagLocation[3][3]
 new Float:g_fWeaponSpeed[33]
 new Float:g_fLastDrop[33]
 new Float:g_fLastBuy[33][4]
-new szHuds[MAX_PLAYERS + 1]
-new szSounds[MAX_PLAYERS + 1]
-new szHudsADR[MAX_PLAYERS + 1]
+
 new pCvar_ctf_flagcaptureslay
 new pCvar_ctf_flagheal
 new pCvar_ctf_flagreturn
 new pCvar_ctf_respawntime
 new pCvar_ctf_protection
+new pCvar_ctf_dynamiclights
 new pCvar_ctf_glows
 new pCvar_ctf_weaponstay
 new pCvar_ctf_spawnmoney
 new pCvar_ctf_itempercent
+
 new pCvar_ctf_sound[4]
 new pCvar_mp_winlimit
 new pCvar_mp_startmoney
@@ -685,12 +553,7 @@ new pCvar_mp_fadetoblack
 new pCvar_mp_forcecamera
 new pCvar_mp_forcechasecam
 new pCvar_mp_autoteambalance
-#if FEATURE_C4 == true
-new pCvar_mp_c4timer
-new gMsg_BarTime
-new gMsg_DeathMsg
-new gMsg_SendAudio
-#endif // FEATURE_C4
+
 new gMsg_SayText
 new gMsg_RoundTime
 new gMsg_ScreenFade
@@ -700,81 +563,83 @@ new gMsg_ScoreInfo
 new gMsg_ScoreAttrib
 new gMsg_TextMsg
 new gMsg_TeamScore
+
 new gHook_EntSpawn
+
 #if FEATURE_ADRENALINE == true
+
 new gSpr_trail
 new gSpr_blood1
 new gSpr_blood2
+
 #endif // FEATURE_ADRENALINE
+
 new gSpr_regeneration
+
 new g_iForwardReturn
 new g_iFW_flag
-new HUDINFO
-new g_iSync[4]
 
-// PRefix Travados
-new allow_map_prefix[][6] = {"awp_", "aim_", "kz_", "bhp_", "surf_",}
-new bool: Map_Check_Cam
-/*--------------------------------------*/
-/*--------------[ PLUGINS ]-------------*/
+
 public plugin_precache()
 {
-	// Models
 	precache_model(FLAG_MODEL)
 	precache_model(ITEM_MODEL_AMMO)
 	precache_model(ITEM_MODEL_MEDKIT)
 
 #if FEATURE_ADRENALINE == true
 
-	// Model
 	precache_model(ITEM_MODEL_ADRENALINE)
 
-	// Sound
 	precache_sound(SND_GETADRENALINE)
 	precache_sound(SND_ADRENALINE)
 
-	// Sprites
 	gSpr_trail = precache_model("sprites/zbeam5.spr")
 	gSpr_blood1 = precache_model("sprites/blood.spr")
 	gSpr_blood2 = precache_model("sprites/bloodspray.spr")
 
 #endif // FEATURE_ADRENALINE
-	
-	// Sound
+
 	precache_sound(SND_GETAMMO)
 	precache_sound(SND_GETMEDKIT)
 
-	// Sprite
-	// gSpr_regeneration = precache_model("sprites/th_jctf_heal.spr")
+	gSpr_regeneration = precache_model("sprites/th_jctf_heal.spr")
 
-	// Sound MP3
 	for(new szSound[64], i = 0; i < sizeof g_szSounds; i++)
 	{
 		for(new t = 1; t <= 2; t++)
-			formatex(szSound, charsmax(szSound), "sound/ctf/%s.mp3", g_szSounds[i][t]), precache_generic(szSound);
+		{
+			formatex(szSound, charsmax(szSound), "sound/ctf/%s.mp3", g_szSounds[i][t])
+
+			precache_generic(szSound)
+		}
 	}
 
-#if FEATURE_C4 == true
-
-	// Sound
-	precache_sound(SND_C4DISARMED)
-
-	// Entity
-	new ent = entity_create(g_szRemoveEntities[8])
-
-	// Criou
-	if(ent)
-	{
-		// Dispatch Ent
-		DispatchKeyValue(ent, "buying", "0")
-		DispatchKeyValue(ent, "bombradius", C4_RADIUS)
-		DispatchSpawn(ent)
-	}
-#endif // FEATURE_C4
-
-	// Ent Spawn
 	gHook_EntSpawn = register_forward(FM_Spawn, "ent_spawn")
+
 }
+
+public ent_spawn(ent)
+{
+	if(!is_valid_ent(ent))
+		return FMRES_IGNORED
+
+	static szClass[32]
+
+	entity_get_string(ent, EV_SZ_classname, szClass, charsmax(szClass))
+
+	for(new i = 0; i < sizeof g_szRemoveEntities; i++)
+	{
+		if(equal(szClass, g_szRemoveEntities[i]))
+		{
+			entity_remove(ent)
+
+			return FMRES_SUPERCEDE
+		}
+	}
+
+	return FMRES_IGNORED
+}
+
 public plugin_init()
 {
 	register_plugin(MOD_TITLE, MOD_VERSION, MOD_AUTHOR)
@@ -786,14 +651,9 @@ public plugin_init()
 	new const SEPARATOR_TEMP[] = " - - - - - - - - - - - - - - - - -"
 
 	server_print(SEPARATOR_TEMP)
+	server_print("    %s - v%s", MOD_TITLE, MOD_VERSION)
+	server_print("    Mod by %s", MOD_AUTHOR)
 
-#if FEATURE_BUY == false
-	server_print("[!] Custom buy feature is disabled! (FEATURE_BUY = false)")
-#endif
-
-#if FEATURE_C4 == false
-	server_print("[!] C4 feature is disabled! (FEATURE_BUYC4 = false)")
-#endif
 
 #if FEATURE_ADRENALINE == false
 	server_print("[!] Adrenaline feature is disabled! (FEATURE_ADRENALINE = false)")
@@ -834,41 +694,9 @@ public plugin_init()
 
 #endif // FEATURE_ADRENALINE
 
-#if FEATURE_BUY == true
-	
-	// MENU CMD
-	register_menucmd(register_menuid(MENU_BUY), MENU_KEYS_BUY, "player_key_buy")
-
-	// Event
-	register_event("StatusIcon", "player_inBuyZone", "be", "2=buyzone")
-
-	// CLCMDS
-	register_clcmd("buy", "player_cmd_buy_main")
-	register_clcmd("buyammo1", "player_fillAmmo")
-	register_clcmd("buyammo2", "player_fillAmmo")
-	register_clcmd("primammo", "player_fillAmmo")
-	register_clcmd("secammo", "player_fillAmmo")
-	register_clcmd("client_buy_open", "player_cmd_buyVGUI")
-	register_clcmd("autobuy", "player_cmd_autobuy")
-	register_clcmd("cl_autobuy", "player_cmd_autobuy")
-	register_clcmd("cl_setautobuy", "player_cmd_setAutobuy")
-	register_clcmd("rebuy", "player_cmd_rebuy")
-	register_clcmd("cl_rebuy", "player_cmd_rebuy")
-	register_clcmd("cl_setrebuy", "player_cmd_setRebuy")
-	register_clcmd("buyequip", "player_cmd_buy_equipament")
-	register_clcmd("say /armas", "xSelectGuns")
-
-#endif // FEATURE_BUY
 
 	for(new w = W_P228; w <= W_NVG; w++)
 	{
-#if FEATURE_BUY == true
-		for(new i = 0; i < 2; i++)
-		{
-			if(strlen(g_szWeaponCommands[w][i]))
-				register_clcmd(g_szWeaponCommands[w][i], "player_cmd_buyWeapon")
-		}
-#endif // FEATURE_BUY
 
 		if(w != W_SHIELD && w <= W_P90)
 			RegisterHam(Ham_Weapon_PrimaryAttack, g_szWeaponEntity[w], "player_useWeapon", 1)
@@ -879,16 +707,6 @@ public plugin_init()
 	register_clcmd("ctf_return", "admin_cmd_returnFlag", ADMIN_RETURN)
 
 	register_clcmd("dropflag", "player_cmd_dropFlag")
-
-#if FEATURE_C4 == true
-
-	RegisterHam(Ham_Use, GRENADE, "c4_defuse", 1)
-	register_logevent("c4_planted", 3, "2=Planted_The_Bomb")
-	register_logevent("c4_defused", 3, "2=Defused_The_Bomb")
-
-	register_touch(WEAPONBOX, PLAYER, "c4_pickup")
-
-#endif // FEATURE_C4
 
 	register_touch(ITEM_CLASSNAME, PLAYER, "item_touch")
 
@@ -906,18 +724,6 @@ public plugin_init()
 	RegisterHam(Ham_Weapon_SecondaryAttack, g_szWeaponEntity[W_M4A1], "player_useWeaponSec", 1)
 
 #endif // FEATURE_ADRENALINE
-
-
-#if FEATURE_C4 == true
-
-	gMsg_BarTime = get_user_msgid("BarTime")
-	gMsg_DeathMsg = get_user_msgid("DeathMsg")
-	gMsg_SendAudio = get_user_msgid("SendAudio")
-
-	register_message(gMsg_BarTime, "c4_used")
-	register_message(gMsg_SendAudio, "msg_sendAudio")
-
-#endif // FEATURE_C4
 
 	gMsg_HostagePos = get_user_msgid("HostagePos")
 	gMsg_HostageK = get_user_msgid("HostageK")
@@ -945,33 +751,18 @@ public plugin_init()
 	pCvar_ctf_flagcaptureslay = register_cvar("ctf_flagcaptureslay", "0")
 	pCvar_ctf_flagheal = register_cvar("ctf_flagheal", "1")
 	pCvar_ctf_flagreturn = register_cvar("ctf_flagreturn", "120")
-	pCvar_ctf_respawntime = register_cvar("ctf_respawntime", "5")
-	pCvar_ctf_protection = register_cvar("ctf_protection", "7")
-	pCvar_ctf_glows = register_cvar("ctf_glow", "1")
-	pCvar_ctf_weaponstay = register_cvar("ctf_weaponstay", "3")
-	pCvar_ctf_spawnmoney = register_cvar("ctf_spawnmoney", "3500")
-	pCvar_ctf_itempercent = register_cvar("ctf_itempercent", "5")
-
-#if FEATURE_BUY == true
-
-	pCvar_ctf_nospam_flash = register_cvar("ctf_nospam_flash", "20")
-	pCvar_ctf_nospam_he = register_cvar("ctf_nospam_he", "20")
-	pCvar_ctf_nospam_smoke = register_cvar("ctf_nospam_smoke", "20")
-
-	gMsg_BuyClose = get_user_msgid("BuyClose")
-
-#endif // FEATURE_BUY
+	pCvar_ctf_respawntime = register_cvar("ctf_respawntime", "10")
+	pCvar_ctf_protection = register_cvar("ctf_protection", "5")
+	pCvar_ctf_dynamiclights = register_cvar("ctf_dynamiclights", "1")
+	pCvar_ctf_glows = register_cvar("ctf_glows", "1")
+	pCvar_ctf_weaponstay = register_cvar("ctf_weaponstay", "15")
+	pCvar_ctf_spawnmoney = register_cvar("ctf_spawnmoney", "1000")
+	pCvar_ctf_itempercent = register_cvar("ctf_itempercent", "25")
 
 	pCvar_ctf_sound[EVENT_TAKEN] = register_cvar("ctf_sound_taken", "1")
 	pCvar_ctf_sound[EVENT_DROPPED] = register_cvar("ctf_sound_dropped", "1")
 	pCvar_ctf_sound[EVENT_RETURNED] = register_cvar("ctf_sound_returned", "1")
 	pCvar_ctf_sound[EVENT_SCORE] = register_cvar("ctf_sound_score", "1")
-
-#if FEATURE_C4 == true
-
-	pCvar_mp_c4timer = get_cvar_pointer("mp_c4timer")
-
-#endif // FEATURE_C4
 
 	pCvar_mp_winlimit = get_cvar_pointer("mp_winlimit")
 	pCvar_mp_startmoney = get_cvar_pointer("mp_startmoney")
@@ -986,43 +777,36 @@ public plugin_init()
 
 
 	// Variables
+
+	new szGame[3]
+
+	get_modname(szGame, charsmax(szGame))
+
+	if(szGame[0] == 'c')
+	{
+		switch(szGame[1])
+		{
+			case 's': copy(g_szGame, charsmax(g_szGame), "CS 1.6 ") // leave the space at the end
+			case 'z': copy(g_szGame, charsmax(g_szGame), "CS:CZ ")
+		}
+	}
+
 	get_mapname(g_szMap, charsmax(g_szMap))
 
 	g_iMaxPlayers = get_maxplayers()
-	HUDINFO = CreateHudSyncObj()
-	g_iSync[0] = CreateHudSyncObj()
-
-
-
-#if FEATURE_C4 == true
-	// fake bomb target
-
-	new ent = entity_create(g_szRemoveEntities[2])
-
-	if(ent)
-	{
-		entity_spawn(ent)
-		entity_set_size(ent, Float:{-8192.0, -8192.0, -8192.0}, Float:{8192.0, 8192.0, 8192.0})
-	}
-#endif // FEATURE_C4
-
-	//Zerar Bool (CHECK MAP)
-	Map_Check_Cam = false
-
-	//Desativar este comando nos eventos boss
-	new map_name[32], check_index
-
-	// MAP NAME
-	get_mapname(map_name, sizeof(map_name))	
-
-	// Loop
-	for(check_index = 0; check_index < sizeof(allow_map_prefix); check_index++)
-	{
-		if(equali(map_name, allow_map_prefix[check_index], strlen(allow_map_prefix[check_index])))
-			Map_Check_Cam = true
-	}
-
 }
+
+
+public game_description()
+{
+	new szFormat[32]
+
+	formatex(szFormat, charsmax(szFormat), "%sjCTF v%s", g_szGame, MOD_VERSION)
+	forward_return(FMV_STRING, szFormat)
+
+	return FMRES_SUPERCEDE
+}
+
 public plugin_cfg()
 {
 	new szFile[64]
@@ -1058,180 +842,100 @@ public plugin_cfg()
 	flag_spawn(TEAM_RED)
 	flag_spawn(TEAM_BLUE)
 
-	task_set(6.5, "plugin_postCfg")
+	// task_set(6.5, "plugin_postCfg")
 }
+
 public plugin_postCfg()
 {
 	set_cvar_num("mp_freezetime", 0)
 	set_cvar_num("mp_limitteams", 0)
-	set_cvar_num("mp_buytime", -1)
-	set_cvar_num("mp_refill_bpammo_weapons", 2)
-	set_cvar_num("mp_item_staytime", 15)
+	set_cvar_num("mp_buytime", 99999999)
 	server_cmd("sv_restart 1")
-	server_cmd("amx_cvar mp_round_infinite 1")
-	server_cmd("amx_cvar mp_respawn_immunitytime %i", get_pcvar_num(pCvar_ctf_protection))
-	set_cvar_string("mp_round_infinite", "1")
-	set_cvar_string("mp_respawn_immunitytime", "4")
 }
+
 public plugin_natives()
 {
-	// Library
 	register_library("jctf")
 
-	// Natives
 	register_native("jctf_get_team", "native_get_team")
 	register_native("jctf_get_flagcarrier", "native_get_flagcarrier")
 	register_native("jctf_get_adrenaline", "native_get_adrenaline")
 	register_native("jctf_add_adrenaline", "native_add_adrenaline")
-	register_native("jctf_buy_itens", "native_buy_itens")
 }
+
 public plugin_end()
 {
 	DestroyForward(g_iFW_flag)
 }
-/*--------------------------------------*/
-/*--------------[ FORWARDS ]------------*/
-public ent_spawn(ent)
-{
-	// Ent
-	if(!is_valid_ent(ent))
-		return FMRES_IGNORED
 
-	static szClass[32]
 
-	entity_get_string(ent, EV_SZ_classname, szClass, charsmax(szClass))
 
-	for(new i = 0; i < sizeof g_szRemoveEntities; i++)
-	{
-		if(equal(szClass, g_szRemoveEntities[i]))
-		{
-			entity_remove(ent)
 
-			return FMRES_SUPERCEDE
-		}
-	}
 
-	//Desativar este comando nos eventos boss
-	new map_name[32], check_index, bool: Idext = false;
 
-	// MAP NAME
-	get_mapname(map_name, sizeof(map_name))	
 
-	// Loop
-	for(check_index = 0; check_index < sizeof(allow_map_prefix); check_index++)
-	{
-		if(equali(map_name, allow_map_prefix[check_index], strlen(allow_map_prefix[check_index])))
-			Idext = true;
-	}
 
-	if(!Idext)
-	{
-		for(new i = 0; i < sizeof g_szRemoveEntities2; i++)
-		{
-			if(equal(szClass, g_szRemoveEntities2[i]))
-			{
-				entity_remove(ent)
-				return FMRES_SUPERCEDE
-			}
-		}
-	}
-
-	return FMRES_IGNORED
-}
-public game_description()
-{
-	// Var
-	new szFormat[32]
-
-	// Formatex
-	formatex(szFormat, charsmax(szFormat), "[PEGABANDEIRA]")
-
-	// Forward
-	forward_return(FMV_STRING, szFormat)
-
-	// Return
-	return FMRES_SUPERCEDE
-}
-
-/*--------------------------------------*/
-/*--------------[ Natives ]------------*/
-public native_buy_itens() return Map_Check_Cam;
 public native_get_team(iPlugin, iParams)
 {
-	// Verificação
-	if(!is_user_connected(get_param(1)))
-		return 0;
+	/* jctf_get_team(id) */
 
-	// Team
-	//return get_user_team(get_param(1)]
-	return get_user_team(get_param(1))
+	return g_iTeam[get_param(1)]
 }
+
 public native_get_flagcarrier(iPlugin, iParams)
 {
-	// ID
+	/* jctf_get_flagcarrier(id) */
+
 	new id = get_param(1)
 
-	// Verificação
-	if(!is_user_connected(id))
-		return 0;
-
-	return g_iFlagHolder[get_opTeam(get_user_team(id))] == id
+	return g_iFlagHolder[get_opTeam(g_iTeam[id])] == id
 }
+
 public native_get_adrenaline(iPlugin, iParams)
 {
 #if FEATURE_ADRENALINE == true
 
-	// ID
-	new id = get_param(1)
+	/* jctf_get_adrenaline(id) */
 
-	// Verificação
-	if(!is_user_connected(id))
-		return 0;
-
-	return g_iAdrenaline[id]
+	return g_iAdrenaline[get_param(1)]
 
 #else // FEATURE_ADRENALINE
-	
-	// Return
+
 	log_error(AMX_ERR_NATIVE, "jctf_get_adrenaline() does not work ! main jCTF plugin has FEATURE_ADRENALINE = false") 
 
-	// Error
-	return 0;
+	return 0
 
 #endif // FEATURE_ADRENALINE
 }
+
 public native_add_adrenaline(iPlugin, iParams)
 {
 #if FEATURE_ADRENALINE == true
 
 	/* jctf_add_adrenaline(id, iAdd, szReason[]) */
 
-	// Vars
-	new id = get_param(1), iAdd = get_param(2), szReason[64];
+	new id = get_param(1)
+	new iAdd = get_param(2)
+	new szReason[64]
 
-	// Verificação
-	if(!is_user_connected(id))
-		return 0;
-
-	// String
 	get_string(3, szReason, charsmax(szReason))
 
-	if(strlen(szReason)) player_award(id, 0, 0, iAdd, szReason)
+	if(strlen(szReason))
+		player_award(id, 0, 0, iAdd, szReason)
+
 	else
 	{
-		// Adrenalina
 		g_iAdrenaline[id] = clamp(g_iAdrenaline[id] + iAdd, 0, 100)
+
+		player_hudAdrenaline(id)
 	}
 
-	// Return
 	return g_iAdrenaline[id]
 
 #else // FEATURE_ADRENALINE
-	
-	// Error
+
 	log_error(AMX_ERR_NATIVE, "jctf_add_adrenaline() does not work ! main jCTF plugin has FEATURE_ADRENALINE = false") 
 
-	// Return
 	return 0
 
 #endif // FEATURE_ADRENALINE
@@ -1239,8 +943,14 @@ public native_add_adrenaline(iPlugin, iParams)
 
 
 
-/*--------------------------------------*/
-/*---------------[ Flags ]--------------*/
+
+
+
+
+
+
+
+
 public flag_spawn(iFlagTeam)
 {
 	if(g_fFlagBase[iFlagTeam][x] == 0.0 && g_fFlagBase[iFlagTeam][y] == 0.0 && g_fFlagBase[iFlagTeam][z] == 0.0)
@@ -1278,8 +988,7 @@ public flag_spawn(iFlagTeam)
 
 	entity_set_model(ent, FLAG_MODEL)
 	entity_set_string(ent, EV_SZ_classname, FLAG_CLASSNAME)
-	entity_set_int(ent, EV_INT_body, 1)
-    entity_set_int(ent, EV_INT_skin, iFlagTeam)
+	entity_set_int(ent, EV_INT_body, iFlagTeam)
 	entity_set_int(ent, EV_INT_sequence, FLAG_ANI_STAND)
 	entity_spawn(ent)
 	entity_set_origin(ent, g_fFlagBase[iFlagTeam])
@@ -1289,7 +998,6 @@ public flag_spawn(iFlagTeam)
 	entity_set_edict(ent, EV_ENT_aiment, 0)
 	entity_set_int(ent, EV_INT_movetype, MOVETYPE_TOSS)
 	entity_set_int(ent, EV_INT_solid, SOLID_TRIGGER)
-	entity_set_float(ent, EV_FL_framerate, 1.0)
 	entity_set_float(ent, EV_FL_gravity, 2.0)
 	entity_set_float(ent, EV_FL_nextthink, fGameTime + FLAG_THINK)
 
@@ -1311,12 +1019,23 @@ public flag_spawn(iFlagTeam)
 	entity_set_origin(ent, g_fFlagBase[iFlagTeam])
 	entity_set_vector(ent, EV_VEC_velocity, FLAG_SPAWN_VELOCITY)
 	entity_set_int(ent, EV_INT_movetype, MOVETYPE_TOSS)
+
+	if(get_pcvar_num(pCvar_ctf_glows))
+		entity_set_int(ent, EV_INT_renderfx, kRenderFxGlowShell)
+
+	entity_set_float(ent, EV_FL_renderamt, 100.0)
 	entity_set_float(ent, EV_FL_nextthink, fGameTime + BASE_THINK)
+
+	if(iFlagTeam == TEAM_RED)
+		entity_set_vector(ent, EV_VEC_rendercolor, Float:{150.0, 0.0, 0.0})
+	else
+		entity_set_vector(ent, EV_VEC_rendercolor, Float:{0.0, 0.0, 150.0})
 
 	g_iBaseEntity[iFlagTeam] = ent
 
 	return PLUGIN_CONTINUE
 }
+
 public flag_think(ent)
 {
 	if(!is_valid_ent(ent))
@@ -1349,12 +1068,9 @@ public flag_think(ent)
 		if(1 <= g_iFlagHolder[iFlagTeam] <= g_iMaxPlayers)
 		{
 			id = g_iFlagHolder[iFlagTeam]
-			
-			if(szHuds[id])
-			{
-				set_hudmessage(HUD_HELP3)
-				ShowSyncHudMsg(id, HUDINFO, "%L", id, "HUD_YOUHAVEFLAG")
-			}
+
+			set_hudmessage(HUD_HELP)
+			show_hudmessage(id, "%L", id, "HUD_YOUHAVEFLAG")
 
 			iStatus = 1
 		}
@@ -1392,7 +1108,7 @@ public flag_think(ent)
 
 	for(id = 1; id <= g_iMaxPlayers; id++)
 	{
-		if(get_user_team(id) == TEAM_NONE || g_bBot[id])
+		if(g_iTeam[id] == TEAM_NONE || g_bBot[id])
 			continue
 
 		/* Check flag proximity for pickup */
@@ -1422,16 +1138,14 @@ public flag_think(ent)
 		}
 
 		/* If iFlagTeam's flag is stolen or dropped, constantly warn team players */
-		if(iStatus && get_user_team(id) == iFlagTeam)
+		if(iStatus && g_iTeam[id] == iFlagTeam)
 		{
-			if(szHuds[id])
-			{
-				set_hudmessage(HUD_HELP3)
-				ShowSyncHudMsg(id, HUDINFO, "%L", id, (iStatus == 1 ? "HUD_ENEMYHASFLAG" : "HUD_RETURNYOURFLAG"))
-			}
+			set_hudmessage(HUD_HELP2)
+			show_hudmessage(id, "%L", id, (iStatus == 1 ? "HUD_ENEMYHASFLAG" : "HUD_RETURNYOURFLAG"))
 		}
 	}
 }
+
 flag_sendHome(iFlagTeam)
 {
 	new ent = g_iFlagEntity[iFlagTeam]
@@ -1446,7 +1160,8 @@ flag_sendHome(iFlagTeam)
 
 	g_iFlagHolder[iFlagTeam] = FLAG_HOLD_BASE
 }
-flag_take(iFlagTeam, id)
+
+public flag_take(iFlagTeam, id)
 {
 	if(g_bProtected[id])
 		player_removeProtection(id, "PROTECTION_TOUCHFLAG")
@@ -1461,11 +1176,12 @@ flag_take(iFlagTeam, id)
 
 	message_begin(MSG_BROADCAST, gMsg_ScoreAttrib)
 	write_byte(id)
-	write_byte(get_user_team(id) == TEAM_BLUE ? 4 : 2)
+	write_byte(g_iTeam[id] == TEAM_BLUE ? 4 : 2)
 	message_end()
 
 	player_updateSpeed(id)
 }
+
 public flag_touch(ent, id)
 {
 #if FLAG_IGNORE_BOTS == true
@@ -1490,9 +1206,9 @@ public flag_touch(ent, id)
 	if(g_fLastDrop[id] > fGameTime)
 		return
 
-	new iTeam = get_user_team(id)
+	new iTeam = g_iTeam[id]
 
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE))
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE))
 		return
 
 	new iFlagTeamOp = get_opTeam(iFlagTeam)
@@ -1516,7 +1232,7 @@ public flag_touch(ent, id)
 
 			for(new i = 1; i <= g_iMaxPlayers; i++)
 			{
-				if(i != id && g_bAssisted[i][iFlagTeam] && get_user_team(i) == iFlagTeam)
+				if(i != id && g_bAssisted[i][iFlagTeam] && g_iTeam[i] == iFlagTeam)
 				{
 					player_award(i, REWARD_RETURN_ASSIST, "%L", i, "REWARD_RETURN_ASSIST")
 
@@ -1544,11 +1260,8 @@ public flag_touch(ent, id)
 
 			log_message("<%s>%s returned the ^"%s^" flag.", g_szTeamName[iTeam], szName, g_szTeamName[iFlagTeam])
 
-			if(szHuds[id])
-			{
-				set_hudmessage(HUD_HELP)
-				ShowSyncHudMsg(id, HUDINFO, "%L", id, "HUD_RETURNEDFLAG")
-			}
+			set_hudmessage(HUD_HELP)
+			show_hudmessage(id, "%L", id, "HUD_RETURNEDFLAG")
 
 			if(g_bProtected[id])
 				player_removeProtection(id, "PROTECTION_TOUCHFLAG")
@@ -1568,7 +1281,7 @@ public flag_touch(ent, id)
 
 			for(new i = 1; i <= g_iMaxPlayers; i++)
 			{
-				if(i != id && get_user_team(i) > 0 && get_user_team(i) == iTeam)
+				if(i != id && g_iTeam[i] > 0 && g_iTeam[i] == iTeam)
 				{
 					if(g_bAssisted[i][iFlagTeamOp])
 					{
@@ -1585,11 +1298,8 @@ public flag_touch(ent, id)
 				g_bAssisted[i][iFlagTeamOp] = false
 			}
 
-			if(szHuds[id])
-			{
-				set_hudmessage(HUD_HELP)
-				ShowSyncHudMsg(id, HUDINFO, "%L", id, "HUD_CAPTUREDFLAG")
-			}
+			set_hudmessage(HUD_HELP)
+			show_hudmessage(id, "%L", id, "HUD_CAPTUREDFLAG")
 
 			if(iAssists)
 			{
@@ -1617,7 +1327,9 @@ public flag_touch(ent, id)
 
 			if(g_bProtected[id])
 				player_removeProtection(id, "PROTECTION_TOUCHFLAG")
-			
+			else
+				player_updateRender(id)
+
 			if(0 < get_pcvar_num(pCvar_mp_winlimit) <= g_iScore[iFlagTeam])
 			{
 				emessage_begin(MSG_ALL, SVC_INTERMISSION) // hookable mapend
@@ -1627,11 +1339,12 @@ public flag_touch(ent, id)
 			}
 
 			new iFlagRoundEnd = 1
+
 			if(iFlagRoundEnd && get_pcvar_num(pCvar_ctf_flagcaptureslay))
 			{
 				for(new i = 1; i <= g_iMaxPlayers; i++)
 				{
-					if(get_user_team(i) == iFlagTeamOp)
+					if(g_iTeam[i] == iFlagTeamOp)
 					{
 						user_kill(i)
 						player_print(i, i, "%L", i, "DEATH_FLAGCAPTURED")
@@ -1659,11 +1372,8 @@ public flag_touch(ent, id)
 			log_message("<%s>%s picked up the ^"%s^" flag.", g_szTeamName[iTeam], szName, g_szTeamName[iFlagTeam])
 		}
 
-		if(szHuds[id])
-		{
-			set_hudmessage(HUD_HELP3)
-			ShowSyncHudMsg(id, HUDINFO, "%L", id, "HUD_YOUHAVEFLAG")
-		}
+		set_hudmessage(HUD_HELP)
+		show_hudmessage(id, "%L", id, "HUD_YOUHAVEFLAG")
 
 		flag_take(iFlagTeam, id)
 
@@ -1673,10 +1383,13 @@ public flag_touch(ent, id)
 
 		if(g_bProtected[id])
 			player_removeProtection(id, "PROTECTION_TOUCHFLAG")
+		else
+			player_updateRender(id)
 
 		game_announce(EVENT_TAKEN, iFlagTeam, szName)
 	}
 }
+
 public flag_autoReturn(ent)
 {
 	task_remove(ent)
@@ -1695,8 +1408,14 @@ public flag_autoReturn(ent)
 	log_message("^"%s^" flag returned automatically", g_szTeamName[iFlagTeam])
 }
 
-/*--------------------------------------*/
-/*--------------[ Base ]----------------*/
+
+
+
+
+
+
+
+
 public base_think(ent)
 {
 	if(!is_valid_ent(ent))
@@ -1723,7 +1442,7 @@ public base_think(ent)
 
 	while((id = find_ent_in_sphere(id, g_fFlagBase[iFlagTeam], BASE_HEAL_DISTANCE)) != 0)
 	{
-		if(1 <= id <= g_iMaxPlayers && g_bAlive[id] && get_user_team(id) == iFlagTeam)
+		if(1 <= id <= g_iMaxPlayers && g_bAlive[id] && g_iTeam[id] == iFlagTeam)
 		{
 			iHealth = get_user_health(id)
 
@@ -1731,7 +1450,7 @@ public base_think(ent)
 			{
 				set_user_health(id, iHealth + 1)
 
-				// player_healingEffect(id)
+				player_healingEffect(id)
 			}
 		}
 
@@ -1740,27 +1459,41 @@ public base_think(ent)
 	}
 }
 
-/*--------------------------------------*/
-/*--------------[ Client ]------------*/
-public client_connect(id) set_user_info(id, "_vgui_menus", "1");
+
+
+
+
+
+
+
+
+
+
 public client_putinserver(id)
 {
 	g_bBot[id] = (is_user_bot(id) ? true : false)
+
+	g_iTeam[id] = TEAM_SPEC
 	g_bFirstSpawn[id] = true
 	g_bRestarted[id] = false
-	g_bLights[id] = false
-	szHuds[id] = true
-	szHudsADR[id] = true
-	szSounds[id] = true
-	task_set(3.0, "client_putinserverPost", id - TASK_PUTINSERVER)
-	set_user_info(id, "_vgui_menus", "1");
+	g_bLights[id] = (g_bBot[id] ? false : (get_pcvar_num(pCvar_ctf_dynamiclights) ? true : false));
 
-	// HUD
-	set_task(1.0, "player_hudAdrenaline", id+TASK_HUDRANK, _, _, "b")
+	task_set(3.0, "client_putinserverPost", id - TASK_PUTINSERVER)
 }
+
 public client_putinserverPost(id)
 {
 	id += TASK_PUTINSERVER
+
+	player_print(id, id, "%L", id, "JOIN_INFO", "^x04", MOD_TITLE, "^x01", "^x03", MOD_AUTHOR, "^x01")
+
+	client_print(id, print_console, "^n%s", SEPARATOR)
+	client_print(id, print_console, "                %s v%s - %L", MOD_TITLE, MOD_VERSION, id, "QH_TITLE")
+	client_print(id, print_console, "                   %L %s^n%s", id, "QH_MADEBY", MOD_AUTHOR, SEPARATOR)
+	client_print(id, print_console, "    %L", id, "QH_LINE1")
+	client_print(id, print_console, "    %L", id, "QH_LINE2")
+	client_print(id, print_console, "    %L", id, "QH_LINE3")
+	client_print(id, print_console, "^n    %L", id, "QH_HELP")
 
 #if FEATURE_ADRENALINE == true
 
@@ -1768,22 +1501,23 @@ public client_putinserverPost(id)
 
 #endif // FEATURE_ADRENALINE
 }
+
 public client_disconnected(id)
 {
 	player_dropFlag(id)
 	task_remove(id)
+
+	g_iTeam[id] = TEAM_NONE
 	g_iAdrenaline[id] = 0
 	g_iAdrenalineUse[id] = 0
+
 	g_bAlive[id] = false
 	g_bLights[id] = false
 	g_bFreeLook[id] = false
-	szHuds[id] = false
-	szHudsADR[id] = false
-	szSounds[id] = false
 	g_bAssisted[id][TEAM_RED] = false
 	g_bAssisted[id][TEAM_BLUE] = false
-	remove_task(id+TASK_HUDRANK)
 }
+
 public player_joinTeam()
 {
 	new id = read_data(1)
@@ -1799,7 +1533,7 @@ public player_joinTeam()
 	{
 		case 'T':
 		{
-			if(get_user_team(id) == TEAM_RED && g_bFirstSpawn[id])
+			if(g_iTeam[id] == TEAM_RED && g_bFirstSpawn[id])
 			{
 				new iRespawn = get_pcvar_num(pCvar_ctf_respawntime)
 
@@ -1808,13 +1542,14 @@ public player_joinTeam()
 
 				task_remove(id - TASK_TEAMBALANCE)
 				task_set(1.0, "player_checkTeam", id - TASK_TEAMBALANCE)
-
 			}
+
+			g_iTeam[id] = TEAM_RED
 		}
 
 		case 'C':
 		{
-			if(get_user_team(id) == TEAM_BLUE && g_bFirstSpawn[id])
+			if(g_iTeam[id] == TEAM_BLUE && g_bFirstSpawn[id])
 			{
 				new iRespawn = get_pcvar_num(pCvar_ctf_respawntime)
 
@@ -1823,13 +1558,14 @@ public player_joinTeam()
 
 				task_remove(id - TASK_TEAMBALANCE)
 				task_set(1.0, "player_checkTeam", id - TASK_TEAMBALANCE)
-			
-
 			}
+
+			g_iTeam[id] = TEAM_BLUE
 		}
 
 		case 'U':
 		{
+			g_iTeam[id] = TEAM_NONE
 			g_bFirstSpawn[id] = true
 		}
 
@@ -1837,16 +1573,27 @@ public player_joinTeam()
 		{
 			player_screenFade(id, {0,0,0,0}, 0.0, 0.0, FADE_OUT, false)
 			player_allowChangeTeam(id)
+
+			g_iTeam[id] = TEAM_SPEC
 			g_bFirstSpawn[id] = true
 		}
 	}
 }
+
 public player_spawn(id)
 {
 	if(!is_user_alive(id) || (!g_bRestarted[id] && g_bAlive[id]))
 		return
 
 	/* make sure we have team right */
+
+	switch(cs_get_user_team(id))
+	{
+		case CS_TEAM_T: g_iTeam[id] = TEAM_RED
+		case CS_TEAM_CT: g_iTeam[id] = TEAM_BLUE
+		default: return
+	}
+
 	g_bAlive[id] = true
 	g_bDefuse[id] = false
 	g_bBuyZone[id] = true
@@ -1855,17 +1602,18 @@ public player_spawn(id)
 
 	task_remove(id - TASK_PROTECTION)
 	task_remove(id - TASK_EQUIPAMENT)
+	task_remove(id - TASK_DAMAGEPROTECTION)
 	task_remove(id - TASK_TEAMBALANCE)
 	task_remove(id - TASK_ADRENALINE)
 	task_remove(id - TASK_DEFUSE)
-	
-#if FEATURE_BUY == true
-	if(!Map_Check_Cam)
-		task_set(0.1, "player_spawnEquipament", id - TASK_EQUIPAMENT)
-
-#endif // FEATURE_BUY
 
 	task_set(0.2, "player_checkVitals", id - TASK_CHECKHP)
+
+#if FEATURE_ADRENALINE == true
+
+	player_hudAdrenaline(id)
+
+#endif // FEATURE_ADRENALINE
 
 	new iProtection = get_pcvar_num(pCvar_ctf_protection)
 
@@ -1892,50 +1640,6 @@ public player_spawn(id)
 	}
 	else
 		cs_set_user_money(id, clamp((cs_get_user_money(id) + get_pcvar_num(pCvar_ctf_spawnmoney)), get_pcvar_num(pCvar_mp_startmoney), 16000))
-
-	// xSelectGuns(id);
-}
-
-public xSelectGuns(id)
-{
-	new xFmtx[1024], xKey[24], i
-	
-	formatex(xFmtx, charsmax(xFmtx), "\y[ep1c] \r~ \wMENU \r|\y ARMAS")
-	
-	new xMenu = menu_create(xFmtx, "_xSelectGuns")
-	
-	for(i = 0; i < sizeof(xGunsPrimary); i++)
-	{
-		formatex(xFmtx, charsmax(xFmtx), "%s", xGunsPrimary[i][xGunName])
-		num_to_str(i, xKey, charsmax(xKey))
-		menu_additem(xMenu, xFmtx, xKey)
-	}
-
-	menu_setprop(xMenu, MPROP_BACKNAME, "Voltar")
-	menu_setprop(xMenu, MPROP_NEXTNAME, "Proxima")
-	menu_setprop(xMenu, MPROP_EXITNAME, "Sair")
-	menu_display(id, xMenu)
-}
-
-public _xSelectGuns(id, menu, item)
-{
-	if(item == MENU_EXIT || !is_user_connected(id))
-	{
-		menu_destroy(menu)
-
-		return
-	}
-
-	if(!is_user_alive(id))
-		return
-
-	new data[6], iname[64], access, callback;
-	menu_item_getinfo(menu, item, access, data, charsmax(data), iname, charsmax(iname), callback)
-
-	xAction[id] = str_to_num(data)
-
-	give_item(id, xGunsPrimary[ xAction[id]][xGunGiveId])
-	cs_set_user_bpammo(id, xGunsPrimary[ xAction[id]][xGunGiveCSW], xGunsPrimary[ xAction[id]][xAmmoBackPack])
 }
 
 public player_checkVitals(id)
@@ -1953,35 +1657,11 @@ public player_checkVitals(id)
 	g_iMaxHealth[id] = get_user_health(id)
 }
 
-#if FEATURE_BUY == true
-public player_spawnEquipament(id)
-{
-	id += TASK_EQUIPAMENT
-
-	if(!g_bAlive[id])
-		return
-
-	strip_user_weapons(id)
-
-	give_item( id, "weapon_knife" );
-	give_item(id, "weapon_deagle")
-	give_item(id, "ammo_50ae")
-	give_item(id, "ammo_50ae")
-	give_item(id, "ammo_50ae")
-	give_item(id, "ammo_50ae")
-	give_item(id, "ammo_50ae")
-	give_item(id, "weapon_knife")
-	give_item(id, "weapon_hegrenade")
-	give_item(id, "weapon_flashbang")
-	give_item(id, "weapon_flashbang")
-	give_item(id, "item_assaultsuit")
-}
-#endif // FEATURE_BUY
 public player_protection(id, iStart)
 {
 	id += TASK_PROTECTION
 
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE))
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE))
 		return
 
 	static iCount[33]
@@ -1991,27 +1671,37 @@ public player_protection(id, iStart)
 		iCount[id] = iStart + 1
 
 		g_bProtected[id] = true
+
+		player_updateRender(id)
 	}
+
 	if(--iCount[id] > 0)
 	{
 		set_hudmessage(HUD_RESPAWN)
-		ShowSyncHudMsg(id, HUDINFO, "%L", id, "PROTECTION_LEFT", iCount[id])
+		show_hudmessage(id, "%L", id, "PROTECTION_LEFT", iCount[id])
+
 		task_set(1.0, "player_protection", id - TASK_PROTECTION)
 	}
-	else player_removeProtection(id, "PROTECTION_EXPIRED")
+	else
+		player_removeProtection(id, "PROTECTION_EXPIRED")
 }
+
 public player_removeProtection(id, szLang[])
 {
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE))
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE))
 		return
 
 	g_bProtected[id] = false
 
 	task_remove(id - TASK_PROTECTION)
+	task_remove(id - TASK_DAMAGEPROTECTION)
 
 	set_hudmessage(HUD_PROTECTION)
-	ShowSyncHudMsg(id, HUDINFO, "%L", id, szLang)
+	show_hudmessage(id, "%L", id, szLang)
+
+	player_updateRender(id)
 }
+
 public player_currentWeapon(id)
 {
 	if(!g_bAlive[id])
@@ -2035,6 +1725,7 @@ public player_currentWeapon(id)
 		player_updateSpeed(id)
 	}
 }
+
 public client_PostThink(id)
 {
 	if(!g_bAlive[id])
@@ -2070,6 +1761,7 @@ public client_PostThink(id)
 	else if(iShield[id]) /* Shield not available anymore */
 		iShield[id] = 0
 }
+
 public player_useWeapon(ent)
 {
 	if(!is_valid_ent(ent))
@@ -2095,6 +1787,7 @@ public player_useWeapon(ent)
 }
 
 #if FEATURE_ADRENALINE == true
+
 public player_useWeaponSec(ent)
 {
 	if(!is_valid_ent(ent))
@@ -2110,12 +1803,27 @@ public player_useWeaponSec(ent)
 		set_pdata_float(ent, m_flNextSecondaryAttack, get_pdata_float(ent, m_flNextSecondaryAttack, 4) * BERSERKER_SPEED2)
 	}
 }
+
 #endif // FEATURE_ADRENALINE
+
+
 public player_damage(id, iWeapon, iAttacker, Float:fDamage, iType)
 {
+	if(g_bProtected[id])
+	{
+		player_updateRender(id, fDamage)
+
+		task_remove(id - TASK_DAMAGEPROTECTION)
+		task_set(0.1, "player_damageProtection", id - TASK_DAMAGEPROTECTION)
+
+		entity_set_vector(id, EV_VEC_punchangle, FLAG_SPAWN_ANGLES)
+
+		return HAM_SUPERCEDE
+	}
+
 #if FEATURE_ADRENALINE == true
 
-	if(1 <= iAttacker <= g_iMaxPlayers && g_iAdrenalineUse[iAttacker] == ADRENALINE_BERSERK && get_user_team(iAttacker) != get_user_team(id))
+	else if(1 <= iAttacker <= g_iMaxPlayers && g_iAdrenalineUse[iAttacker] == ADRENALINE_BERSERK && g_iTeam[iAttacker] != g_iTeam[id])
 	{
 		SetHamParamFloat(4, fDamage * BERSERKER_DAMAGE)
 
@@ -2141,6 +1849,15 @@ public player_damage(id, iWeapon, iAttacker, Float:fDamage, iType)
 
 	return HAM_IGNORED
 }
+
+public player_damageProtection(id)
+{
+	id += TASK_DAMAGEPROTECTION
+
+	if(g_bAlive[id])
+		player_updateRender(id)
+}
+
 public player_killed(id, killer)
 {
 	g_bAlive[id] = false
@@ -2149,34 +1866,30 @@ public player_killed(id, killer)
 	task_remove(id - TASK_RESPAWN)
 	task_remove(id - TASK_PROTECTION)
 	task_remove(id - TASK_EQUIPAMENT)
+	task_remove(id - TASK_DAMAGEPROTECTION)
 	task_remove(id - TASK_TEAMBALANCE)
 	task_remove(id - TASK_ADRENALINE)
 	task_remove(id - TASK_DEFUSE)
 
-#if FEATURE_C4 == true
+	new szHint[10]
 
-	new iWeapon = entity_get_edict(id, EV_ENT_dmg_inflictor)
-	new szWeapon[10]
-	new bool:bC4 = false
+	new iHint
 
-	if(iWeapon > g_iMaxPlayers && is_valid_ent(iWeapon))
+	while((iHint = random_num(1, 12)))
 	{
-		entity_get_string(iWeapon, EV_SZ_classname, szWeapon, charsmax(szWeapon))
+#if FEATURE_ADRENALINE == false
+		if(iHint == 1 || iHint == 7 || iHint == 9)
+			continue
+#endif // FEATURE_ADRENALINE
 
-		if(equal(szWeapon, GRENADE) && get_pdata_int(iWeapon, 96) & (1<<8))
-		{
-			message_begin(MSG_ALL, gMsg_DeathMsg)
-			write_byte(killer)
-			write_byte(id)
-			write_byte(0)
-			write_string("c4")
-			message_end()
-
-			bC4 = true
-		}
+		break
 	}
 
-#endif // FEATURE_C4
+	formatex(szHint, charsmax(szHint), "HINT_%d", iHint)
+
+	set_hudmessage(HUD_HINT)
+	show_hudmessage(id, "%L: %L", id, "HINT", id, szHint)
+	client_print(id, print_console, "%s%L: %L", CONSOLE_PREFIX, id, "HINT", id, szHint)
 
 	if(id == killer || !(1 <= killer <= g_iMaxPlayers))
 	{
@@ -2184,49 +1897,18 @@ public player_killed(id, killer)
 
 		player_award(id, PENALTY_SUICIDE, "%L", id, "PENALTY_SUICIDE")
 
-#if FEATURE_C4 == true
-
-		if(bC4)
-			player_setScore(id, -1, 1)
-
-#endif // FEATURE_C4
-
 	}
 	else if(1 <= killer <= g_iMaxPlayers)
 	{
-		if(get_user_team(id) == get_user_team(killer))
+		if(g_iTeam[id] == g_iTeam[killer])
 		{
-
-#if FEATURE_C4 == true
-
-			if(bC4)
-			{
-				player_setScore(killer, -1, 0)
-				cs_set_user_money(killer, clamp(cs_get_user_money(killer) - 3300, 0, 16000), 1)
-			}
-
-#endif // FEATURE_C4
-
 			player_award(killer, PENALTY_TEAMKILL, "%L", killer, "PENALTY_TEAMKILL")
 		}
 		else
 		{
-
-#if FEATURE_C4 == true
-
-			if(bC4)
+			if(id == g_iFlagHolder[g_iTeam[killer]])
 			{
-				player_setScore(killer, -1, 0)
-				player_setScore(id, 0, 1)
-
-				cs_set_user_money(killer, clamp(cs_get_user_money(killer) + 300, 0, 16000), 1)
-			}
-
-#endif // FEATURE_C4
-
-			if(id == g_iFlagHolder[get_user_team(killer)])
-			{
-				g_bAssisted[killer][get_user_team(killer)] = true
+				g_bAssisted[killer][g_iTeam[killer]] = true
 
 				player_award(killer, REWARD_KILLCARRIER, "%L", killer, "REWARD_KILLCARRIER")
 
@@ -2263,6 +1945,7 @@ public player_killed(id, killer)
 		g_iAdrenalineUse[id] = 0
 
 		player_updateRender(id)
+		player_hudAdrenaline(id)
 	}
 
 #endif // FEATURE_ADRENALINE
@@ -2277,21 +1960,22 @@ public player_killed(id, killer)
 
 	task_set(1.0, "player_checkTeam", id - TASK_TEAMBALANCE)
 }
+
 public player_checkTeam(id)
 {
 	id += TASK_TEAMBALANCE
 
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE) || g_bAlive[id] || !get_pcvar_num(pCvar_mp_autoteambalance))
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE) || g_bAlive[id] || !get_pcvar_num(pCvar_mp_autoteambalance))
 		return
 
 	new iPlayers[3]
-	new iTeam = get_user_team(id)
+	new iTeam = g_iTeam[id]
 	new iOpTeam = get_opTeam(iTeam)
 
 	for(new i = 1; i <= g_iMaxPlayers; i++)
 	{
-		if(TEAM_RED <= get_user_team(i) <= TEAM_BLUE)
-			iPlayers[get_user_team(i)]++
+		if(TEAM_RED <= g_iTeam[i] <= TEAM_BLUE)
+			iPlayers[g_iTeam[i]]++
 	}
 
 	if((iPlayers[iTeam] > 1 && !iPlayers[iOpTeam]) || iPlayers[iTeam] > (iPlayers[iOpTeam] + 1))
@@ -2305,15 +1989,17 @@ public player_checkTeam(id)
 		player_print(id, id, "%L", id, "DEATH_TRANSFER", "^x04", id, g_szMLTeamName[iOpTeam], "^x01")
 	}
 }
+
 public player_forceJoinClass(id)
 {
 	engclient_cmd(id, "joinclass", "5")
 }
+
 public player_respawn(id, iStart)
 {
 	id += TASK_RESPAWN
 
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE) || g_bAlive[id])
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE) || g_bAlive[id])
 		return
 
 	static iCount[33]
@@ -2325,14 +2011,14 @@ public player_respawn(id, iStart)
 
 	if(--iCount[id] > 0)
 	{
-		ShowSyncHudMsg(id, HUDINFO, "%L", id, "RESPAWNING_IN", iCount[id])
+		show_hudmessage(id, "%L", id, "RESPAWNING_IN", iCount[id])
 		client_print(id, print_console, "%L", id, "RESPAWNING_IN", iCount[id])
 
 		task_set(1.0, "player_respawn", id - TASK_RESPAWN)
 	}
 	else
 	{
-		ShowSyncHudMsg(id, HUDINFO, "%L", id, "RESPAWNING")	
+		show_hudmessage(id, "%L", id, "RESPAWNING")
 		client_print(id, print_console, "%L", id, "RESPAWNING")
 
 		entity_set_int(id, EV_INT_deadflag, DEAD_RESPAWNABLE)
@@ -2342,10 +2028,12 @@ public player_respawn(id, iStart)
 		set_user_health(id, 100)
 	}
 }
+
 #if FEATURE_ADRENALINE == true
+
 public player_cmd_buySpawn(id)
 {
-	if(g_bAlive[id] || !(TEAM_RED <= get_user_team(id) <= TEAM_BLUE))
+	if(g_bAlive[id] || !(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE))
 		player_print(id, id, "%L", id, "INSTANTSPAWN_NOTEAM")
 
 	else if(g_iAdrenaline[id] < INSTANTSPAWN_COST)
@@ -2368,12 +2056,12 @@ public player_cmd_buySpawn(id)
 
 public player_cmd_dropFlag(id)
 {
-	if(!g_bAlive[id] || id != g_iFlagHolder[get_opTeam(get_user_team(id))])
+	if(!g_bAlive[id] || id != g_iFlagHolder[get_opTeam(g_iTeam[id])])
 		player_print(id, id, "%L", id, "DROPFLAG_NOFLAG")
 
 	else
 	{
-		new iOpTeam = get_opTeam(get_user_team(id))
+		new iOpTeam = get_opTeam(g_iTeam[id])
 
 		player_dropFlag(id)
 		player_award(id, PENALTY_DROP, "%L", id, "PENALTY_MANUALDROP")
@@ -2388,7 +2076,7 @@ public player_cmd_dropFlag(id)
 
 public player_dropFlag(id)
 {
-	new iOpTeam = get_opTeam(get_user_team(id))
+	new iOpTeam = get_opTeam(g_iTeam[id])
 
 	if(id != g_iFlagHolder[iOpTeam])
 		return
@@ -2443,7 +2131,7 @@ public player_dropFlag(id)
 
 	g_fFlagDropped[iOpTeam] = get_gametime()
 
-	log_message("<%s>%s dropped the ^"%s^" flag.", g_szTeamName[get_user_team(id)], szName, g_szTeamName[iOpTeam])
+	log_message("<%s>%s dropped the ^"%s^" flag.", g_szTeamName[g_iTeam[id]], szName, g_szTeamName[iOpTeam])
 }
 
 public player_cmd_say(id)
@@ -2469,16 +2157,27 @@ public player_cmd_say(id)
 	if(equal(szMsg[0], "@"))
 		return PLUGIN_CONTINUE
 
-#if FEATURE_BUY == true
+	new szFormat[192]
+	new szName[32]
 
-	if(equali(szMsg, "/buy"))
+	get_user_name(id, szName, charsmax(szName))
+
+	switch(g_iTeam[id])
 	{
-		player_menu_buy(id, 0)
-
-		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
+		case TEAM_RED, TEAM_BLUE: formatex(szFormat, charsmax(szFormat), "^x01%s^x03%s ^x01:  %s", (g_bAlive[id] ? NULL : "^x01*DEAD* "), szName, szMsg)
+		case TEAM_NONE, TEAM_SPEC: formatex(szFormat, charsmax(szFormat), "^x01*SPEC* ^x03%s ^x01:  %s", szName, szMsg)
 	}
 
-#endif // FEATURE_BUY
+	for(new i = 1; i <= g_iMaxPlayers; i++)
+	{
+		if(i == id || g_iTeam[i] == TEAM_NONE || g_bAlive[i] == g_bAlive[id] || g_bBot[id])
+			continue
+
+		message_begin(MSG_ONE, gMsg_SayText, _, i)
+		write_byte(id)
+		write_string(szFormat)
+		message_end()
+	}
 
 #if FEATURE_ADRENALINE == true
 
@@ -2498,6 +2197,13 @@ public player_cmd_say(id)
 
 #endif // FEATURE_ADRENALINE
 
+	if(equali(szMsg, "/help"))
+	{
+		player_cmd_help(id)
+
+		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
+	}
+
 	if(equali(szMsg, "/dropflag"))
 	{
 		player_cmd_dropFlag(id)
@@ -2515,20 +2221,6 @@ public player_cmd_say(id)
 	if(equali(szMsg, "/sounds", 7))
 	{
 		player_cmd_setSounds(id, szMsg[8])
-
-		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
-	}
-
-	if(equali(szMsg, "/hud"))
-	{
-		player_cmd_sethuds(id)
-
-		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
-	}
-
-	if(equali(szMsg, "/hudadr"))
-	{
-		player_cmd_adrhuds(id)
 
 		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
 	}
@@ -2559,16 +2251,27 @@ public player_cmd_sayTeam(id)
 	if(equal(szMsg[0], "@"))
 		return PLUGIN_CONTINUE
 
-#if FEATURE_BUY == true
+	new szFormat[192]
+	new szName[32]
 
-	if(equali(szMsg, "/buy"))
+	get_user_name(id, szName, charsmax(szName))
+
+	switch(g_iTeam[id])
 	{
-		player_menu_buy(id, 0)
-
-		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
+		case TEAM_RED, TEAM_BLUE: formatex(szFormat, charsmax(szFormat), "^x01%s(%L) ^x03%s ^x01:  %s", (g_bAlive[id] ? NULL : "*DEAD* "), LANG_PLAYER, g_szMLFlagTeam[g_iTeam[id]], szName, szMsg)
+		case TEAM_NONE, TEAM_SPEC: formatex(szFormat, charsmax(szFormat), "^x01*SPEC*(%L) ^x03%s ^x01:  %s", LANG_PLAYER, g_szMLTeamName[TEAM_SPEC], szName, szMsg)
 	}
 
-#endif // FEATURE_BUY
+	for(new i = 1; i <= g_iMaxPlayers; i++)
+	{
+		if(i == id || g_iTeam[i] == TEAM_NONE || g_iTeam[i] != g_iTeam[id] || g_bAlive[i] == g_bAlive[id] || g_bBot[id])
+			continue
+
+		message_begin(MSG_ONE, gMsg_SayText, _, i)
+		write_byte(id)
+		write_string(szFormat)
+		message_end()
+	}
 
 #if FEATURE_ADRENALINE == true
 
@@ -2594,8 +2297,73 @@ public player_cmd_sayTeam(id)
 
 		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
 	}
+
+	if(equali(szMsg, "/help"))
+	{
+		player_cmd_help(id)
+
+		return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
+	}
+
 	return PLUGIN_CONTINUE
 }
+
+public player_cmd_help(id)
+{
+	client_cmd(id, "hideconsole;toggleconsole")
+
+	client_print(id, print_console, "^n^n^n^n%s", SEPARATOR)
+	client_print(id, print_console, "                %s v%s - %L^n 				Mod by %s", MOD_TITLE, MOD_VERSION, id, "HELP_TITLE", MOD_AUTHOR)
+	client_print(id, print_console, SEPARATOR)
+	client_print(id, print_console, "    1. %L^n    2. %L^n    3. %L^n    4. %L", id, "HELP_1", id, "HELP_2", id, "HELP_3", id, "HELP_4")
+	client_print(id, print_console, "^n    --- 1: %L ---^n", id, "HELP_1")
+	client_print(id, print_console, "%L", id, "HELP_1_LINE1")
+	client_print(id, print_console, "%L", id, "HELP_1_LINE2")
+	client_print(id, print_console, "%L", id, "HELP_1_LINE3")
+	client_print(id, print_console, "%L", id, "HELP_1_LINE4")
+	client_print(id, print_console, "^n    --- 2: %L ---", id, "HELP_2")
+	client_print(id, print_console, "%L", id, "HELP_2_NOTE")
+	client_print(id, print_console, "%L", id, "HELP_2_LINE1")
+	client_print(id, print_console, "%L", id, "HELP_2_LINE2")
+
+#if FEATURE_ADRENALINE == true
+	client_print(id, print_console, "%L", id, "HELP_2_LINE3", INSTANTSPAWN_COST)
+#endif // FEATURE_ADRENALINE
+
+	client_print(id, print_console, "%L", id, "HELP_2_LINE4")
+
+#if FEATURE_ADRENALINE == true
+	client_print(id, print_console, "%L", id, "HELP_2_LINE5")
+#endif // FEATURE_ADRENALINE
+
+	client_print(id, print_console, "^n    --- 3: %L ---", id, "HELP_3")
+
+	client_print(id, print_console, " * %L", id, "HELP_3_INFROUND", id, "OFF")
+	client_print(id, print_console, " * %L", id, "HELP_3_ROUNDEND", id, "OFF")
+
+	client_print(id, print_console, " * %L", id, "HELP_3_CAPTURESLAY", id, get_pcvar_num(pCvar_ctf_flagcaptureslay) ? "ON" : "OFF")
+
+#if FEATURE_ADRENALINE == true
+	client_print(id, print_console, " * %L", id, "HELP_3_ADRENALINE", id, "ON")
+#else
+	client_print(id, print_console, " * %L", id, "HELP_3_ADRENALINE", id, "OFF")
+#endif
+
+	client_print(id, print_console, " * %L", id, "HELP_3_FLAGHEAL", id, get_pcvar_num(pCvar_ctf_flagheal) ? "ON" : "OFF")
+	client_print(id, print_console, " * %L", id, "HELP_3_RESPAWN", get_pcvar_num(pCvar_ctf_respawntime))
+	client_print(id, print_console, " * %L", id, "HELP_3_PROTECTION", get_pcvar_num(pCvar_ctf_protection))
+	client_print(id, print_console, " * %L", id, "HELP_3_FLAGRETURN", get_pcvar_num(pCvar_ctf_flagreturn))
+	client_print(id, print_console, " * %L", id, "HELP_3_WEAPONSTAY", get_pcvar_num(pCvar_ctf_weaponstay))
+	client_print(id, print_console, " * %L", id, "HELP_3_ITEMDROP", get_pcvar_num(pCvar_ctf_itempercent))
+
+	client_print(id, print_console, "^n    --- 4: %L ---", id, "HELP_4")
+	client_print(id, print_console, "	%L: http://forums.alliedmods.net/showthread.php?t=132115", id, "HELP_4_LINE1")
+	client_print(id, print_console, "	%L: http://thehunters.ro/jctf", id, "HELP_4_LINE2")
+	client_print(id, print_console, SEPARATOR)
+
+	return PLUGIN_HANDLED
+}
+
 public player_cmd_setLights(id, const szMsg[])
 {
 	switch(szMsg[1])
@@ -2617,41 +2385,47 @@ public player_cmd_setLights(id, const szMsg[])
 
 	return PLUGIN_HANDLED
 }
+
 public player_cmd_setSounds(id, const szMsg[])
 {
-	switch(szMsg[1])
+	if(equali(szMsg, "test"))
 	{
-		case 'n':
-		{
-			szSounds[id] = true
-			player_print(id, id, "%L", id, "SOUNDS_ON", "^x04", "^x01")
-		}
+		player_print(id, id, "%L", id, "SOUNDS_TEST", "^x04 Red Flag Taken^x01")
+		client_cmd(id, "mp3 play ^"sound/ctf/red_flag_taken.mp3^"")
 
-		case 'f':
-		{
-			szSounds[id] = false
-			player_print(id, id, "%L", id, "SOUNDS_OFF", "^x04", "^x01")
-		}
+		return PLUGIN_HANDLED
 	}
-	return PLUGIN_HANDLED
-}
-public player_cmd_sethuds(id)
-{
-	if(szHuds[id]) szHuds[id] = false
-	else szHuds[id] = true
+
+	new iVol = (strlen(szMsg) ? str_to_num(szMsg) : -1)
+
+	if(0 <= iVol <= 10)
+	{
+		client_cmd(id, "mp3volume %.2f", iVol == 0 ? 0.0 : iVol * 0.1)
+		player_print(id, id, "%L", id, "SOUNDS_SET", "^x04", iVol)
+	}
+	else
+		player_print(id, id, "%L", id, "SOUNDS_INVALID", "^x04 0^x01", "^x04 10^x01", "^x04 test")
 
 	return PLUGIN_HANDLED
 }
-public player_cmd_adrhuds(id)
-{
-	if(szHudsADR[id]) szHudsADR[id] = false
-	else szHudsADR[id] = true
-	return PLUGIN_HANDLED
-}
+
+
+
+
+
+
+
+
+
+
+
 #if FEATURE_ADRENALINE == true
+
 public player_cmd_adrenaline(id)
 {
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE) || !g_bAlive[id])
+	player_hudAdrenaline(id)
+
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE) || !g_bAlive[id])
 		return player_print(id, id, "%L", id, "ADR_ALIVE")
 
 	if(g_iAdrenalineUse[id])
@@ -2675,9 +2449,10 @@ public player_cmd_adrenaline(id)
 
 	return PLUGIN_HANDLED
 }
+
 public player_key_adrenaline(id, iKey)
 {
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE) || !g_bAlive[id])
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE) || !g_bAlive[id])
 		return player_print(id, id, "%L", id, "ADR_ALIVE")
 
 	if(g_iAdrenalineUse[id])
@@ -2693,12 +2468,13 @@ public player_key_adrenaline(id, iKey)
 
 	return PLUGIN_HANDLED
 }
+
 public player_useAdrenaline(id, iUse)
 {
 	if(!(1 <= iUse <= 4))
 		return PLUGIN_HANDLED
 
-	if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE) || !g_bAlive[id])
+	if(!(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE) || !g_bAlive[id])
 		return player_print(id, id, "%L", id, "ADR_ALIVE")
 
 	if(g_iAdrenalineUse[id])
@@ -2751,11 +2527,12 @@ public player_useAdrenaline(id, iUse)
 
 	return PLUGIN_HANDLED
 }
+
 public player_adrenalineDrain(id)
 {
 	id += TASK_ADRENALINE
 
-	if(!g_bAlive[id] || !g_iAdrenalineUse[id] || !(TEAM_RED <= get_user_team(id) <= TEAM_BLUE))
+	if(!g_bAlive[id] || !g_iAdrenalineUse[id] || !(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE))
 	{
 		g_iAdrenaline[id] = 0
 		return
@@ -2785,7 +2562,7 @@ public player_adrenalineDrain(id)
 						cs_set_user_armor(id, iArmor + 1, ArmorType)
 				}
 
-				// player_healingEffect(id)
+				player_healingEffect(id)
 			}
 		}
 
@@ -2813,8 +2590,23 @@ public player_adrenalineDrain(id)
 			case ADRENALINE_BERSERK, ADRENALINE_INVISIBILITY: player_updateRender(id)
 		}
 	}
+
+	player_hudAdrenaline(id)
 }
+
 #endif // FEATURE_ADRENALINE
+
+
+
+
+
+
+
+
+
+
+
+
 public admin_cmd_moveFlag(id, level, cid)
 {
 	if(!cmd_access(id, level, cid, 2))
@@ -2855,7 +2647,7 @@ public admin_cmd_moveFlag(id, level, cid)
 	get_user_name(id, szName, charsmax(szName))
 	get_user_authid(id, szSteam, charsmax(szSteam))
 
-	log_amx("Admin %s<%s><%s> moved %s flag to %.2f %.2f %.2f", szName, szSteam, g_szTeamName[get_user_team(id)], g_szTeamName[iTeam], g_fFlagBase[iTeam][0], g_fFlagBase[iTeam][1], g_fFlagBase[iTeam][2])
+	log_amx("Admin %s<%s><%s> moved %s flag to %.2f %.2f %.2f", szName, szSteam, g_szTeamName[g_iTeam[id]], g_szTeamName[iTeam], g_fFlagBase[iTeam][0], g_fFlagBase[iTeam][1], g_fFlagBase[iTeam][2])
 
 	show_activity_key("ADMIN_MOVEBASE_1", "ADMIN_MOVEBASE_2", szName, LANG_PLAYER, g_szMLFlagTeam[iTeam])
 
@@ -2863,6 +2655,7 @@ public admin_cmd_moveFlag(id, level, cid)
 
 	return PLUGIN_HANDLED
 }
+
 public admin_cmd_saveFlags(id, level, cid)
 {
 	if(!cmd_access(id, level, cid, 1))
@@ -2889,12 +2682,13 @@ public admin_cmd_saveFlags(id, level, cid)
 	get_user_name(id, szName, charsmax(szName))
 	get_user_authid(id, szSteam, charsmax(szSteam))
 
-	log_amx("Admin %s<%s><%s> saved flag positions.", szName, szSteam, g_szTeamName[get_user_team(id)])
+	log_amx("Admin %s<%s><%s> saved flag positions.", szName, szSteam, g_szTeamName[g_iTeam[id]])
 
 	client_print(id, print_console, "%s%L %s", CONSOLE_PREFIX, id, "ADMIN_MOVEBASE_SAVED", szFile)
 
 	return PLUGIN_HANDLED
 }
+
 public admin_cmd_returnFlag(id, level, cid)
 {
 	if(!cmd_access(id, level, cid, 2))
@@ -2938,8 +2732,8 @@ public admin_cmd_returnFlag(id, level, cid)
 			get_user_name(id, szName, charsmax(szName))
 			get_user_authid(id, szSteam, charsmax(szSteam))
 
-			log_message("^"%s^" flag returned by admin %s<%s><%s>", g_szTeamName[iTeam], szName, szSteam, g_szTeamName[get_user_team(id)])
-			log_amx("Admin %s<%s><%s> returned %s flag from %.2f %.2f %.2f", szName, szSteam, g_szTeamName[get_user_team(id)], g_szTeamName[iTeam], fFlagOrigin[0], fFlagOrigin[1], fFlagOrigin[2])
+			log_message("^"%s^" flag returned by admin %s<%s><%s>", g_szTeamName[iTeam], szName, szSteam, g_szTeamName[g_iTeam[id]])
+			log_amx("Admin %s<%s><%s> returned %s flag from %.2f %.2f %.2f", szName, szSteam, g_szTeamName[g_iTeam[id]], g_szTeamName[iTeam], fFlagOrigin[0], fFlagOrigin[1], fFlagOrigin[2])
 
 			show_activity_key("ADMIN_RETURN_1", "ADMIN_RETURN_2", szName, LANG_PLAYER, g_szMLFlagTeam[iTeam])
 
@@ -2953,998 +2747,22 @@ public admin_cmd_returnFlag(id, level, cid)
 
 	return PLUGIN_HANDLED
 }
-#if FEATURE_BUY == true
-public player_inBuyZone(id)
-{
-	if(!g_bAlive[id])
-		return
 
-	g_bBuyZone[id] = (read_data(1) ? true : false)
 
-	if(!g_bBuyZone[id])
-		set_pdata_int(id, 205, 0) // no "close menu upon exit buyzone" thing
-}
-
-public player_cmd_setAutobuy(id)
-{
-	new iIndex
-	new szWeapon[24]
-	new szArgs[1024]
-
-	read_args(szArgs, charsmax(szArgs))
-	remove_quotes(szArgs)
-	trim(szArgs)
-
-	while(contain(szArgs, WHITESPACE) != -1)
-	{
-		argbreak(szArgs, szWeapon, charsmax(szWeapon), szArgs, charsmax(szArgs))
-
-		for(new bool:bFound, w = W_P228; w <= W_NVG; w++)
-		{
-			if(!bFound)
-			{
-				for(new i = 0; i < 2; i++)
-				{
-					if(!bFound && equali(g_szWeaponCommands[w][i], szWeapon))
-					{
-						bFound = true
-
-						g_iAutobuy[id][iIndex++] = w
-					}
-				}
-			}
-		}
-	}
-
-	player_cmd_autobuy(id)
-
-	return PLUGIN_HANDLED
-}
-
-public player_cmd_autobuy(id)
-{
-	if(!g_bAlive[id])
-		return PLUGIN_HANDLED
-
-	if(!g_bBuyZone[id])
-	{
-		client_print(id, print_center, "%L", id, "BUY_NOTINZONE")
-		return PLUGIN_HANDLED
-	}
-
-	new iMoney = cs_get_user_money(id)
-
-	for(new bool:bBought[6], iWeapon, i = 0; i < sizeof g_iAutobuy[]; i++)
-	{
-		if(!g_iAutobuy[id][i])
-			return PLUGIN_HANDLED
-
-		iWeapon = g_iAutobuy[id][i]
-
-		if(bBought[g_iWeaponSlot[iWeapon]])
-			continue
-
-#if FEATURE_ADRENALINE == true
-
-		if((g_iWeaponPrice[iWeapon] > 0 && g_iWeaponPrice[iWeapon] > iMoney) || (g_iWeaponAdrenaline[iWeapon] > 0 && g_iWeaponAdrenaline[iWeapon] > g_iAdrenaline[id]))
-			continue
-
-#else // FEATURE_ADRENALINE
-
-		if(g_iWeaponPrice[iWeapon] > 0 && g_iWeaponPrice[iWeapon] > iMoney)
-			continue
-
-#endif // FEATURE_ADRENALINE
-
-		player_buyWeapon(id, iWeapon)
-		bBought[g_iWeaponSlot[iWeapon]] = true
-	}
-
-	return PLUGIN_HANDLED
-}
-
-public player_cmd_setRebuy(id)
-{
-	new iIndex
-	new szType[18]
-	new szArgs[256]
-
-	read_args(szArgs, charsmax(szArgs))
-	replace_all(szArgs, charsmax(szArgs), "^"", NULL)
-	trim(szArgs)
-
-	while(contain(szArgs, WHITESPACE) != -1)
-	{
-		split(szArgs, szType, charsmax(szType), szArgs, charsmax(szArgs), WHITESPACE)
-
-		for(new i = 1; i < sizeof g_szRebuyCommands; i++)
-		{
-			if(equali(szType, g_szRebuyCommands[i]))
-				g_iRebuy[id][++iIndex] = i
-		}
-	}
-
-	player_cmd_rebuy(id)
-
-	return PLUGIN_HANDLED
-}
-
-public player_cmd_rebuy(id)
-{
-	if(!g_bAlive[id])
-		return PLUGIN_HANDLED
-	if(Map_Check_Cam)
-	{
-		client_print(id, print_center, "Voce nao pode abrir este menu neste mapa")
-		return PLUGIN_HANDLED
-	}
-
-	if(!g_bBuyZone[id])
-	{
-		client_print(id, print_center, "%L", id, "BUY_NOTINZONE")
-		return PLUGIN_HANDLED
-	}
-
-	new iBought
-
-	for(new iType, iBuy, i = 1; i < sizeof g_iRebuy[]; i++)
-	{
-		iType = g_iRebuy[id][i]
-
-		if(!iType)
-			continue
-
-		iBuy = g_iRebuyWeapons[id][iType]
-
-		if(!iBuy)
-			continue
-
-		switch(iType)
-		{
-			case primary, secondary: player_buyWeapon(id, iBuy)
-
-			case armor: player_buyWeapon(id, (iBuy == 2 ? W_VESTHELM : W_VEST))
-
-			case he: player_buyWeapon(id, W_HEGRENADE)
-
-			case flash:
-			{
-				player_buyWeapon(id, W_FLASHBANG)
-
-				if(iBuy == 2)
-					player_buyWeapon(id, W_FLASHBANG)
-			}
-
-			case smoke: player_buyWeapon(id, W_SMOKEGRENADE)
-
-			case nvg: player_buyWeapon(id, W_NVG)
-		}
-
-		iBought++
-
-		if(iType == flash && iBuy == 2)
-			iBought++
-	}
-
-	if(iBought)
-		client_print(id, print_center, "%L", id, "BUY_REBOUGHT", iBought)
-
-	return PLUGIN_HANDLED
-}
-
-public player_addRebuy(id, iWeapon)
-{
-	if(!g_bAlive[id])
-		return
-
-	switch(g_iWeaponSlot[iWeapon])
-	{
-		case 1: g_iRebuyWeapons[id][primary] = iWeapon
-		case 2: g_iRebuyWeapons[id][secondary] = iWeapon
-
-		default:
-		{
-			switch(iWeapon)
-			{
-				case W_VEST: g_iRebuyWeapons[id][armor] = (g_iRebuyWeapons[id][armor] == 2 ? 2 : 1)
-				case W_VESTHELM: g_iRebuyWeapons[id][armor] = 2
-				case W_FLASHBANG: g_iRebuyWeapons[id][flash] = clamp(g_iRebuyWeapons[id][flash] + 1, 0, 2)
-				case W_HEGRENADE: g_iRebuyWeapons[id][he] = 1
-				case W_SMOKEGRENADE: g_iRebuyWeapons[id][smoke] = 1
-				case W_NVG: g_iRebuyWeapons[id][nvg] = 1
-			}
-		}
-	}
-}
-
-public player_cmd_buy_main(id)
-{
-	if(Map_Check_Cam)
-	{
-		client_print(id, print_center, "Voce nao pode abrir este menu neste mapa")
-		return PLUGIN_HANDLED
-	}
-	return player_menu_buy(id, 0)
-}
-public player_cmd_buy_equipament(id)
-{
-	if(Map_Check_Cam)
-	{
-		client_print(id, print_center, "Voce nao pode abrir este menu neste mapa")
-		return PLUGIN_HANDLED
-	}
-
-	return player_menu_buy(id, 8)
-}
-
-public player_cmd_buyVGUI(id)
-{
-	message_begin(MSG_ONE, gMsg_BuyClose, _, id)
-	message_end()
-
-	if(Map_Check_Cam)
-	{
-		client_print(id, print_center, "Voce nao pode abrir este menu neste mapa")
-		return PLUGIN_HANDLED
-	}
-	return player_menu_buy(id, 0)
-}
-
-public player_menu_buy(id, iMenu)
-{
-	if(!g_bAlive[id])
-		return PLUGIN_HANDLED
-
-	if(!g_bBuyZone[id])
-	{
-		client_print(id, print_center, "%L", id, "BUY_NOTINZONE")
-		return PLUGIN_HANDLED
-	}
-	if(Map_Check_Cam)
-	{
-		client_print(id, print_center, "Voce nao pode abrir este menu neste mapa")
-		return PLUGIN_HANDLED
-	}
-
-	static szMenu[1024]
-
-	new iMoney = cs_get_user_money(id)
-
-	switch(iMenu)
-	{
-		case 1:
-		{
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sGlock 18\R$%d^n\d2. \%sUSP\R$%d^n\d3. \%sP228\R$%d^n\d4. \%sDesert Eagle\R$%d^n\d5. \%sFiveseven\R$%d^n\d6. \%sDual Elites\R$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_PISTOLS",
-				(iMoney >= g_iWeaponPrice[W_GLOCK18] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_GLOCK18],
-				(iMoney >= g_iWeaponPrice[W_USP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_USP],
-				(iMoney >= g_iWeaponPrice[W_P228] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_P228],
-				(iMoney >= g_iWeaponPrice[W_DEAGLE] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_DEAGLE],
-				(iMoney >= g_iWeaponPrice[W_FIVESEVEN] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_FIVESEVEN],
-				(iMoney >= g_iWeaponPrice[W_ELITE] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_ELITE],
-				id, "EXIT"
-			)
-		}
-
-		case 2:
-		{
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sM3 Super90\R$%d^n\d2. \%sXM1014\R$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_SHOTGUNS",
-				(iMoney >= g_iWeaponPrice[W_M3] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_M3],
-				(iMoney >= g_iWeaponPrice[W_XM1014] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_XM1014],
-				id, "EXIT"
-			)
-		}
-
-		case 3:
-		{
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sTMP\R$%d^n\d2. \%sMac-10\R$%d^n\d3. \%sMP5 Navy\R$%d^n\d4. \%sUMP-45\R$%d^n\d5. \%sP90\R$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_SMGS",
-				(iMoney >= g_iWeaponPrice[W_TMP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_TMP],
-				(iMoney >= g_iWeaponPrice[W_MAC10] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_MAC10],
-				(iMoney >= g_iWeaponPrice[W_MP5NAVY] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_MP5NAVY],
-				(iMoney >= g_iWeaponPrice[W_UMP45] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_UMP45],
-				(iMoney >= g_iWeaponPrice[W_P90] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_P90],
-				id, "EXIT"
-			)
-		}
-
-		case 4:
-		{
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sGalil\R$%d^n\d2. \%sFamas\R$%d^n\d3. \%sAK-47\R$%d^n\d4. \%sM4A1\R$%d^n\d5. \%sAUG\R$%d^n\d6. \%sSG552\R$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_RIFLES",
-				(iMoney >= g_iWeaponPrice[W_GALIL] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_GALIL],
-				(iMoney >= g_iWeaponPrice[W_FAMAS] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_FAMAS],
-				(iMoney >= g_iWeaponPrice[W_AK47] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_AK47],
-				(iMoney >= g_iWeaponPrice[W_M4A1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_M4A1],
-				(iMoney >= g_iWeaponPrice[W_AUG] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_AUG],
-				(iMoney >= g_iWeaponPrice[W_SG552] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SG552],
-				id, "EXIT"
-			)
-		}
-
-		case 5:
-		{
-
-#if FEATURE_ADRENALINE == true
-
-#if FEATURE_C4 == true
-
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sM249 \w(\%s%d %L\w)\R\%s$%d^n\d3. \%sSG550 \w(\%s%d %L\w)\R\%s$%d^n\d3. \%sG3SG1 \w(\%s%d %L\w)\R\%s$%d^n\d4. \%sScout \w(\%s%d %L\w)\R\%s$%d^n\d5. \%sAWP \w(\%s%d %L\w)\R\%s$%d^n\d6. \%s%L \w(\%s%d %L\w)\R\%s$%d^n\d7. \%s%L \w(\%s%d %L\w)\R\%s$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_SPECIAL",
-				(iMoney >= g_iWeaponPrice[W_M249] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_M249] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_M249], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_M249],
-				(iMoney >= g_iWeaponPrice[W_SG550] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SG550] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_SG550], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SG550],
-				(iMoney >= g_iWeaponPrice[W_G3SG1] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_G3SG1] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_G3SG1], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_G3SG1],
-				(iMoney >= g_iWeaponPrice[W_SCOUT] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SCOUT] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_SCOUT], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SCOUT],
-				(iMoney >= g_iWeaponPrice[W_AWP] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_AWP] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_AWP], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_AWP],
-				(iMoney >= g_iWeaponPrice[W_SHIELD] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_SHIELD", (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SHIELD] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_SHIELD], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SHIELD],
-				(iMoney >= g_iWeaponPrice[W_C4] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_C4] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_C4", (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_C4] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_C4], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_C4] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_C4],
-				id, "EXIT"
-			)
-
-#else // FEATURE_C4
-
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sM249 \w(\%s%d %L\w)\R\%s$%d^n\d3. \%sSG550 \w(\%s%d %L\w)\R\%s$%d^n\d3. \%sG3SG1 \w(\%s%d %L\w)\R\%s$%d^n\d4. \%sScout \w(\%s%d %L\w)\R\%s$%d^n\d5. \%sAWP \w(\%s%d %L\w)\R\%s$%d^n\d6. \%s%L \w(\%s%d %L\w)\R\%s$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_SPECIAL",
-				(iMoney >= g_iWeaponPrice[W_M249] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_M249] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_M249], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_M249],
-				(iMoney >= g_iWeaponPrice[W_SG550] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SG550] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_SG550], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SG550],
-				(iMoney >= g_iWeaponPrice[W_G3SG1] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_G3SG1] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_G3SG1], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_G3SG1],
-				(iMoney >= g_iWeaponPrice[W_SCOUT] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SCOUT] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_SCOUT], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SCOUT],
-				(iMoney >= g_iWeaponPrice[W_AWP] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_AWP] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_AWP], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_AWP],
-				(iMoney >= g_iWeaponPrice[W_SHIELD] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_SHIELD", (g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_SHIELD] ? BUY_ITEM_AVAILABLE2 : BUY_ITEM_DISABLED), g_iWeaponAdrenaline[W_SHIELD], id, "ADRENALINE", (iMoney >= g_iWeaponPrice[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SHIELD],
-				id, "EXIT"
-			)
-
-#endif // FEATURE_C4
-
-#else // FEATURE_ADRENALINE
-
-#if FEATURE_C4 == true
-
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sM249\R\%s$%d^n\d3. \%sSG550\R\%s$%d^n\d3. \%sG3SG1\R\%s$%d^n\d4. \%sScout\R\%s$%d^n\d5. \%sAWP\R\%s$%d^n\d6. \%s%L\R\%s$%d^n\d7. \%s%L\R\%s$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_SPECIAL",
-				(iMoney >= g_iWeaponPrice[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED),(iMoney >= g_iWeaponPrice[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_M249],
-				(iMoney >= g_iWeaponPrice[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SG550],
-				(iMoney >= g_iWeaponPrice[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_G3SG1],
-				(iMoney >= g_iWeaponPrice[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SCOUT],
-				(iMoney >= g_iWeaponPrice[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_AWP],
-				(iMoney >= g_iWeaponPrice[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_SHIELD", (iMoney >= g_iWeaponPrice[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SHIELD],
-				(iMoney >= g_iWeaponPrice[W_C4] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_C4", (iMoney >= g_iWeaponPrice[W_C4] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_C4],
-				id, "EXIT"
-			)
-
-#else // FEATURE_C4
-
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%sM249\R\%s$%d^n\d3. \%sSG550\R\%s$%d^n\d4. \%sG3SG1\R\%s$%d^n\d5. \%sScout\R\%s$%d^n\d6. \%sAWP\R\%s$%d^n\d7. \%s%L\R\%s$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_SPECIAL",
-				(iMoney >= g_iWeaponPrice[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED),(iMoney >= g_iWeaponPrice[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_M249],
-				(iMoney >= g_iWeaponPrice[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_SG550] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SG550],
-				(iMoney >= g_iWeaponPrice[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_G3SG1] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_G3SG1],
-				(iMoney >= g_iWeaponPrice[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_SCOUT] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SCOUT],
-				(iMoney >= g_iWeaponPrice[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), (iMoney >= g_iWeaponPrice[W_AWP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_AWP],
-				(iMoney >= g_iWeaponPrice[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_SHIELD", (iMoney >= g_iWeaponPrice[W_SHIELD] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), g_iWeaponPrice[W_SHIELD],
-				id, "EXIT"
-			)
-
-#endif // FEATURE_C4
-
-
-#endif // FEATURE_ADRENALINE
-
-		}
-
-		case 8:
-		{
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L: %L^n^n\d1. \%s%L\R$%d^n\d2. \%s%L\R$%d^n^n\d3. \%s%L\R$%d^n\d4. \%s%L\R$%d^n\d5. \%s%L\R$%d^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE", id, "BUYMENU_EQUIPAMENT",
-				(iMoney >= g_iWeaponPrice[W_VEST] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_VEST", g_iWeaponPrice[W_VEST],
-				(iMoney >= g_iWeaponPrice[W_VESTHELM] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_VESTHELM", g_iWeaponPrice[W_VESTHELM],
-				(iMoney >= g_iWeaponPrice[W_FLASHBANG] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_FLASHBANG", g_iWeaponPrice[W_FLASHBANG],
-				(iMoney >= g_iWeaponPrice[W_HEGRENADE] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_HE", g_iWeaponPrice[W_HEGRENADE],
-				(iMoney >= g_iWeaponPrice[W_SMOKEGRENADE] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_ITEM_SMOKE", g_iWeaponPrice[W_SMOKEGRENADE],
-				id, "EXIT"
-			)
-		}
-
-		default:
-		{
-
-#if FEATURE_ADRENALINE == true
-
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L^n^n\d1. \%s%L^n\d2. \%s%L^n\d3. \%s%L^n\d4. \%s%L^n\d5. \%s%L^n^n\d6. \w%L\R$0^n^n\d8. \%s%L^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE",
-				(iMoney >= g_iWeaponPrice[W_GLOCK18] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_PISTOLS",
-				(iMoney >= g_iWeaponPrice[W_M3] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_SHOTGUNS",
-				(iMoney >= g_iWeaponPrice[W_TMP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_SMGS",
-				(iMoney >= g_iWeaponPrice[W_GALIL] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_RIFLES",
-				(iMoney >= g_iWeaponPrice[W_M249] && g_iAdrenaline[id] >= g_iWeaponAdrenaline[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_SPECIAL",
-				id, "BUYMENU_AMMO",
-				(iMoney >= g_iWeaponPrice[W_FLASHBANG] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_EQUIPAMENT",
-				id, "EXIT"
-			)
-
-#else // FEATURE_ADRENALINE
-
-			formatex(szMenu, charsmax(szMenu),
-				"\y%L^n^n\d1. \%s%L^n\d2. \%s%L^n\d3. \%s%L^n\d4. \%s%L^n\d5. \%s%L^n^n\d6. \w%L\R$0^n^n\d8. \%s%L^n^n\d0. \w%L",
-				id, "BUYMENU_TITLE",
-				(iMoney >= g_iWeaponPrice[W_GLOCK18] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_PISTOLS",
-				(iMoney >= g_iWeaponPrice[W_M3] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_SHOTGUNS",
-				(iMoney >= g_iWeaponPrice[W_TMP] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_SMGS",
-				(iMoney >= g_iWeaponPrice[W_GALIL] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_RIFLES",
-				(iMoney >= g_iWeaponPrice[W_M249] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_SPECIAL",
-				id, "BUYMENU_AMMO",
-				(iMoney >= g_iWeaponPrice[W_FLASHBANG] ? BUY_ITEM_AVAILABLE : BUY_ITEM_DISABLED), id, "BUYMENU_EQUIPAMENT",
-				id, "EXIT"
-			)
-
-#endif // FEATURE_ADRENALINE
-
-		}
-	}
-
-	g_iMenu[id] = iMenu
-
-	show_menu(id, MENU_KEYS_BUY, szMenu, -1, MENU_BUY)
-
-	return PLUGIN_HANDLED
-}
-
-public player_key_buy(id, iKey)
-{
-	iKey += 1
-
-	if(!g_bAlive[id] || iKey == 10)
-		return PLUGIN_HANDLED
-
-	if(!g_bBuyZone[id])
-	{
-		client_print(id, print_center, "%L", id, "BUY_NOTINZONE")
-		return PLUGIN_HANDLED
-	}
-	if(Map_Check_Cam)
-	{
-		client_print(id, print_center, "Voce nao pode abrir este menu neste mapa")
-		return PLUGIN_HANDLED
-	}
-
-	switch(g_iMenu[id])
-	{
-		case 1:
-		{
-			switch(iKey)
-			{
-				case 1: player_buyWeapon(id, W_GLOCK18)
-				case 2: player_buyWeapon(id, W_USP)
-				case 3: player_buyWeapon(id, W_P228)
-				case 4: player_buyWeapon(id, W_DEAGLE)
-				case 5: player_buyWeapon(id, W_FIVESEVEN)
-				case 6: player_buyWeapon(id, W_ELITE)
-			}
-		}
-
-		case 2:
-		{
-			switch(iKey)
-			{
-				case 1: player_buyWeapon(id, W_M3)
-				case 2: player_buyWeapon(id, W_XM1014)
-			}
-		}
-
-		case 3:
-		{
-			switch(iKey)
-			{
-				case 1: player_buyWeapon(id, W_TMP)
-				case 2: player_buyWeapon(id, W_MAC10)
-				case 3: player_buyWeapon(id, W_MP5NAVY)
-				case 4: player_buyWeapon(id, W_UMP45)
-				case 5: player_buyWeapon(id, W_P90)
-			}
-		}
-
-		case 4:
-		{
-			switch(iKey)
-			{
-				case 1: player_buyWeapon(id, W_GALIL)
-				case 2: player_buyWeapon(id, W_FAMAS)
-				case 3: player_buyWeapon(id, W_AK47)
-				case 4: player_buyWeapon(id, W_M4A1)
-				case 5: player_buyWeapon(id, W_AUG)
-				case 6: player_buyWeapon(id, W_SG552)
-			}
-		}
-
-		case 5:
-		{
-			switch(iKey)
-			{
-				case 1: player_buyWeapon(id, W_M249)
-				case 2: player_buyWeapon(id, W_SG550)
-				case 3: player_buyWeapon(id, W_G3SG1)
-				case 4: player_buyWeapon(id, W_SCOUT)
-				case 5: player_buyWeapon(id, W_AWP)
-				case 6: player_buyWeapon(id, W_SHIELD)
-				case 7: player_buyWeapon(id, W_C4)
-			}
-		}
-
-		case 8:
-		{
-			switch(iKey)
-			{
-				case 1: player_buyWeapon(id, W_VEST)
-				case 2: player_buyWeapon(id, W_VESTHELM)
-				case 3: player_buyWeapon(id, W_FLASHBANG)
-				case 4: player_buyWeapon(id, W_HEGRENADE)
-				case 5: player_buyWeapon(id, W_SMOKEGRENADE)
-			}
-		}
-
-		default:
-		{
-			switch(iKey)
-			{
-				case 1,2,3,4,5,8: player_menu_buy(id, iKey)
-				case 6,7: player_fillAmmo(id)
-			}
-		}
-	}
-
-	return PLUGIN_HANDLED
-}
-
-public player_cmd_buyWeapon(id)
-{
-	if(!g_bBuyZone[id])
-	{
-		client_print(id, print_center, "%L", id, "BUY_NOTINZONE")
-		return PLUGIN_HANDLED
-	}
-
-	new szCmd[12]
-
-	read_argv(0, szCmd, charsmax(szCmd))
-
-	for(new w = W_P228; w <= W_NVG; w++)
-	{
-		for(new i = 0; i < 2; i++)
-		{
-			if(equali(g_szWeaponCommands[w][i], szCmd))
-			{
-				player_buyWeapon(id, w)
-				return PLUGIN_HANDLED
-			}
-		}
-	}
-
-	return PLUGIN_HANDLED
-}
-
-public player_buyWeapon(id, iWeapon)
-{
-	if(!g_bAlive[id])
-		return
-
-	new CsArmorType:ArmorType
-	new iArmor = cs_get_user_armor(id, ArmorType)
-
-	new iMoney = cs_get_user_money(id)
-
-	/* apply discount if you already have a kevlar and buying a kevlar+helmet */
-	new iCost = g_iWeaponPrice[iWeapon] - (ArmorType == CS_ARMOR_KEVLAR && iWeapon == W_VESTHELM ? 650 : 0)
-
-#if FEATURE_ADRENALINE == true
-
-	new iCostAdrenaline = g_iWeaponAdrenaline[iWeapon]
-
-#endif // FEATURE_ADRENALINE
-
-	if(iCost > iMoney)
-	{
-		client_print(id, print_center, "%L", id, "BUY_NEEDMONEY", iCost)
-		return
-	}
-
-#if FEATURE_ADRENALINE == true
-
-	else if(!(iCostAdrenaline <= g_iAdrenaline[id]))
-	{
-		client_print(id, print_center, "%L", id, "BUY_NEEDADRENALINE", iCostAdrenaline)
-		return
-	}
-
-#endif // FEATURE_ADRENALINE
-
-	switch(iWeapon)
-	{
-
-#if FEATURE_C4 == true
-
-		case W_C4:
-		{
-			if(user_has_weapon(id, W_C4))
-			{
-				client_print(id, print_center, "%L", id, "BUY_HAVE_C4")
-				return
-			}
-
-			player_giveC4(id)
-		}
-
-#endif // FEATURE_C4
-
-		case W_NVG:
-		{
-			if(cs_get_user_nvg(id))
-			{
-				client_print(id, print_center, "%L", id, "BUY_HAVE_NVG")
-				return
-			}
-
-			cs_set_user_nvg(id, 1)
-		}
-
-		case W_VEST:
-		{
-			if(iArmor >= 100)
-			{
-				client_print(id, print_center, "%L", id, "BUY_HAVE_KEVLAR")
-				return
-			}
-		}
-
-		case W_VESTHELM:
-		{
-			if(iArmor >= 100 && ArmorType == CS_ARMOR_VESTHELM)
-			{
-				client_print(id, print_center, "%L", id, "BUY_HAVE_KEVLARHELM")
-				return
-			}
-		}
-
-		case W_FLASHBANG:
-		{
-			new iGrenades = cs_get_user_bpammo(id, W_FLASHBANG)
-
-			if(iGrenades >= 2)
-			{
-				client_print(id, print_center, "%L", id, "BUY_NOMORE_FLASH")
-				return
-			}
-
-			new iCvar = get_pcvar_num(pCvar_ctf_nospam_flash)
-			new Float:fGameTime = get_gametime()
-
-			if(g_fLastBuy[id][iGrenades] > fGameTime)
-			{
-				client_print(id, print_center, "%L", id, "BUY_DELAY_FLASH", iCvar)
-				return
-			}
-
-			g_fLastBuy[id][iGrenades] = fGameTime + iCvar
-
-			if(iGrenades == 1)
-				g_fLastBuy[id][0] = g_fLastBuy[id][iGrenades]
-		}
-
-		case W_HEGRENADE:
-		{
-			if(cs_get_user_bpammo(id, W_HEGRENADE) >= 1)
-			{
-				client_print(id, print_center, "%L", id, "BUY_NOMORE_HE")
-				return
-			}
-
-			new iCvar = get_pcvar_num(pCvar_ctf_nospam_he)
-			new Float:fGameTime = get_gametime()
-
-			if(g_fLastBuy[id][2] > fGameTime)
-			{
-				client_print(id, print_center, "%L", id, "BUY_DELAY_HE", iCvar)
-				return
-			}
-
-			g_fLastBuy[id][2] = fGameTime + iCvar
-		}
-
-		case W_SMOKEGRENADE:
-		{
-			if(cs_get_user_bpammo(id, W_SMOKEGRENADE) >= 1)
-			{
-				client_print(id, print_center, "%L", id, "BUY_NOMORE_SMOKE")
-				return
-			}
-
-			new iCvar = get_pcvar_num(pCvar_ctf_nospam_smoke)
-			new Float:fGameTime = get_gametime()
-
-			if(g_fLastBuy[id][3] > fGameTime)
-			{
-				client_print(id, print_center, "%L", id, "BUY_DELAY_SMOKE", iCvar)
-				return
-			}
-
-			g_fLastBuy[id][3] = fGameTime + iCvar
-		}
-	}
-
-	if(1 <= g_iWeaponSlot[iWeapon] <= 2)
-	{
-		new iWeapons
-		new iWeaponList[32]
-
-		get_user_weapons(id, iWeaponList, iWeapons)
-
-		if(cs_get_user_shield(id))
-			iWeaponList[iWeapons++] = W_SHIELD
-
-		for(new w, i = 0; i < iWeapons; i++)
-		{
-			w = iWeaponList[i]
-
-			if(1 <= g_iWeaponSlot[w] <= 2)
-			{
-				if(w == iWeapon)
-				{
-					client_print(id, print_center, "%L", id, "BUY_HAVE_WEAPON")
-					return
-				}
-
-				if(iWeapon == W_SHIELD && w == W_ELITE)
-					engclient_cmd(id, "drop", g_szWeaponEntity[W_ELITE]) // drop the dual elites too if buying a shield
-
-				if(iWeapon == W_ELITE && w == W_SHIELD)
-					engclient_cmd(id, "drop", g_szWeaponEntity[W_SHIELD]) // drop the too shield if buying dual elites
-
-				if(g_iWeaponSlot[w] == g_iWeaponSlot[iWeapon])
-				{
-					if(g_iWeaponSlot[w] == 2 && iWeaponList[iWeapons-1] == W_SHIELD)
-					{
-						engclient_cmd(id, "drop", g_szWeaponEntity[W_SHIELD]) // drop the shield
-
-						new ent = find_ent_by_owner(g_iMaxPlayers, g_szWeaponEntity[W_SHIELD], id)
-
-						if(ent)
-						{
-							entity_set_int(ent, EV_INT_flags, FL_KILLME) // kill the shield
-							call_think(ent)
-						}
-
-						engclient_cmd(id, "drop", g_szWeaponEntity[w]) // drop the secondary
-
-						give_item(id, g_szWeaponEntity[W_SHIELD]) // give back the shield
-					}
-					else
-						engclient_cmd(id, "drop", g_szWeaponEntity[w]) // drop weapon if it's of the same slot
-				}
-			}
-		}
-	}
-
-	if(iWeapon != W_NVG && iWeapon != W_C4)
-		give_item(id, g_szWeaponEntity[iWeapon])
-
-	player_addRebuy(id, iWeapon)
-
-	if(g_iWeaponPrice[iWeapon])
-		cs_set_user_money(id, iMoney - iCost, 1)
-
-#if FEATURE_ADRENALINE == true
-
-	if(iCostAdrenaline)
-	{
-		g_iAdrenaline[id] -= iCostAdrenaline
-	}
-
-#endif // FEATURE_ADRENALINE
-
-	if(g_iBPAmmo[iWeapon])
-		cs_set_user_bpammo(id, iWeapon, g_iBPAmmo[iWeapon])
-}
-
-public player_fillAmmo(id)
-{
-	if(!g_bAlive[id])
-		return PLUGIN_HANDLED
-
-	if(!g_bBuyZone[id])
-	{
-		client_print(id, print_center, "%L", id, "BUY_NOTINZONE")
-		return PLUGIN_HANDLED
-	}
-
-	if(player_getAmmo(id))
-	{
-		emit_sound(id, CHAN_ITEM, SND_GETAMMO, VOL_NORM, ATTN_NORM, 0, PITCH_NORM)
-		client_print(id, print_center, "%L", id, "BUY_FULLAMMO")
-	}
-
-	return PLUGIN_HANDLED
-}
-
-#endif // FEATURE_BUY
-#if FEATURE_C4 == true
-public c4_used(msgid, dest, id)
-{
-	if(get_user_team(id))
-		player_updateSpeed(id)
-
-	if(get_msg_arg_int(1) == 0)
-		g_bDefuse[id] = false
-
-	return PLUGIN_HANDLED
-}
-public c4_planted()
-{
-	new szLogUser[80], szName[32]
-
-	read_logargv(0, szLogUser, charsmax(szLogUser))
-	parse_loguser(szLogUser, szName, charsmax(szName))
-
-	new id = get_user_index(szName)
-	new ent = g_iMaxPlayers
-	new Float:fAngles[3]
-	new szFormat[40]
-
-	entity_get_vector(id, EV_VEC_angles, fAngles)
-
-	fAngles[pitch] = 0.0
-	fAngles[yaw] += 90.0
-	fAngles[roll] = 0.0
-
-	new iC4Timer = get_pcvar_num(pCvar_mp_c4timer)
-
-	client_print(id, print_center, "%L", id, "C4_ARMED", iC4Timer)
-
-	formatex(szFormat, charsmax(szFormat), "%L", LANG_PLAYER, "C4_ARMED_RADIO", iC4Timer)
-
-	for(new i = 1; i <= g_iMaxPlayers; i++)
-	{
-		if(get_user_team(i) == get_user_team(id) && !g_bBot[id])
-		{
-			/* fully fake hookable radio message and event */
-
-			emessage_begin(MSG_ONE, gMsg_TextMsg, _, i)
-			ewrite_byte(3)
-			ewrite_string("#Game_radio")
-			ewrite_string(szName)
-			ewrite_string(szFormat)
-			emessage_end()
-
-			emessage_begin(MSG_ONE, gMsg_SendAudio, _, i)
-			ewrite_byte(id)
-			ewrite_string("%!MRAD_BLOW")
-			ewrite_short(100)
-			emessage_end()
-		}
-	}
-
-	while((ent = find_ent_by_owner(ent, GRENADE, id)))
-	{
-		if(get_pdata_int(ent, 96) & (1<<8))
-		{
-			entity_set_int(ent, EV_INT_solid, SOLID_NOT)
-			entity_set_int(ent, EV_INT_movetype, MOVETYPE_TOSS)
-			entity_set_float(ent, EV_FL_gravity, 1.0)
-			entity_set_vector(ent, EV_VEC_angles, fAngles)
-
-			return
-		}
-	}
-}
-
-public c4_defuse(ent, id, activator, iType, Float:fValue)
-{
-	if(g_bAlive[id] && get_pdata_int(ent, 96) & (1<<8))
-	{
-		new iOwner = entity_get_edict(ent, EV_ENT_owner)
-
-		if(id != iOwner && 1 <= iOwner <= g_iMaxPlayers && get_user_team(id) == get_user_team(iOwner])
-		{
-			client_print(id, print_center, "%L", id, "C4_NODEFUSE")
-			client_cmd(id, "-use")
-
-			return HAM_SUPERCEDE
-		}
-
-		if(get_user_team(id) == TEAM_RED)
-		{
-			set_pdata_int(id, 114, TEAM_BLUE, 5)
-
-			ExecuteHam(Ham_Use, ent, id, activator, iType, fValue)
-
-			set_pdata_int(id, 114, TEAM_RED, 5)
-		}
-
-		if(!g_bDefuse[id])
-		{
-			client_print(id, print_center, "%L", id, "C4_DEFUSING", C4_DEFUSETIME)
-
-			message_begin(MSG_ONE_UNRELIABLE, gMsg_BarTime, _, id)
-			write_short(C4_DEFUSETIME)
-			message_end()
-
-			set_pdata_float(ent, 99, get_gametime() + C4_DEFUSETIME, 5)
-
-			g_bDefuse[id] = true
-		}
-	}
-
-	return HAM_IGNORED
-}
-
-public c4_defused()
-{
-	new szLogUser[80], szName[32]
-
-	read_logargv(0, szLogUser, charsmax(szLogUser))
-	parse_loguser(szLogUser, szName, charsmax(szName))
-
-	new id = get_user_index(szName)
-
-	if(!g_bAlive[id])
-		return
-
-	g_bDefuse[id] = false
-
-	player_giveC4(id)
-	client_print(id, print_center, "%L", id, "C4_DEFUSED")
-}
-
-public c4_pickup(ent, id)
-{
-	if(g_bAlive[id] && is_valid_ent(ent) && (entity_get_int(ent, EV_INT_flags) & FL_ONGROUND))
-	{
-		static szModel[32]
-
-		entity_get_string(ent, EV_SZ_model, szModel, charsmax(szModel))
-
-		if(equal(szModel, "models/w_backpack.mdl"))
-		{
-			if(user_has_weapon(id, W_C4))
-				return PLUGIN_HANDLED
-
-			player_giveC4(id)
-
-			weapon_remove(ent)
-
-			return PLUGIN_HANDLED
-		}
-	}
-
-	return PLUGIN_CONTINUE
-}
-
-#endif // FEATURE_C4 == true
 public weapon_spawn(ent)
 {
-	if(!Map_Check_Cam)
+	if(!is_valid_ent(ent))
+		return
+
+	new Float:fWeaponStay = get_pcvar_float(pCvar_ctf_weaponstay)
+
+	if(fWeaponStay > 0)
 	{
-		if(!is_valid_ent(ent))
-			return
-
-		new Float:fWeaponStay = get_pcvar_float(pCvar_ctf_weaponstay)
-
-		if(fWeaponStay > 0)
-		{
-			task_remove(ent)
-			task_set(fWeaponStay, "weapon_startFade", ent)
-		}
+		task_remove(ent)
+		task_set(fWeaponStay, "weapon_startFade", ent)
 	}
 }
+
 public weapon_startFade(ent)
 {
 	if(!is_valid_ent(ent))
@@ -3969,6 +2787,7 @@ public weapon_startFade(ent)
 
 	weapon_fadeOut(ent, 255.0)
 }
+
 public weapon_fadeOut(ent, Float:fStart)
 {
 	if(!is_valid_ent(ent))
@@ -4005,6 +2824,14 @@ public weapon_fadeOut(ent, Float:fStart)
 			entity_remove(ent)
 	}
 }
+
+
+
+
+
+
+
+
 public item_touch(ent, id)
 {
 	if(g_bAlive[id] && is_valid_ent(ent) && entity_get_int(ent, EV_INT_flags) & FL_ONGROUND)
@@ -4046,6 +2873,8 @@ public item_touch(ent, id)
 
 				g_iAdrenaline[id] = clamp(g_iAdrenaline[id] + ITEM_ADRENALINE_GIVE, 0, 100)
 
+				player_hudAdrenaline(id)
+
 				client_print(id, print_center, "%L", id, "PICKED_ADRENALINE", ITEM_ADRENALINE_GIVE)
 
 				emit_sound(id, CHAN_ITEM, SND_GETADRENALINE, VOL_NORM, ATTN_NORM, 0, 140)
@@ -4060,6 +2889,23 @@ public item_touch(ent, id)
 
 	return PLUGIN_CONTINUE
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public event_restartGame()
 	g_bRestarting = true
 
@@ -4122,21 +2968,25 @@ public event_roundStart()
 		g_bRestarting = false
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public msg_block()
 	return PLUGIN_HANDLED
-
-#if FEATURE_C4 == true
-
-public msg_sendAudio()
-{
-	new szAudio[14]
-
-	get_msg_arg_string(2, szAudio, charsmax(szAudio))
-
-	return equal(szAudio, "%!MRAD_BOMB", 11) ? PLUGIN_HANDLED : PLUGIN_CONTINUE
-}
-
-#endif // FEATURE_C4 == true
 
 public msg_screenFade(msgid, dest, id)
 	return (g_bProtected[id] && g_bAlive[id] && get_msg_arg_int(4) == 255 && get_msg_arg_int(5) == 255 && get_msg_arg_int(6) == 255 && get_msg_arg_int(7) > 199 ? PLUGIN_HANDLED : PLUGIN_CONTINUE)
@@ -4184,7 +3034,7 @@ public msg_textMsg(msgid, dest, id)
 
 	if(equal(szMsg, "#Spec_Mode", 10) && !get_pcvar_num(pCvar_mp_fadetoblack) && (get_pcvar_num(pCvar_mp_forcecamera) || get_pcvar_num(pCvar_mp_forcechasecam)))
 	{
-		if(TEAM_RED <= get_user_team(id) <= TEAM_BLUE && szMsg[10] == '3')
+		if(TEAM_RED <= g_iTeam[id] <= TEAM_BLUE && szMsg[10] == '3')
 		{
 			if(!g_bFreeLook[id])
 			{
@@ -4217,15 +3067,23 @@ public msg_textMsg(msgid, dest, id)
 		set_msg_arg_string(2, szMsg)
 	}
 
-#if FEATURE_C4 == true
-
-	else if(equal(szMsg, "#Defusing", 9) || equal(szMsg, "#Got_bomb", 9) || equal(szMsg, "#Game_bomb", 10) || equal(szMsg, "#Bomb", 5) || equal(szMsg, "#Target", 7))
-		return PLUGIN_HANDLED
-
-#endif // FEATURE_C4 == true
-
 	return PLUGIN_CONTINUE
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 player_award(id, iMoney, iFrags, iAdrenaline, szText[], any:...)
 {
 #if FEATURE_ADRENALINE == false
@@ -4234,7 +3092,7 @@ player_award(id, iMoney, iFrags, iAdrenaline, szText[], any:...)
 
 #endif // FEATURE_ADRENALINE
 
-	if(!get_user_team(id) || (!iMoney && !iFrags && !iAdrenaline))
+	if(!g_iTeam[id] || (!iMoney && !iFrags && !iAdrenaline))
 		return
 
 	new szMsg[48]
@@ -4263,6 +3121,8 @@ player_award(id, iMoney, iFrags, iAdrenaline, szText[], any:...)
 	{
 		g_iAdrenaline[id] = clamp(g_iAdrenaline[id] + iAdrenaline, 0, 100)
 
+		player_hudAdrenaline(id)
+
 		formatex(szAdrenaline, charsmax(szAdrenaline), "%s%d %L", iAdrenaline > 0 ? "+" : NULL, iAdrenaline, id, "ADRENALINE")
 	}
 
@@ -4277,31 +3137,25 @@ player_award(id, iMoney, iFrags, iAdrenaline, szText[], any:...)
 
 #if FEATURE_ADRENALINE == true
 
-public player_hudAdrenaline(id)
+player_hudAdrenaline(id)
 {
-	// ID
-	id -= TASK_HUDRANK
+	set_hudmessage(HUD_ADRENALINE)
 
-	// CONECTED
-	if(!is_user_connected(id)) 
-	{
-		remove_task(id+TASK_HUDRANK)
-		return;
-	}
+	if(g_iAdrenalineUse[id])
+		show_hudmessage(id, "%L", id, "HUD_ADRENALINECOMBO", id, g_szAdrenalineUseML[g_iAdrenalineUse[id]], g_iAdrenaline[id], 100)
 
-	if(szHudsADR[id])
-	{
-		set_hudmessage(HUD_ADRENALINE)
-		if(g_iAdrenaline[id] >= 100) show_hudmessage(id,  "%L", id, "HUD_ADRENALINEFULL")
-		else ShowSyncHudMsg(id, g_iSync[0], "%L", id, "HUD_ADRENALINE", g_iAdrenaline[id], 100)
-	}
+	else if(g_iAdrenaline[id] >= 100)
+		show_hudmessage(id, "%L", id, "HUD_ADRENALINEFULL")
+
+	else
+		show_hudmessage(id, "%L", id, "HUD_ADRENALINE", g_iAdrenaline[id], 100)
 }
 
 #endif // FEATURE_ADRENALINE == true
 
 player_print(id, iSender, szMsg[], any:...)
 {
-	if(g_bBot[id] || (id && !get_user_team(id)))
+	if(g_bBot[id] || (id && !g_iTeam[id]))
 		return PLUGIN_HANDLED
 
 	new szFormat[192]
@@ -4378,9 +3232,10 @@ player_setScore(id, iAddFrags, iAddDeaths)
 	write_short(iFrags)
 	write_short(iDeaths)
 	write_short(0)
-	write_short(get_user_team(id))
+	write_short(g_iTeam[id])
 	message_end()
 }
+
 player_spawnItem(id)
 {
 #if FEATURE_ADRENALINE == true
@@ -4428,6 +3283,7 @@ player_spawnItem(id)
 					break
 				}
 			}
+
 			case ITEM_MEDKIT:
 			{
 				if(ITEM_DROP_MEDKIT)
@@ -4465,122 +3321,133 @@ player_spawnItem(id)
 	task_set(get_pcvar_float(pCvar_ctf_weaponstay), "weapon_startFade", ent)
 }
 
-#if FEATURE_C4 == true
-player_giveC4(id)
+player_healingEffect(id)
 {
-	give_item(id, g_szWeaponEntity[W_C4])
-	cs_set_user_plant(id, 1, 1)
+	new iOrigin[3]
+
+	get_user_origin(id, iOrigin)
+
+	message_begin(MSG_PVS, SVC_TEMPENTITY, iOrigin)
+	write_byte(TE_PROJECTILE)
+	write_coord(iOrigin[x] + random_num(-10, 10))
+	write_coord(iOrigin[y] + random_num(-10, 10))
+	write_coord(iOrigin[z] + random_num(0, 30))
+	write_coord(0)
+	write_coord(0)
+	write_coord(15)
+	write_short(gSpr_regeneration)
+	write_byte(1)
+	write_byte(id)
+	message_end()
 }
 
-#endif // FEATURE_C4
-// player_healingEffect(id)
-// {
-// 	new iOrigin[3]
-
-// 	get_user_origin(id, iOrigin)
-// 	message_begin(MSG_PVS, SVC_TEMPENTITY, iOrigin)
-// 	write_byte(TE_PROJECTILE)
-// 	write_coord(iOrigin[x] + random_num(-10, 10))
-// 	write_coord(iOrigin[y] + random_num(-10, 10))
-// 	write_coord(iOrigin[z] + random_num(0, 30))
-// 	write_coord(0)
-// 	write_coord(0)
-// 	write_coord(15)
-// 	write_short(gSpr_regeneration)
-// 	write_byte(1)
-// 	write_byte(id)
-// 	message_end()
-// }
 player_updateRender(id, Float:fDamage = 0.0)
 {
-	// Vars
 	new bool:bGlows = (get_pcvar_num(pCvar_ctf_glows) == 1)
-	new iTeam = get_user_team(id)
+	new iTeam = g_iTeam[id]
 	new iMode = kRenderNormal
 	new iEffect = kRenderFxNone
+	new iAmount = 0
 	new iColor[3] = {0,0,0}
 
-	// Protected
 	if(g_bProtected[id])
 	{
-		if(bGlows) iEffect = kRenderFxGlowShell;
+		if(bGlows)
+			iEffect = kRenderFxGlowShell
 
-		// Collor
+		iAmount = 200
+
 		iColor[0] = (iTeam == TEAM_RED ? 155 : 0)
 		iColor[1] = (fDamage > 0.0 ? 100 - clamp(floatround(fDamage), 0, 100) : 0)
 		iColor[2] = (iTeam == TEAM_BLUE ? 155 : 0)
 	}
 
-// FEATURE_ADRENALINE == true
 #if FEATURE_ADRENALINE == true
 	switch(g_iAdrenalineUse[id])
 	{
 		case ADRENALINE_BERSERK:
 		{
-			// Glows
-			if(bGlows) iEffect = kRenderFxGlowShell
+			if(bGlows)
+				iEffect = kRenderFxGlowShell
 
-			// Collor
+			iAmount = 160
 			iColor = {55, 0, 55}
 		}
+
 		case ADRENALINE_INVISIBILITY:
 		{
 			iMode = kRenderTransAlpha
 
-			// Glows
-			if(bGlows) iEffect = kRenderFxGlowShell		
+			if(bGlows)
+				iEffect = kRenderFxGlowShell
 
-			// Collor		
+			iAmount = 10
 			iColor = {15, 15, 15}
 		}
 	}
-#endif
-	/*if(player_hasFlag(id))
-	{
-		// Type
-		if(iMode != kRenderTransAlpha) iMode = kRenderNormal;
-		if(bGlows) iEffect = kRenderFxGlowShell
+#endif // FEATURE_ADRENALINE == true
 
-		// Color
+	if(player_hasFlag(id))
+	{
+		if(iMode != kRenderTransAlpha)
+			iMode = kRenderNormal
+
+		if(bGlows)
+			iEffect = kRenderFxGlowShell
+
 		iColor[0] = (iTeam == TEAM_RED ? (iColor[0] > 0 ? 200 : 155) : 0)
 		iColor[1] = (iAmount == 160 ? 55 : 0)
 		iColor[2] = (iTeam == TEAM_BLUE ? (iColor[2] > 0 ? 200 : 155) : 0)
-	}*/
 
-	// Render
-	fm_set_rendering(id, iEffect, iColor[0], iColor[1], iColor[2], iMode, 10)
+		iAmount = (iAmount == 160 ? 50 : (iAmount == 10 ? 20 : 30))
+	}
+
+	set_user_rendering(id, iEffect, iColor[0], iColor[1], iColor[2], iMode, iAmount)
 }
-player_updateSpeed(id)
+
+public player_updateSpeed(id)
 {
-	// Float
+	if (!is_user_alive(id))
+	{
+		return;
+	}
+
+	new Float:flMaxSpeed = entity_get_float(id, EV_FL_maxspeed)
+	if (flMaxSpeed <= 1.0)
+	{
+		return;
+	}
 	new Float:fSpeed = 1.0
 
-	// Has Flag
 	if(player_hasFlag(id))
+	{
 		fSpeed *= SPEED_FLAG
+	}
 
-// FEATURE_ADRENALINE
 #if FEATURE_ADRENALINE == true
-	if(g_iAdrenalineUse[id] == ADRENALINE_SPEED) fSpeed *= SPEED_ADRENALINE;
 
-#endif 
+	if(g_iAdrenalineUse[id] == ADRENALINE_SPEED)
+	{
+		fSpeed *= SPEED_ADRENALINE
+	}
 
-	// SPED
+#endif // FEATURE_ADRENALINE
+
 	set_user_maxspeed(id, g_fWeaponSpeed[id] * fSpeed)
 }
+
 player_screenFade(id, iColor[4] = {0,0,0,0}, Float:fEffect = 0.0, Float:fHold = 0.0, iFlags = FADE_OUT, bool:bReliable = false)
 {
-	// ID
-	if(id && !get_user_team(id))
+	if(id && !g_iTeam[id])
 		return
 
 	static iType
 
-	// Type
-	if(1 <= id <= g_iMaxPlayers) iType = (bReliable ? MSG_ONE : MSG_ONE_UNRELIABLE)
-	else iType = (bReliable ? MSG_ALL : MSG_BROADCAST)
+	if(1 <= id <= g_iMaxPlayers)
+		iType = (bReliable ? MSG_ONE : MSG_ONE_UNRELIABLE)
+	else
+		iType = (bReliable ? MSG_ALL : MSG_BROADCAST)
 
-	// Fade
 	message_begin(iType, gMsg_ScreenFade, _, id)
 	write_short(clamp(floatround(fEffect * (1<<12)), 0, 0xFFFF))
 	write_short(clamp(floatround(fHold * (1<<12)), 0, 0xFFFF))
@@ -4591,12 +3458,12 @@ player_screenFade(id, iColor[4] = {0,0,0,0}, Float:fEffect = 0.0, Float:fHold = 
 	write_byte(iColor[3])
 	message_end()
 }
+
 game_announce(iEvent, iFlagTeam, szName[])
 {
-	// Vars
-	new iColor = iFlagTeam, szText[64]
+	new iColor = iFlagTeam
+	new szText[64]
 
-	// Events
 	switch(iEvent)
 	{
 		case EVENT_TAKEN:
@@ -4604,31 +3471,25 @@ game_announce(iEvent, iFlagTeam, szName[])
 			iColor = get_opTeam(iFlagTeam)
 			formatex(szText, charsmax(szText), "%L", LANG_PLAYER, "ANNOUNCE_FLAGTAKEN", szName, LANG_PLAYER, g_szMLFlagTeam[iFlagTeam])
 		}
+
 		case EVENT_DROPPED: formatex(szText, charsmax(szText), "%L", LANG_PLAYER, "ANNOUNCE_FLAGDROPPED", szName, LANG_PLAYER, g_szMLFlagTeam[iFlagTeam])
+
 		case EVENT_RETURNED:
 		{
-			if(strlen(szName) != 0)	formatex(szText, charsmax(szText), "%L", LANG_PLAYER, "ANNOUNCE_FLAGRETURNED", szName, LANG_PLAYER, g_szMLFlagTeam[iFlagTeam])
-			else formatex(szText, charsmax(szText), "%L", LANG_PLAYER, "ANNOUNCE_FLAGAUTORETURNED", LANG_PLAYER, g_szMLFlagTeam[iFlagTeam])
+			if(strlen(szName) != 0)
+				formatex(szText, charsmax(szText), "%L", LANG_PLAYER, "ANNOUNCE_FLAGRETURNED", szName, LANG_PLAYER, g_szMLFlagTeam[iFlagTeam])
+			else
+				formatex(szText, charsmax(szText), "%L", LANG_PLAYER, "ANNOUNCE_FLAGAUTORETURNED", LANG_PLAYER, g_szMLFlagTeam[iFlagTeam])
 		}
+
 		case EVENT_SCORE: formatex(szText, charsmax(szText), "%L", LANG_PLAYER, "ANNOUNCE_FLAGCAPTURED", szName, LANG_PLAYER, g_szMLFlagTeam[get_opTeam(iFlagTeam)])
 	}
 
-	// HUD MSG
-	for(new i = 1; i <= get_maxplayers(); i++) 
-	{
-		// Huds
-		if(szHuds[i])
-		{
-			set_hudmessage(iColor == TEAM_RED ? 255 : 0, iColor == TEAM_RED ? 51 : 255, iColor == TEAM_BLUE ? 255 : 0, HUD_ANNOUNCE)
-			ShowSyncHudMsg(i, HUDINFO, szText)
-		}
+	set_hudmessage(iColor == TEAM_RED ? 255 : 0, 0, iColor == TEAM_BLUE ? 255 : 0, HUD_ANNOUNCE)
+	show_hudmessage(0, szText)
 
-		// Sounds
-		if(szSounds[i])
-		{
-			if(get_pcvar_num(pCvar_ctf_sound[iEvent])) client_cmd(i, "mp3 play ^"sound/ctf/%s.mp3^"", g_szSounds[iEvent][iFlagTeam])
-		}
-	}
+	client_print(0, print_console, "%s%L: %s", CONSOLE_PREFIX, LANG_PLAYER, "ANNOUNCEMENT", szText)
+
+	if(get_pcvar_num(pCvar_ctf_sound[iEvent]))
+		client_cmd(0, "mp3 play ^"sound/ctf/%s.mp3^"", g_szSounds[iEvent][iFlagTeam])
 }
-
-
