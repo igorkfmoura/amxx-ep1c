@@ -1,0 +1,158 @@
+/*
+	Created Auto Recording Demo by IzI and Bonaqua (Rebuild)
+	
+	All ingenious is simple - Excellent. Made in Russia.
+*/
+
+#include <amxmodx>
+
+#define NAME	"Auto recording demo"
+#define VERSION	"2.0"
+#define AUTHOR	"IzI | Bonaqua (Rebuild)"
+
+new g_DemoEnable, g_DemoRtimer, g_DemoPrefix, g_DemoName, g_DemoMsgType, g_DemoHudrgb, g_DemoHudx, g_DemoHudy, g_DemoEffect, g_DemoMsgTypePrintChat
+new Red, Green, Blue, Effect, Float:FadeIn, Float:FadeOut, Float:HoldTime
+
+public plugin_init() 
+{
+	register_plugin( NAME, VERSION, AUTHOR )
+
+	server_cmd("exec addons/amxmodx/configs/demo.cfg")
+	
+	g_DemoEnable			= register_cvar("amx_demo_enable",  "")
+	g_DemoRtimer			= register_cvar("amx_demo_rectime", "")
+	g_DemoPrefix			= register_cvar("amx_demo_prefix", "")
+	g_DemoName				= register_cvar("amx_demo_name", "")
+	g_DemoMsgType			= register_cvar("amx_demo_msg_type", "")
+	g_DemoMsgTypePrintChat	= register_cvar("amx_demo_msg_chat_type", "")
+	g_DemoHudrgb			= register_cvar("amx_demo_hud_colour", "")
+	g_DemoHudx				= register_cvar("amx_demo_hud_xpozition", "")
+	g_DemoHudy				= register_cvar("amx_demo_hud_ypozition", "")
+	g_DemoEffect			= register_cvar("amx_demo_hud_effect", "")
+}
+
+public client_putinserver(i)
+{
+	if(get_pcvar_num(g_DemoEnable)) 
+	{
+		set_task(get_pcvar_float(g_DemoRtimer), "g_RecDemoFunc", i);
+	}
+}
+
+public g_RecDemoFunc(i)
+{
+	if( !is_user_connected(i) || get_pcvar_num(g_DemoEnable))
+	{
+		new Name[33], Time[9], Data[64], g_szDemoPrefix[64], g_szDemoName[64]
+
+		get_user_name(i, Name, 32)
+		
+		get_time("%H:%M:%S", Time, 8)
+		get_time("%d.%m.%Y", Data, 63)
+
+		get_pcvar_string( g_DemoPrefix, g_szDemoPrefix, 63 );
+		get_pcvar_string( g_DemoName, g_szDemoName, 63 );
+
+		client_cmd(i, "stop; record ^"%s^"", g_szDemoName)
+		
+		switch(get_pcvar_num(g_DemoMsgType))
+		{
+			case 1:
+			{
+				switch(get_pcvar_num(g_DemoMsgTypePrintChat))
+				{
+					case 0:
+					{
+						ChatColor(i, "^3[^4%s^3]^1 Atencao ^3%s^1!", g_szDemoPrefix, Name)
+						ChatColor(i, "^3[^4%s^3]^1 Gravacao da demo em andamento ^"^3%s.dem^1^"", g_szDemoPrefix, g_szDemoName)
+						ChatColor(i, "^3[^4%s^3]^1 Hora: ^4%s^1 Data: ^4%s^1", g_szDemoPrefix , Time, Data)
+					}
+					case 1:
+					{
+						client_print(i, print_chat, "[%s] ATENCAO %s!", g_szDemoPrefix, Name)
+						client_print(i, print_chat, "[%s] GRAVACAO DA DEMO EM ANDAMENTO ^"%s.dem^"", g_szDemoPrefix, g_szDemoName)
+						client_print(i, print_chat, "[%s] HORA: %s DATA: %s", g_szDemoPrefix , Time, Data)
+					}
+				}
+			}
+			case 2:
+			{
+				{
+					get_hud_color(Red, Green, Blue)
+					switch(get_pcvar_num(g_DemoEffect))
+					{
+						case 1:
+						{
+							Effect = 1
+							FadeIn = 0.2
+							FadeOut = 0.2
+							HoldTime = 6.0
+						}
+						case 2:
+						{
+							Effect = 2
+							FadeIn = 0.05
+							FadeOut = 0.5
+							HoldTime = 6.0
+						}
+						default:
+						{
+							Effect = 0
+							FadeIn = 0.5
+							FadeOut = 0.5
+							HoldTime = 6.0
+						}
+					}
+					set_hudmessage( Red, Green, Blue, get_pcvar_float(g_DemoHudx), get_pcvar_float(g_DemoHudy), Effect, 6.0, HoldTime, FadeIn, FadeOut, 2)
+					show_hudmessage(i, "[%s] Внимание %s!^n[%s] Идёт запись демо ^"%s.dem^"^n[%s] Время записи: %s Дата: %s", g_szDemoPrefix, Name, g_szDemoPrefix, g_szDemoName, g_szDemoPrefix, Time, Data)
+				}
+			}
+		}
+	}
+	return PLUGIN_HANDLED
+}
+
+get_hud_color(&r, &g, &b) 
+{
+	new color[20]
+	static Red[5], Green[5], Blue[5]
+	
+	get_pcvar_string(g_DemoHudrgb, color, charsmax(color))
+	parse(color, Red, charsmax(Red), Green, charsmax(Green), Blue, charsmax(Blue))
+	
+	r = str_to_num(Red)
+	g = str_to_num(Green)
+	b = str_to_num(Blue)
+}
+
+/* Сток цветного чата */
+stock ChatColor(const id, const input[], any:...) 
+{
+	new count = 1, players[32]
+	static msg[191]
+	vformat(msg, 190, input, 3)
+	
+	replace_all(msg, 190, "!g", "^4") // Зелёный
+	replace_all(msg, 190, "!y", "^1") // Стандартный
+	replace_all(msg, 190, "!t", "^3") // Цвет команды
+	
+	if (id) players[0] = id; else get_players(players, count, "ch")
+	{
+		for (new i = 0; i < count; i++)
+		{
+			if (is_user_connected(players[i]))
+			{
+				message_begin(MSG_ONE_UNRELIABLE, get_user_msgid("SayText"), _, players[i])
+				write_byte(players[i]);
+				write_string(msg);
+				message_end();
+			}
+		}
+	}
+}
+
+/* 	Написание мелких плагинов:  
+
+	* Skype: is_user_admin
+	* Icq: 1944489
+*/

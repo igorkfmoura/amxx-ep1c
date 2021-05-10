@@ -1,0 +1,78 @@
+E entao ... Um novo AMX_WAR 2.7 Mod foi instalado no servidor CW
+Aqui estao as instrucoes sobre como gerenciar o servidor para moderadores
+Estude todos cuidadosamente para que mais tarde ninguem faca perguntas estupidas
+O autor do plugin e Grisbilen
+
+
+Os seguintes modos de jogo sao suportados
+Maxrounds, Timelimit, Winlimit
+
+Rodadas adicionais(OverTime)
+Se as equipes empataram, voce pode jogar a prorrogacao ou encerrar a partida
+
+Selecao de lados iniciais
+- As proprias equipes decidem por quem comecar
+- O plugin lanca uma moeda e distribui os comandos de acordo com o resultado da moeda
+- As equipes jogam rodada de faca, o time vencedor escolhe o lado
+
+Multi-map match
+A partida pode ser jogada em um ou dois mapas por vez
+
+Modo de aquecimento (warmup)
+Antes de cada metade do jogo, um modo de aquecimento e iniciado, os jogadores devem escrever e dizer pronto para confirmar que estao prontos para jogar,
+quando todos os jogadores estiverem prontos, o plug-in e reiniciado e o jogo comeca
+Voce pode definir um limite para o tempo de aquecimento, apos o qual a partida comecara automaticamente
+
+Restaurando a situacao do jogo
+Os jogadores que partiram durante o jogo, ao retornar, devolvem dinheiro, armaduras, armas, tenazes, fragmentos e morte
+Se o servidor encerrou seu trabalho incorretamente (travou) durante a partida, apos o carregamento a partida e restaurada da rodada em que decolou,
+apos os reinicios os jogadores recebem dinheiro, armadura, armas, pincas, fragmentos e mortes
+
+Carregando configuracoes individuais
+Para rodada de faca, aquecimento, jogo, hora extra, suas configuracoes sao carregadas
+
+Alertando jogadores
+Apos cada rodada, uma mensagem informativa sobre o estado da partida e exibida
+O plugin inicia o seu trabalho apos o inicio do comando pelo admin
+aw team1 team2 optional minready optional mrXX,mxXX,tlXX optional map=map1name optional map2=map2name optional pw=password optional cfg=cfgfile
+
+Onde
+equipe1 - a equipe que inicia o jogo como Contra-Terroristas
+time2 - o time que comeca o jogo como Terroristas
+minready opcional - O numero de jogadores na equipe
+opcional mrXX, mxXX, tlXX - Modo de jogo
+1) mrXX - Maximo de rodadas, primeira metade de XX rodadas, segundo antes de uma das equipes vencer (XX + 1 rodada vitorias)
+2) mxXX - O jogo e em XX2 rodadas, ou seja, o segundo tempo e jogado ate o final
+3) tlXX - Limite de tempo
+
+Vou explicar
+XX sao as variaveis ??dos comandos mp_maxrounds (nos modos 1,2) e mp_timelimit (no modo 3)
+opcional map1 - Em qual mapa jogar, se o parametro estiver ausente, a partida comecara no mapa atual
+mapa opcional2 - Se especificado, a partida acontecera em 2 mapas
+opcional pw = senha - defina uma senha para entrar no servidor durante a partida, voce pode omitir o parametro
+opcional cfg = cfgfile - Qual configuracao para o torneio carregar da pasta ... 
+cstrikeamxwarcfg, voce pode deixar o parametro fora, entao default.cfg e usado .. nos nao mexemos nele!
+
+Vou notar
+1) Os parametros marcados como opcionais nao sao necessarios para iniciar uma partida
+2) Os parametros opcionais podem ser inseridos em qualquer ordem
+
+por exemplo, voce pode comecar a partida assim
+aw SK Virtus.pro
+1) entao, em vez de minready, gametype, os valores awc_minready_default e awc_gametype_default especificados em amxwaramxwar.cfg
+2) o plugin verificara o amxwarclans.ini, e se esses clas nao estiverem registrados la, ele os registrara. Isso e necessario para o menu do plugin
+
+e agora os comandos
+awstart - Comece uma partida sem esperar que todos estejam prontos
+awabort - Aborta a partida
+awrestart - Reiniciar partida (mapa atual)
+awrestart2 - Reinicia a meia partida (mapas)
+swap - troca de nomes de comandos
+
+EXEMPLO DE INICIANDO HF
+aw Team1 Team2
+E aqui que comeca a fase de aquecimento ...
+Se os clas estiverem prontos, entao cada jogador escreve pronto ou o administrador escreve awstart (no console) se quiser iniciar o HF a forca!
+
+Voce pode iniciar, cancelar, auto-iniciar a partida usando o menu, para isso voce precisa digitar o comando awmenu
+ 
