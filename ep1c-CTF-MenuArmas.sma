@@ -1,5 +1,7 @@
 #include <amxmodx>
 #include <cstrike>
+#include <engine>
+#include <fakemeta>
 #include <hamsandwich>
 #include <fun>
 
@@ -14,14 +16,58 @@
  #define MAX_MAPNAME_LENGTH 64
 #endif
 
-// new g_szMapsToIgnore[][6] =
-// {
-// 	"awp_",
-//     "aim_",
-// 	"35hp_",
-// 	"fy_",
-// 	"he_"
-// }
+new g_szMapsToIgnore[][6] =
+{
+	"awp_",
+    "aim_",
+	"35hp_",
+	"fy_",
+	"he_"
+}
+
+enum AmmoInfo
+{
+  WEAPONID,
+  CLIP,
+  BPAMMO
+};
+new weapons[][AmmoInfo] =
+{
+  {CSW_NONE,        0,   0},
+  {CSW_P228,       13,  52},
+  {CSW_NONE,        0,   0},
+  {CSW_SCOUT,      10,  90},
+  {CSW_NONE,        0,   0},
+  {CSW_XM1014,      7,  32},
+  {CSW_NONE,        0,   0},
+  {CSW_MAC10,      30, 100},
+  {CSW_AUG,        30,  90},
+  {CSW_NONE,        0,   0},
+  {CSW_ELITE,      30, 120},
+  {CSW_FIVESEVEN,  20, 100},
+  {CSW_UMP45,      25, 100},
+  {CSW_SG550,      30,  90},
+  {CSW_GALIL,      35,  90},
+  {CSW_FAMAS,      25,  90},
+  {CSW_USP,        12, 100},
+  {CSW_GLOCK18,    20, 120},
+  {CSW_AWP,        10,  30},
+  {CSW_MP5NAVY,    30, 120},
+  {CSW_M249,      100, 200},
+  {CSW_M3,          8,  32},
+  {CSW_M4A1,       30,  90},
+  {CSW_TMP,        30, 120},
+  {CSW_G3SG1,      20,  90},
+  {CSW_NONE,        0,   0},
+  {CSW_DEAGLE,      7,  35},
+  {CSW_SG552,      30,  90},
+  {CSW_AK47,       30,  90},
+  {CSW_NONE,        0,   0},
+  {CSW_P90,        50, 100},
+  {CSW_NONE,        0,   0},
+  {CSW_NONE,        0,   0},
+  {CSW_NONE,        0,   0}
+};
 
 enum Weapon
 {
@@ -48,6 +94,7 @@ new g_xSecondaryWeapons[][Weapon] =
 new g_iRemember[MAX_PLAYERS+1];
 new g_iPrimary[MAX_PLAYERS+1];
 new g_iSecondary[MAX_PLAYERS+1];
+new g_BoughtThisRound[MAX_PLAYERS+1];
 new g_iMenu[MAX_PLAYERS+1];
 new bool:g_bInBuyZone[33];
 
@@ -62,25 +109,33 @@ public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 	
-	// new szMapName[MAX_MAPNAME_LENGTH];
-	// get_mapname(szMapName, charsmax(szMapName));
+	new szMapName[MAX_MAPNAME_LENGTH];
+	get_mapname(szMapName, charsmax(szMapName));
 
-	// new iLen = sizeof(g_szMapsToIgnore);
-	// for (new i = 0; i < iLen; ++i)
-	// {
-	// 	if (equal(szMapName, g_szMapsToIgnore[i]))
-	// 		pause("a");
-	// }
+	new bSpecialMap = false;
 
-	register_event("HLTV", "NewRound", "a", "1=0", "2=0");
+	new iLen = sizeof(g_szMapsToIgnore);
+	for (new i = 0; i < iLen; ++i)
+	{
+		if (equal(szMapName, g_szMapsToIgnore[i]))
+		{
+			bSpecialMap = true;
+		}
+	}
+
 	register_logevent("RoundStart", 2, "1=Round_Start");
+	register_event("HLTV", "NewRound", "a", "1=0", "2=0");
+
+	if (!bSpecialMap)
+	{
+		register_event("StatusIcon", "player_inBuyZone", "be", "2=buyzone");
+	}
 
 	g_pCvarBuyTime = get_cvar_pointer("mp_buytime");
 	g_pCvarRoundTime = get_cvar_pointer("mp_roundtime");
 
 	RegisterHam(Ham_Spawn, "player", "HamSpawnPost", true);
 
-	register_event("StatusIcon", "player_inBuyZone", "be", "2=buyzone");
 	g_iMenuGunsCheckID = menu_makecallback("MenuGunsCheck");
 
 	xRegisterSay("armas", "ShowMenuGuns");
@@ -172,35 +227,64 @@ public player_inBuyZone(id)
 public HamSpawnPost(id)
 {
 	if(is_user_alive(id))
+	{
+		g_BoughtThisRound[id] = false;
+		g_bInBuyZone[id] = true;
+
 		set_task(0.5, "GiveItems", 2424 + id);
+	}
 }
 
 public GiveItems(id)
 {
 	id -= 2424;
 
-	if(is_user_alive(id))
+	if(!is_user_alive(id))
+		return;
+	
+	if(g_iRemember[id])
 	{
-		if(g_iRemember[id])
+		if (!cs_get_user_hasprim(id))
 		{
 			GivePlayerWeapons(id);
+			return;
 		}
-		else 
-		{
-			new menu;
-  			new keys;
-			new newmenu;
 
-			player_menu_info(id, menu, newmenu, keys);
-			
-			if (newmenu >= 0)
-			{
-				menu_destroy(newmenu);
-			}
-			
-			ShowMenuGuns(id);
-		}
+		fill_player_ammo(id);
 	}
+
+	new menu;
+  	new keys;
+	new newmenu;
+	player_menu_info(id, menu, newmenu, keys);
+	
+	if (newmenu >= 0)
+		menu_destroy(newmenu);
+	
+	ShowMenuGuns(id);
+}
+
+
+public fill_player_ammo(id)
+{
+  for (new slot = CS_WEAPONSLOT_PRIMARY; slot <= CS_WEAPONSLOT_SECONDARY; ++slot)
+  {
+    new weapon_id = get_ent_data_entity(id, "CBasePlayer", "m_rgpPlayerItems", slot);
+    if (is_valid_ent(weapon_id))
+    {
+      new weapon_type = get_ent_data(weapon_id, "CBasePlayerItem", "m_iId");
+      if (weapon_type > 0 && weapon_type <= CSW_P90 && weapons[weapon_type][WEAPONID])
+      {
+        static weapon_name[32];
+        cs_get_item_alias(weapon_type, weapon_name, charsmax(weapon_name));
+
+        cs_set_weapon_ammo(weapon_id, weapons[weapon_type][CLIP]);
+        cs_set_user_bpammo(id, weapon_type, weapons[weapon_type][BPAMMO]);
+
+        client_print_color(id, id, "%s Refilling ^3%s^1 ammo...", PREFIX_CHAT, weapon_name);
+      }
+    }
+  }
 }
 
 public client_connected(id)
@@ -213,8 +297,8 @@ public client_connected(id)
 
 public ShowMenuGuns(id)
 {
-	if(!is_user_alive(id))
-		return
+	if(!is_user_connected(id))
+		return;
 
 	new szTitle[64];
 	formatex(szTitle, charsmax(szTitle), "\wMenu de Armas^n%s", PREFIX_MENUS);
@@ -229,7 +313,6 @@ public ShowMenuGuns(id)
 	for (new i = 0; i < iLenPrimary; ++i)
 	{
 		formatex(szItem, charsmax(szItem), "Kit \d[%s%s + %s\d]", (g_bInBuyZone[id] && g_bAllowBuy) ? "\y" : "\d", g_xPrimaryWeapons[i][W_NAME], g_xSecondaryWeapons[iSecondary][W_NAME]);
-		
 		menu_additem(xMenu, szItem, _, _, g_iMenuGunsCheckID);
 	}
 	
@@ -305,24 +388,29 @@ public _ShowMenuGuns(id, menu, item)
 
 public GivePlayerWeapons(id)
 {
-	new item = g_iPrimary[id];
+	if (g_BoughtThisRound[id] || !is_user_alive(id))
+		return;
 
 	strip_user_weapons(id);
+	
+	new item = g_iPrimary[id];	
 	give_item(id, g_xPrimaryWeapons[item][W_ENTITY]);
 	cs_set_user_bpammo(id, g_xPrimaryWeapons[item][W_ID], g_xPrimaryWeapons[item][W_AMMO]);
 	
 	new iSec = g_iSecondary[id];
 	give_item(id, g_xSecondaryWeapons[iSec][W_ENTITY]);
 	cs_set_user_bpammo(id, g_xSecondaryWeapons[iSec][W_ID], g_xSecondaryWeapons[iSec][W_AMMO]);
+
 	give_item(id, "weapon_knife");
 	give_item(id, "weapon_hegrenade");
 	give_item(id, "weapon_flashbang");
 	give_item(id, "weapon_flashbang");
 	give_item(id, "item_assaultsuit");
 	
-	client_print_color(id, print_team_default, "%s Você recebeu o kit ^4%s^1 + ^4%s^1!", PREFIX_CHAT, g_xPrimaryWeapons[item][W_NAME], g_xSecondaryWeapons[iSec][W_NAME]);
-	client_print_color(id, print_team_default, "%s Para reabrir o menu de armas digite ^4/armas^1 no chat!", PREFIX_CHAT);
+	g_BoughtThisRound[id] = true;
 
+	client_print_color(id, print_team_default, "%s Você recebeu o kit ^4[%s + %s]^1!", PREFIX_CHAT, g_xPrimaryWeapons[item][W_NAME], g_xSecondaryWeapons[iSec][W_NAME]);
+	client_print_color(id, print_team_default, "%s Para reabrir o menu de armas digite ^4/armas^1 no chat!", PREFIX_CHAT);
 }
 
 
