@@ -109,7 +109,7 @@ enum
     REWARD_FRAG     = 3
 };
 
-enum
+enum FlagEvents
 {
     FLAG_STOLEN,
     FLAG_PICKED,
@@ -127,15 +127,6 @@ enum
     EVENT_DROPPED,
     EVENT_RETURNED,
     EVENT_SCORE,
-};
-
-enum _:STRUCT_WEAPONS
-{
-    WEAPON_NAME[20],
-    WEAPON_ENT[20],
-    WEAPON_TYPE[20],
-    WeaponIdType:WEAPON_CSW,
-    WEAPON_AMMO
 };
 
 new const g_szSounds[][][] =
@@ -199,8 +190,10 @@ new gMsg_TeamScore;
 
 new gHook_EntSpawn;
 new gSpr_regeneration;
+
 new g_iForwardReturn;
 new g_iFW_flag;
+new g_iFW_adrenaline;
 
 public plugin_precache()
 {
@@ -300,7 +293,9 @@ public plugin_init()
     pCvar_ctf_sound[EVENT_SCORE]    = register_cvar("ctf_sound_score", "1");
     
     g_iFW_flag = CreateMultiForward("jctf_flag", ET_IGNORE, FP_CELL, FP_CELL, FP_CELL, FP_CELL);
-    
+    g_iFW_adrenaline = CreateMultiForward("jctf_adrenaline", ET_IGNORE, FP_CELL, FP_CELL);
+    //ExecuteForward(g_iFW_flag, g_iForwardReturn, FLAG_RETURNED, id, iFlagTeam, false);
+
     g_iSync[0] = CreateHudSyncObj();
     g_iSync[1] = CreateHudSyncObj();
     g_iSync[2] = CreateHudSyncObj();
@@ -363,6 +358,7 @@ public plugin_natives()
     
     register_native("get_user_adrenaline", "native_get_adrenaline");
     register_native("set_user_adrenaline", "native_set_adrenaline");
+    register_native("add_user_adrenaline", "native_add_adrenaline");
 }
 
 public native_get_adrenaline(iPlugin, iParams)
@@ -375,9 +371,15 @@ public native_set_adrenaline(iPlugin, iParams)
     g_bAdrenaline[get_param(1)] = get_param(2);
 }
 
+public native_add_adrenaline(iPlugin, iParams)
+{
+    g_bAdrenaline[get_param(1)] += get_param(2);
+}
+
 public plugin_end()
 {
     DestroyForward(g_iFW_flag);
+    DestroyForward(g_iFW_adrenaline);
 }
 
 public native_get_flagcarrier(iPlugin, iParams)
@@ -392,9 +394,9 @@ public jctf_flag(iEvent, iPlayer, iFlagTeam, bool:bAssist)
     {
         case FLAG_CAPTURED: g_bAdrenaline[iPlayer] = clamp(g_bAdrenaline[iPlayer] + REWARD_CAPTURED, 0, LIMIT_ADRENALINE);
         case FLAG_RETURNED: g_bAdrenaline[iPlayer] = clamp(g_bAdrenaline[iPlayer] + REWARD_RETURNED, 0, LIMIT_ADRENALINE);
-        case FLAG_STOLEN:   g_bAdrenaline[iPlayer] = clamp(g_bAdrenaline[iPlayer] + REWARD_STOLEN, 0, LIMIT_ADRENALINE);
-        case FLAG_DROPPED:  g_bAdrenaline[iPlayer] = clamp(g_bAdrenaline[iPlayer] - REWARD_DROPPED, 0, LIMIT_ADRENALINE);
-    }
+        case FLAG_STOLEN:   g_bAdrenaline[iPlayer] = clamp(g_bAdrenaline[iPlayer] + REWARD_STOLEN,   0, LIMIT_ADRENALINE);
+        case FLAG_DROPPED:  g_bAdrenaline[iPlayer] = clamp(g_bAdrenaline[iPlayer] - REWARD_DROPPED,  0, LIMIT_ADRENALINE);
+    } 
     return PLUGIN_HANDLED;
 }
 
@@ -1022,7 +1024,7 @@ public player_dropFlag(id)
         new Float:fVelocity[3];
         velocity_by_aim(id, 400, fVelocity);
 
-        fVelocity1[z] = 0.0;
+        fVelocity[z] = 0.0;
         entity_set_vector(ent, EV_VEC_velocity, fVelocity);
     }
     
@@ -1194,7 +1196,7 @@ public msg_roundTime()
     set_msg_arg_int(1, ARG_SHORT, get_timeleft());
 }
 
-player_healingEffect(id)
+public player_healingEffect(id)
 {
     new iOrigin[3];
     get_user_origin(id, iOrigin);
@@ -1213,7 +1215,7 @@ player_healingEffect(id)
     message_end();
 }
 
-game_announce(iEvent, iFlagTeam, szName[])
+public game_announce(iEvent, iFlagTeam, szName[])
 {
     new iColor = iFlagTeam;
     new szText[64];
@@ -1251,7 +1253,7 @@ game_announce(iEvent, iFlagTeam, szName[])
     }
 }
 
-rg_set_user_rendering(id, fx = kRenderFxNone, {Float,_}:color[3] = {0.0,0.0,0.0}, render = kRenderNormal, Float:amount = 0.0)
+stock rg_set_user_rendering(id, fx = kRenderFxNone, {Float,_}:color[3] = {0.0,0.0,0.0}, render = kRenderNormal, Float:amount = 0.0)
 {
     set_entvar(id, var_renderfx, fx);
     set_entvar(id, var_rendercolor, color);
