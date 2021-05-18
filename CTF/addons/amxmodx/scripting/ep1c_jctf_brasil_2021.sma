@@ -2307,7 +2307,7 @@ public player_checkTeam(id)
 
 		engclient_cmd(id, "jointeam", (iOpTeam == TEAM_BLUE ? "2" : "1"))
 
-		set_task(2.0, "player_forceJoinClass", id)
+		set_task(0.1, "player_forceJoinClass", id)
 
 		player_print(id, id, "%L", id, "DEATH_TRANSFER", "^x04", id, g_szMLTeamName[iOpTeam], "^x01")
 	}

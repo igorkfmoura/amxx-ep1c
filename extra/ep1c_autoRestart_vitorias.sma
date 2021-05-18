@@ -8,6 +8,14 @@
 
 new team_scores[CsTeams];
 
+enum ScreenFadeFlags
+{
+  ScreenFade_FadeIn,
+  ScreenFade_FadeOut,
+  ScreenFade_Modulate,
+  ScreenFade_StayOut 
+};
+
 enum Cvars
 {
     SWAP_TEAMS,
@@ -16,11 +24,20 @@ enum Cvars
 }
 new cvars[Cvars];
 
+enum Sounds
+{
+    WIN
+};
+new sounds[Sounds][64] =
+{
+    "ep1cgaming/ep1c_winmatch.wav"
+};
+
 public plugin_precache()
 {
-    precache_generic("sound/capturabandeira/CTF_A_Ganharam.mp3");
-    precache_generic("sound/capturabandeira/CTF_V_Ganharam.mp3");
+    precache_generic(sounds[WIN]);
 }
+
 
 public plugin_init()
 {
@@ -31,19 +48,21 @@ public plugin_init()
     register_event("TextMsg",   "event_restarted",    "a", "2=#Game_will_restart_in");
 
     register_logevent("roundStart", 2, "1=Round_Start");
-    register_logevent("roundEnd", 2, "1=Round_End") 
+    register_logevent("roundEnd",   2, "1=Round_End");
 
     // Register CVAR's
     cvars[SWAP_TEAMS]  = create_cvar("amx_match_swapteams",  "1",   _, "<0-1> Enable auto team swapping.");
     cvars[SWAP_ROUNDS] = create_cvar("amx_match_swaprounds", "15",  _, "<number> Rounds before swapping.");
-    cvars[MAX_WINS]   = create_cvar("amx_match_maxwins",    "16",  _, "<number> Rounds needed to victory.");
+    cvars[MAX_WINS]    = create_cvar("amx_match_maxwins",    "16",  _, "<number> Rounds needed to victory.");
 }
+
 
 public event_restarted()
 {
     team_scores[CS_TEAM_T]  = 0;
     team_scores[CS_TEAM_CT] = 0;
 }
+
 
 public event_update_score()
 {
@@ -63,6 +82,7 @@ public event_update_score()
     }   
 }
 
+
 public roundStart()
 {
     new match_point = get_pcvar_num(cvars[MAX_WINS]) - 1;
@@ -79,6 +99,7 @@ public roundStart()
     }
 }
 
+
 public roundEnd()
 {
     new max_wins = get_pcvar_num(cvars[MAX_WINS]);
@@ -93,7 +114,7 @@ public roundEnd()
         client_print_color(0, print_team_blue, "%s Auto Restart:^3 %d Round's^1.", PREFIX, max_wins);
         
         fade_screen(3.0, 3.0);
-        client_cmd(0, "mp3 play ^"sound/capturabandeira/CTF_A_Ganharam.mp3^"");
+        client_cmd(0, fmt("spk ^"%s^"", sounds[WIN]));
         shake_screen(10.0, 8.0, 1.0);
     }
     else if(team_scores[CS_TEAM_T] >= max_wins)
@@ -107,7 +128,7 @@ public roundEnd()
         client_print_color(0, print_team_red, "%s Auto Restart:^4 %d Round's^1.", PREFIX, max_wins);
 
         fade_screen(3.0, 3.0, _, 255, 0, 0);
-        client_cmd(0, "mp3 play ^"sound/capturabandeira/CTF_V_Ganharam.mp3^"");
+        client_cmd(0, fmt("spk ^"%s^"", sounds[WIN]));
         shake_screen(10.0, 8.0, 1.0);
     }
 }
@@ -127,6 +148,7 @@ public restart_game()
     team_scores[CS_TEAM_CT] = 0;
 }
 
+
 stock shake_screen(Float:amplitude = 3.0, Float:duration = 3.0, Float:frequency = 1.0)
 {
 	static MSG_ScreenShake;
@@ -143,13 +165,6 @@ stock shake_screen(Float:amplitude = 3.0, Float:duration = 3.0, Float:frequency 
 	return 1;
 }
 
-enum ScreenFadeFlags
-{
-	ScreenFade_FadeIn = 0x0000,
-	ScreenFade_FadeOut = 0x0001,
-	ScreenFade_Modulate = 0x0002,
-	ScreenFade_StayOut = 0x0004
-}
 
 stock fade_screen(Float:duration = 1.0, Float:fadetime = 1.0, ScreenFadeFlags:flags = ScreenFade_FadeIn, r = 0, g = 0, b = 255, a = 75)
 {

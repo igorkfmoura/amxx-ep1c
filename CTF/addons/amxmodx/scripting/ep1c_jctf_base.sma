@@ -5,12 +5,15 @@
 #include <jctf>
 #include <xs>
 
-#define PLUGIN  "ep1c CTF"
+#define PLUGIN  "ep1c-jctf"
 #define VERSION "1.32o.1"
 #define AUTHOR  "Digi + lonewolf"
 
-#define GAME_DESCRIPTION "[PEGA BANDEIRA ]"
+#define GAME_DESCRIPTION "[PEGA BANDEIRA.]"
 
+#define DEBUG(%1) client_print(%1)
+
+#define player_allowChangeTeam(%1) (get_ent_data((%1), "CBasePlayer", "m_bTeamChanged", false))
 
 const ADMIN_RETURN     = ADMIN_RCON; // access required for admins to return flags (full list in includes/amxconst.inc)
 const ADMIN_RETURNWAIT = 15;         // time the flag needs to stay dropped before it can be returned by command
@@ -28,7 +31,7 @@ new const TASK_CLASSNAME[] = "ctf_think_task";
 new const Float:TASK_THINK = 1.0;
 
 new const FLAG_CLASSNAME[] = "ctf_flag"
-new const FLAG_MODEL[]     = "models/jctf/ctf_flag.mdl"
+new const FLAG_MODEL[]     = "models/ep1c/ctf_flag_ep1c_03.mdl"
 
 const TASK_EQUIPAMENT  = 6451;
 const LIMIT_ADRENALINE = 100;
@@ -52,12 +55,14 @@ const FLAG_HOLD_DROPPED = 34;
 new const CHAT_PREFIX[]    = "^4[ep1c gaming Brasil]^1 ";
 new const CONSOLE_PREFIX[] = "[ep1c gaming Brasil] ";
 
-#define HUD_HINT       255,  255, 255, 0.15, -0.3, 0, 0.0, 10.0
-#define HUD_HELP       255,  255, 0,   -1.0, 0.2,  2, 1.0, 1.5, .fadeintime=0.03
-#define HUD_HELP2      255,  255, 0,   -1.0, 0.25, 2, 1.0, 1.5, .fadeintime=0.03
-#define HUD_ANNOUNCE   -1.0, 0.3, 2,   1.0,  3.0, .fadeintime = 0.03
-#define HUD_RESPAWN    0,    255, 0,   -1.0, 0.6,  2, 1.0, 0.8, .fadeintime=0.03
-#define HUD_PROTECTION 255,  255, 0,   -1.0, 0.6,  2, 1.0, 0.8, .fadeintime=0.03
+#define HUD_HINT            255,  255, 255, 0.15,  -0.3, 0, 0.0, 10.0
+#define HUD_HELP            255,  255, 0,   -1.0,  0.2,  2, 1.0, 1.5, .fadeintime=0.03
+#define HUD_HELP2           255,  255, 0,   -1.0,  0.25, 2, 1.0, 1.5, .fadeintime=0.03
+#define HUD_ANNOUNCE        -1.0, 0.3, 2,   1.0,   3.0, .fadeintime = 0.03
+#define HUD_RESPAWN         0,    255, 0,   -1.0,  0.6,  2, 1.0, 0.8, .fadeintime=0.03
+#define HUD_PROTECTION      255,  255, 0,   -1.0,  0.6,  2, 1.0, 0.8, .fadeintime=0.03
+#define HUD_ADRENALINE      0,    255, 0,   0.03, 0.3,  0, 1.0, 1.0
+#define HUD_ADRENALINE_FULL 0,    255, 0,   0.03, 0.3,  1, 1.0, 1.0
 
 #define get_opTeam(%1) ((%1) == TEAM_BLUE ? TEAM_RED : ((%1) == TEAM_RED ? TEAM_BLUE : 0))
 
@@ -104,12 +109,12 @@ enum
 {
     REWARD_CAPTURED = 15,
     REWARD_RETURNED = 10,
-    REWARD_STOLEN   = 5,
+    REWARD_STOLEN   = 100,
     REWARD_DROPPED  = 15,
     REWARD_FRAG     = 3
 };
 
-enum FlagEvents
+enum
 {
     FLAG_STOLEN,
     FLAG_PICKED,
@@ -590,8 +595,42 @@ public task_think(ent)
     set_hudmessage(HUD_RESPAWN);
     for(i = 1; i <= g_iMaxPlayers; i++)
     {
-        if(is_user_connected(i) && (TEAM_RED <= g_iTeam[i] <= TEAM_BLUE) && !g_bAlive[i] && g_bRespawned[i])
+        if (!is_user_connected(i) || (g_iTeam[i] != TEAM_RED && g_iTeam[i] != TEAM_BLUE))
         {
+            continue;
+        }
+
+        DEBUG(i, print_chat, "(task_think) g_bAlive[%d]: %d, g_bRespawned[%d]: %d, g_bRespawn[%d]: %d", i, g_bAlive[i], i, g_bRespawned[i], i, g_bRespawn[i]);
+        if(g_bAlive[i])
+        {
+            if (g_bProtected[i])
+            {
+                ShowSyncHudMsg(i, g_iSync[1], "%L", i, "PROTECTION_LEFT", g_bProtecting[i]);
+        
+                if(g_bProtecting[i] <= 0)
+                {
+                    player_removeProtection(i, "PROTECTION_EXPIRED");
+                }
+                g_bProtecting[i]--;
+            }
+            else
+            {
+                new iAdrenaline = g_bAdrenaline[i];
+                if (iAdrenaline < 100)
+                {
+                    set_hudmessage(HUD_ADRENALINE);
+                    ShowSyncHudMsg(i, g_iSync[1], "%L", i, "HUD_ADRENALINE", iAdrenaline, LIMIT_ADRENALINE);
+                }
+                else
+                {
+                    set_hudmessage(HUD_ADRENALINE_FULL);
+                    ShowSyncHudMsg(i, g_iSync[1], "%L", i, "HUD_ADRENALINE_FULL");
+                }
+            }
+        }
+        else if(g_bRespawned[i])
+        {
+            DEBUG(i, print_chat, "(task_think) g_bRespawned[%d]: %d, g_bRespawn[%d]: %d", i, g_bRespawned[i], i, g_bRespawn[i]);
             ShowSyncHudMsg(i, g_iSync[1], "%L", i, "RESPAWNING_IN", g_bRespawn[i]);
             
             if(g_bRespawn[i] <= 0)
@@ -600,17 +639,6 @@ public task_think(ent)
                 rg_round_respawn(i);
             }
             g_bRespawn[i]--;
-        }
-        
-        if(is_user_connected(i) && (TEAM_RED <= g_iTeam[i] <= TEAM_BLUE) && g_bAlive[i] && g_bProtected[i])
-        {
-            ShowSyncHudMsg(i, g_iSync[1], "%L", i, "PROTECTION_LEFT", g_bProtecting[i]);
-        
-            if(g_bProtecting[i] <= 0)
-            {
-                player_removeProtection(i, "PROTECTION_EXPIRED");
-            }
-            g_bProtecting[i]--;
         }
     }
     entity_set_float(ent, EV_FL_nextthink, get_gametime() + TASK_THINK);
@@ -865,8 +893,10 @@ public client_disconnected(id)
 
 public pfn_ChooseAppearance(id, slot)
 {
+    DEBUG(id, print_chat, "(pfn_ChooseAppearance) id: %d, slot: %d", id, slot);
     if((1 <= slot <= 4 || slot == 6) && !g_bAlive[id])
     {
+        client_print(id, print_chat, "(pfn_ChooseAppearance) inside");
         g_bRespawned[id] = true;
         g_bRespawn[id]   = get_pcvar_num(pCvar_ctf_respawntime);
     }
@@ -880,14 +910,21 @@ public player_joinTeam()
     id = read_data(1);
     read_data(2, szTeam, charsmax(szTeam));
     
+    DEBUG(id, print_chat, "(player_joinTeam) id: %d, szTeam: %s", id, szTeam);
+
+    player_allowChangeTeam(id);
+    
     switch(szTeam[0])
     {
         case 'T': g_iTeam[id] = TEAM_RED;
         case 'C': g_iTeam[id] = TEAM_BLUE;
         case 'U': g_iTeam[id] = TEAM_NONE;
-        default:  g_iTeam[id] = TEAM_SPEC;
+        default:
+        {
+            g_iTeam[id] = TEAM_SPEC;
+        }
     }
-    g_bRespawned[id] = false;
+    // g_bRespawned[id] = false;
 }
 
 public pfn_PlayerSpawn(id)
@@ -960,6 +997,7 @@ public event_playerKilled()
         }
     }
     
+    player_allowChangeTeam(v);
     g_bRespawn[v] = get_pcvar_num(pCvar_ctf_respawntime);
     player_dropFlag(v);
 }

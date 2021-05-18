@@ -69,7 +69,7 @@ public pfn_shop_adrenaline(id)
 	for(new i = 0; i < g_TotalItems; i++)
 	{
 		num_to_str(i, temp, charsmax(temp))
-		menu_additem(menu, fmt("\w%L: \y%d \d(Adr)", id, g_szItem[i][ITEM_NAME], g_szItem[i][ITEM_COST]), temp)
+		menu_additem(menu, fmt("\d[\y%d\d] \w%s", g_szItem[i][ITEM_COST], g_szItem[i][ITEM_NAME]), temp)
 	}
 	
 	menu_setprop(menu, MPROP_BACKNAME, fmt("%L", id, "MENU_BACK"))

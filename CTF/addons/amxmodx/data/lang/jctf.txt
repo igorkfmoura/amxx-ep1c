@@ -129,6 +129,9 @@ HUD_RETURNYOURFLAG = Your flag is dropped, return it!
 HUD_RETURNEDFLAG = You returned your team flag!
 HUD_CAPTUREDFLAG = You captured the enemy flag!
 
+HUD_ADRENALINE = Adrenaline: %d of %d
+HUD_ADRENALINE_FULL = Adrenaline FULL!^nSay /adrenaline in chat to use a combo!
+
 PRINT_ADR_LOW = You do not have enough adrenaline to buy this item
 PRINT_ITEM_USE = You can not buy this item again while it is in use
 

@@ -31,6 +31,8 @@ lonewolf implementou:
 #define VERSION "#1.0.6.4"
 #define AUTHOR  "tuty + lonewolf"
 
+#define PREFIX "^4[ep1c gaming Brasil]^1"
+
 #if AMXX_VERSION_NUM < 183
 #define MAX_PLAYERS        32
 #endif
@@ -137,7 +139,7 @@ public plugin_init( )
 	gCvarDispenserHealth = register_cvar( "dispenser_health", "900" );
 	gCvarBuildTime = register_cvar( "dispenser_buildtime", "1" );
 	gCvarReplenishRadius = register_cvar( "dispenser_radius", "300" );
-	gCvarSpinDispenser = register_cvar( "dispenser_spin", "0" );
+	gCvarSpinDispenser = register_cvar( "dispenser_spin", "1" );
 	gCvarMaxHealth = register_cvar( "dispenser_playermax_health", "100" );
 	gCvarMaxArmor = register_cvar( "dispenser_playermax_armor", "100" );
 	gCvarGlow = register_cvar( "dispenser_glow", "1" );
@@ -195,8 +197,8 @@ public ShowDispenserOwner( id )
 			new szName[ 32 ], iOwner = pev( iEnt, pev_iuser2 );
 			get_user_name( iOwner, szName, charsmax( szName ) );
 
-			set_hudmessage( 255, 255, 255, -1.0, 0.65, .holdtime = gDispenserCheckFreq );
-			ShowSyncHudMsg( id, gDispenserSyncObj, "[ ep1c - Dispenser ]^n^nDono: [%s]", szName );
+			set_hudmessage( 255, 255, 255, -1.0, 0.65, 1, .holdtime = gDispenserCheckFreq );
+			ShowSyncHudMsg( id, gDispenserSyncObj, "• Dispenser •^n^nDono: %s", szName );
 		}
 	}
 }
@@ -212,14 +214,14 @@ public CommandDispenserBuild( id )
 
 	if( bDispenserBuild[ id ] == true )
 	{
-		client_print_color(id, print_team_default, "^4[RECRUTA] ^3Você^1 já tem um ^3dispenser ^1construido!" );
+		client_print_color(id, print_team_default, "%s Você já tem um ^3Dispenser^1 construido!", PREFIX );
 
 		return PLUGIN_HANDLED;
 	}
 
 	if( !( pev( id, pev_flags ) & FL_ONGROUND ) )
 	{
-		client_print_color(id, print_team_default, "^4[RECRUTA] ^3Você^1 precisa estar no chão para construir um ^4Dispenser^1!" );
+		client_print_color(id, print_team_default, "%s Você precisa estar no chão para construir um ^3Dispenser^1!", PREFIX );
 
 		return PLUGIN_HANDLED;
 	}
@@ -229,7 +231,7 @@ public CommandDispenserBuild( id )
 
 	if( iMoney < iCost )
 	{
-		client_print_color(id, print_team_default, "^4[RECRUTA] ^3Você ^1não tem dinheiro ^1suficiente para construir um ^3Dispenser^1... precisa de ^4( $%d )", iCost );
+		client_print_color(id, print_team_default, "%s Você precisa de ^4$%d^1 para construir um ^3Dispenser^1!", PREFIX, iCost );
 		
 		return PLUGIN_HANDLED;
 	}
@@ -247,9 +249,7 @@ public CommandDispenserBuild( id )
 	pev( id, pev_origin, flPlayerOrigin );
 
 	new Float:flHealth = float( get_pcvar_num( gCvarDispenserHealth ) );
-	
-	client_print(id, print_chat, "gPlayerTeam[ %d ]: %d", id, gPlayerTeam[ id ]);
-	
+		
 	set_pev( iEntity, pev_classname, gDispenserClassname );
 	engfunc( EngFunc_SetModel, iEntity, gDispenserMdl );
 	set_pev( iEntity, pev_skin, gPlayerTeam[ id ] );
@@ -286,11 +286,7 @@ public CommandDispenserBuild( id )
 	
 	cs_set_user_money( id, iMoney - iCost, 1 );
 
-	client_print_color(id, id, "^4------ ^1------ ^3------ ^4------ ^1------ ^3------ ^4------" );
-	client_print_color(id, id, "^1[^4RECRUTA^1]^3: ^1Construindo um ^4dispenser^1." );
-	client_print_color(id, id, "^1[^4RECRUTA^1]^3: ^1Item: ^4Dispenser ^1Concluido." );
-	client_print_color(id, id, "^1[^4RECRUTA^1]^3: ^1Preço: ^4( $%d )^1.", iCost );
-	client_print_color(id, id, "^4------ ^1------ ^3------ ^4------ ^1------ ^3------ ^4------" );
+	client_print_color(id, id, "%s Você comprou um ^3Dispenser^1 por ^4$%d^1!", PREFIX, iCost );
 
 	return PLUGIN_HANDLED;
 }
@@ -314,7 +310,7 @@ public CommandSay( id )
 
 		if( !iPlayer )
 		{
-			client_print_color(id, print_team_default, "^4[RECRUTA] ^1Player não encontrado!" );
+			client_print_color(id, print_team_default, "%s, Player não encontrado!", PREFIX );
 			return PLUGIN_HANDLED;
 		}
 
@@ -323,23 +319,23 @@ public CommandSay( id )
 
 		if( !bDispenserBuild[ iPlayer ] )
 		{
-			client_print_color(id, iPlayer, "^4[RECRUTA] ^1Jogador ^3%s ^1não tem um ^4dispenser^1!", szName );
+			client_print_color(id, iPlayer, "%s Jogador ^3%s^1 não tem um ^3Dispenser^1!", PREFIX, szName );
 			return PLUGIN_HANDLED;
 		}
 
 		DestroyDispenser( iPlayer );
-		client_print_color(id, iPlayer, "^4[RECRUTA] ^1Você destruiu o ^4Dispenser de ^3%s", szName );
+		client_print_color(id, iPlayer, "%s Você destruiu o ^3Dispenser^1 de ^3%s!", PREFIX, szName );
 	}
 	else
 	{
 		if( !bDispenserBuild[ id ] )
 		{
-			client_print_color(id, print_team_default, "^4[RECRUTA] ^3Você^1 não tem um ^4dispenser^1!" );
+			client_print_color(id, id, "%s Você não tem um ^3Dispenser^1!", PREFIX );
 			return PLUGIN_HANDLED;
 		}
 
 		DestroyDispenser( id );
-		client_print_color(id, print_team_default, "^4[RECRUTA] ^3Você^1 destruiu seu próprio ^4Dispenser^1." );
+		client_print_color(id, id, "%s Você destruiu seu próprio ^3Dispenser^1!", PREFIX );
 	}
 
 	return PLUGIN_HANDLED;
@@ -357,12 +353,12 @@ public bacon_TakeDamage( ent, idinflictor, idattacker, Float:damage, damagebits 
 	new szClassname[ 32 ];
 	pev( ent, pev_classname, szClassname, charsmax( szClassname ) );
 
-	// client_print_color( 0, print_team_default, "traceattack: %s", szClassname );
 	if( equal( szClassname, gDispenserClassname ) )
 	{
 		new iOwner = pev( ent, pev_iuser2 );
+		new iHealth = pev( ent, pev_health );
 
-		if( pev( ent, pev_health ) <= 0.0 )
+		if( iHealth <= 0 )
 		{
 			new szName[ 32 ];
 			get_user_name( idattacker, szName, charsmax( szName ) );
@@ -375,20 +371,20 @@ public bacon_TakeDamage( ent, idinflictor, idattacker, Float:damage, damagebits 
 
 			if( idattacker == iOwner )
 			{
-				client_print_color(iOwner, print_team_default, "^4[RECRUTA] ^3Você ^1destruiu seu próprio ^4Dispenser^3." );
+				client_print_color(iOwner, print_team_default, "%s Você destruiu seu próprio ^3Dispenser^1!", PREFIX );
 			}
 			else
 			{
 				if (cs_get_user_team( iOwner ) != cs_get_user_team( idattacker ) )
 				{
-//					client_print( iOwner, print_center, "[RECRUTA] %s destruiu seu Dispenser!", szName ); // centro da tela
-					client_print_color(iOwner, idattacker, "^4[RECRUTA] ^1Jogador ^3%s^1 destruiu seu Dispenser!", szName); // no chat com cor
+					client_print( iOwner, print_center, "%s destruiu seu Dispenser!", szName ); // centro da tela
+					client_print_color(iOwner, idattacker, "%s Jogador ^3%s^1 destruiu seu Dispenser!", PREFIX, szName); // no chat com cor
 				}
 				else
 				{
 					new szOwner[ 32 ];
 					get_user_name( iOwner, szOwner, charsmax( szOwner ) );
-					client_print_color(0, idattacker, "^4[RECRUTA] ^1Jogador ^3%s ^1destruiu o dispenser do aliado ^3%s^1!", szName, szOwner); // vingança
+					client_print_color(0, idattacker, "%s Jogador ^3%s^1 destruiu o Dispenser do aliado ^3%s^1!", PREFIX, szName, szOwner); // vingança
 				}
 			}
 
@@ -396,7 +392,8 @@ public bacon_TakeDamage( ent, idinflictor, idattacker, Float:damage, damagebits 
 			bDispenserBuild[ iOwner ] = false;
 		}
 
-		gDispenserHealthOff[ iOwner ] = float( pev( ent, pev_health ) );
+
+		gDispenserHealthOff[ iOwner ] = float( iHealth );
 		emit_sound( ent, CHAN_STATIC, gDamageSounds[ random_num( 0, charsmax( gDamageSounds ) ) ], VOL_NORM, ATTN_NORM, 0, PITCH_NORM );
 	}
 }
@@ -406,7 +403,6 @@ public bacon_TraceAttack( iVictim, iAttacker, Float:flDamage, Float:flDirection[
 	new szClassname[ 32 ];
 	pev( iVictim, pev_classname, szClassname, charsmax( szClassname ) );
 
-	// client_print_color( 0, print_team_default, "traceattack: %s", szClassname );
 	if( equal( szClassname, gDispenserClassname ) )
 	{
 		new Float:flEndOrigin[ 3 ];
