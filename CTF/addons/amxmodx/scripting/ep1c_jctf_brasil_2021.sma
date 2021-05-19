@@ -10,9 +10,9 @@
 #include <fun>
 
 // Infos
-new const MOD_TITLE[] =			"Captura Bandeira 2021"					/* Please don't modify. */
-new const MOD_AUTHOR[] =		"Digi || SKVD || yRestrict || MOISES nPQ"				/* If you make major changes, add " & YourName" at the end */
-new const MOD_VERSION[] =		"5.1.B"									/* If you make major changes, add "custom" at the end but do not modify the actual version number! */
+new const MOD_TITLE[] =			"jCTF ep1c"					/* Please don't modify. */
+new const MOD_AUTHOR[] =		"Digi || SKVD || yRestrict || lonewolf"	/* If you make major changes, add " & YourName" at the end */
+new const MOD_VERSION[] =		"0.1 + 5.1.B"									/* If you make major changes, add "custom" at the end but do not modify the actual version number! */
 
 // Features
 #define FEATURE_BUY				true
@@ -101,7 +101,7 @@ new const WEAPONBOX[] =					"weaponbox"
 new const PLAYER[] =					"player"
 
 // Itens
-new const FLAG_MODEL[] =				"models/jctf/ctf_flag.mdl"
+new const FLAG_MODEL[] =				"models/ep1c/ctf_flag_ep1c_03.mdl"
 new const ITEM_MODEL_AMMO[] =			"models/w_chainammo.mdl"
 new const ITEM_MODEL_MEDKIT[] =			"models/w_medkit.mdl"
 new const SND_GETAMMO[] =				"items/9mmclip1.wav"
@@ -143,8 +143,8 @@ const m_flNextPrimaryAttack =		46
 const m_flNextSecondaryAttack =		47
 
 // Prefix
-new const CHAT_PREFIX[] =			"^x04[ep1c gaming Brasil]^x01 "
-new const CONSOLE_PREFIX[] =		"[ep1c gaming Brasil] "
+new const PREFIX[]         = "^x04[ep1c gaming Brasil]^x01"
+new const CONSOLE_PREFIX[] = "[ep1c gaming Brasil]"
 
 // Huds
 #define NULL					""
@@ -185,10 +185,10 @@ enum (+= 64)
 	TASK_CHECKHP
 }
 enum { TEAM_NONE = 0, TEAM_RED, TEAM_BLUE, TEAM_SPEC }
-new const g_szCSTeams[][] = { NULL, "TERRORIST", "CT", "SPECTATOR" }
-new const g_szTeamName[][] = { NULL, "Red", "Blue", "Spectator" }
-new const g_szMLTeamName[][] = { NULL, "TEAM_RED", "TEAM_BLUE", "TEAM_SPEC" }
-new const g_szMLFlagTeam[][] = { NULL, "FLAG_RED", "FLAG_BLUE", NULL }
+new const g_szCSTeams[][]    = { NULL, "TERRORIST", "CT", "SPECTATOR" }
+new const g_szTeamName[][]   = { NULL, "Black", "White", "Spectator" }
+new const g_szMLTeamName[][] = { NULL, "TEAM_BLACK", "TEAM_WHITE", "TEAM_SPEC" }
+new const g_szMLFlagTeam[][] = { NULL, "FLAG_BLACK", "FLAG_WHITE", NULL }
 enum
 {
 	FLAG_STOLEN = 0,
@@ -4325,7 +4325,7 @@ player_print(id, iSender, szMsg[], any:...)
 	new szFormat[192]
 
 	vformat(szFormat, charsmax(szFormat), szMsg, 4)
-	format(szFormat, charsmax(szFormat), "%s%s", CHAT_PREFIX, szFormat)
+	format(szFormat, charsmax(szFormat), "%s %s", PREFIX, szFormat)
 
 	if(id)
 		message_begin(MSG_ONE, gMsg_SayText, _, id)
