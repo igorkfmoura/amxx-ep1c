@@ -104,7 +104,7 @@ new const PLAYER[] =                    "player"
 
 // Itens
 // new const FLAG_MODEL[] =                "models/ep1c/ctf_flag_ep1c_03.mdl"
-new const FLAG_MODEL[] =                "models/ep1c/ep1c_flag2.mdl"
+new const FLAG_MODEL[] =                "models/ep1c/flag_ep1c_b_03_04.mdl"
 new const ITEM_MODEL_AMMO[] =            "models/w_chainammo.mdl"
 new const ITEM_MODEL_MEDKIT[] =            "models/w_medkit.mdl"
 new const SND_GETAMMO[] =                "items/9mmclip1.wav"
@@ -166,8 +166,8 @@ new const CONSOLE_PREFIX[] = "[ep1c gaming Brasil]"
 #define HUD_ANNOUNCE        -1.0, 0.3, 2,   1.0,   3.0, .fadeintime = 0.03
 #define HUD_RESPAWN         0,    255, 0,   -1.0,  0.6,  2, 1.0, 0.8, .fadeintime=0.03
 #define HUD_PROTECTION      255,  255, 0,   -1.0,  0.6,  2, 1.0, 0.8, .fadeintime=0.03
-#define HUD_ADRENALINE      0,    255, 0,   0.03, 0.3,  0, 1.0, 1.0
-#define HUD_ADRENALINEFULL 0,    255, 0,   0.03, 0.3,  1, 1.0, 1.0
+#define HUD_ADRENALINE      0,    255, 0,   0.03, 0.25,  0, 1.0, 1.0
+#define HUD_ADRENALINEFULL 0,    255, 0,   0.03, 0.25,  1, 1.0, 1.0
 #define TASK_HUDRANK                 1234569
 
 // Entitys
@@ -392,35 +392,35 @@ new const g_iWeaponPrice[] =
     0,            // (unknown)
     600,        // P228
     5000,        // SHIELD
-    5000,        // SCOUT
+    2750,        // SCOUT
     300,        // HEGRENADE
-    2000,        // XM1014
+    3000,        // XM1014
     12000,        // C4
     1400,        // MAC10
-    2300,        // AUG
+    3500,        // AUG
     300,        // SMOKEGRENADE
-    650,        // ELITE
-    600,        // FIVESEVEN
+    800,        // ELITE
+    750,        // FIVESEVEN
     1700,        // UMP45
-    6500,        // SG550
-    2500,        // GALIL
-    2500,        // FAMAS
+    4200,        // SG550
+    2000,        // GALIL
+    2250,        // FAMAS
     500,        // USP
     400,        // GLOCK18
-    6000,        // AWP
+    4750,        // AWP
     1500,        // MP5NAVY
-    3000,        // M249
+    5750,        // M249
     1700,        // M3
-    3000,        // M4A1
-    1400,        // TMP
-    7000,        // G3SG1
+    3100,        // M4A1
+    1250,        // TMP
+    5000,        // G3SG1
     200,        // FLASHBANG
-    700,        // DEAGLE
-    2300,        // SG552
-    3000,        // AK47
+    650,        // DEAGLE
+    3500,        // SG552
+    2500,        // AK47
     0,            // KNIFE (not used)
-    2000,        // P90
-    500,        // Kevlar
+    2350,        // P90
+    650,        // Kevlar
     1000,        // Kevlar + Helm
     1000        // NVG
 }
@@ -431,7 +431,7 @@ new const g_iWeaponAdrenaline[] =
     0,        // (unknown)
     0,        // P228
     50,        // SHIELD
-    10,        // SCOUT
+    0,        // SCOUT
     0,        // HEGRENADE
     0,        // XM1014
     100,        // C4
@@ -441,7 +441,7 @@ new const g_iWeaponAdrenaline[] =
     0,        // ELITE
     0,        // FIVESEVEN
     0,        // UMP45
-    50,        // SG550
+    40,        // SG550
     0,        // GALIL
     0,        // FAMAS
     0,        // USP
@@ -452,10 +452,10 @@ new const g_iWeaponAdrenaline[] =
     0,        // M3
     0,        // M4A1
     0,        // TMP
-    15,        // G3SG1
+    40,        // G3SG1
     0,        // FLASHBANG
     0,        // DEAGLE
-    0,        // SG552
+    40,        // SG552
     0,        // AK47
     0,        // KNIFE (not used)
     0,        // P90
@@ -624,17 +624,17 @@ enum xDataGuns
 
 new const xGunsPrimary[][xDataGuns] =
 {
-    { "M4a1", CSW_M4A1, "weapon_m4a1", 30, 90 },
-    { "Ak 47", CSW_AK47, "weapon_ak47", 30, 90 },
+    { "M4A1", CSW_M4A1, "weapon_m4a1", 30, 90 },
+    { "AK47", CSW_AK47, "weapon_ak47", 30, 90 },
     //{ "AWP", CSW_AWP, "weapon_awp", 10, 30 },
     { "Famas", CSW_FAMAS, "weapon_famas", 25, 90 },
-    { "Aug", CSW_AUG, "weapon_aug", 30, 90 },
+    // { "Aug", CSW_AUG, "weapon_aug", 30, 90 },
     { "Galil", CSW_GALI, "weapon_galil", 35, 90 },
     //{ "Scout", CSW_SCOUT, "weapon_scout", 10, 90 },
     { "M3-12", CSW_M3, "weapon_m3", 10, 90 },
-    { "RAMBAO", CSW_M249, "weapon_m249", 10, 90 }, 
-    { "P90", CSW_P90, "weapon_p90", 10, 90 }, 
-    { "MP5", CSW_MP5NAVY, "weapon_mp5navy", 10, 90 }, 
+    // { "RAMBAO", CSW_M249, "weapon_m249", 10, 90 }, 
+    // { "P90", CSW_P90, "weapon_p90", 10, 90 }, 
+    // { "MP5", CSW_MP5NAVY, "weapon_mp5navy", 10, 90 }, 
     { "XM-12", CSW_XM1014, "weapon_xm1014", 10, 90 },
 }
 new xAction[33];
@@ -872,7 +872,15 @@ public plugin_init()
     register_clcmd("cl_rebuy", "player_cmd_rebuy")
     register_clcmd("cl_setrebuy", "player_cmd_setRebuy")
     register_clcmd("buyequip", "player_cmd_buy_equipament")
-    // register_clcmd("say /ep1c gaming Brasil", "xSelectGuns")
+
+    register_clcmd("say /armas", "xSelectGuns")
+    register_clcmd("say .armas", "xSelectGuns")
+    register_clcmd("say_team /armas", "xSelectGuns")
+    register_clcmd("say_team .armas", "xSelectGuns")
+    register_clcmd("say /guns", "xSelectGuns")
+    register_clcmd("say .guns", "xSelectGuns")
+    register_clcmd("say_team /guns", "xSelectGuns")
+    register_clcmd("say_team .guns", "xSelectGuns")
 
 #endif // FEATURE_BUY
 
@@ -1026,17 +1034,17 @@ public plugin_init()
     Map_Check_Cam = false
 
     //Desativar este comando nos eventos boss
-    new map_name[32], check_index
+    // new map_name[32], check_index
 
     // MAP NAME
-    get_mapname(map_name, sizeof(map_name))    
+    // get_mapname(map_name, sizeof(map_name))    
 
-    // Loop
-    for(check_index = 0; check_index < sizeof(allow_map_prefix); check_index++)
-    {
-        if(equali(map_name, allow_map_prefix[check_index], strlen(allow_map_prefix[check_index])))
-            Map_Check_Cam = true
-    }
+    // // Loop
+    // for(check_index = 0; check_index < sizeof(allow_map_prefix); check_index++)
+    // {
+    //     if(equali(map_name, allow_map_prefix[check_index], strlen(allow_map_prefix[check_index])))
+    //         Map_Check_Cam = true
+    // }
 
 }
 public plugin_cfg()
@@ -1078,16 +1086,21 @@ public plugin_cfg()
 }
 public plugin_postCfg()
 {
-    set_cvar_num("mp_freezetime", 0)
-    set_cvar_num("mp_limitteams", 0)
+    // set_cvar_num("mp_freezetime", 0)
+    // set_cvar_num("mp_limitteams", 0)
     set_cvar_num("mp_buytime", -1)
     set_cvar_num("mp_refill_bpammo_weapons", 2)
     set_cvar_num("mp_item_staytime", 15)
+    server_cmd("sv_alltalk 1")
     server_cmd("sv_restart 1")
     server_cmd("amx_cvar mp_round_infinite 1")
+    server_cmd("amx_cvar mp_timelimit 30")
     server_cmd("amx_cvar mp_respawn_immunitytime %i", get_pcvar_num(pCvar_ctf_protection))
     set_cvar_string("mp_round_infinite", "1")
-    set_cvar_string("mp_respawn_immunitytime", "4")
+
+    // new str[10]
+    // get_pcvar_string(pCvar_ctf_protection, str, charsmax(str))
+    // set_cvar_string("mp_respawn_immunitytime", str)
 }
 public plugin_natives()
 {
@@ -1131,14 +1144,14 @@ public ent_spawn(ent)
     new map_name[32], check_index, bool: Idext = false;
 
     // MAP NAME
-    get_mapname(map_name, sizeof(map_name))    
+    // get_mapname(map_name, sizeof(map_name))    
 
-    // Loop
-    for(check_index = 0; check_index < sizeof(allow_map_prefix); check_index++)
-    {
-        if(equali(map_name, allow_map_prefix[check_index], strlen(allow_map_prefix[check_index])))
-            Idext = true;
-    }
+    // // Loop
+    // for(check_index = 0; check_index < sizeof(allow_map_prefix); check_index++)
+    // {
+    //     if(equali(map_name, allow_map_prefix[check_index], strlen(allow_map_prefix[check_index])))
+    //         Idext = true;
+    // }
 
     if(!Idext)
     {
@@ -1857,6 +1870,9 @@ public player_joinTeam()
         }
     }
 }
+
+new bool:g_bAlreadySelectedGun[MAX_PLAYERS+1]
+
 public player_spawn(id)
 {
     if(!is_user_alive(id) || (!g_bRestarted[id] && g_bAlive[id]))
@@ -1913,14 +1929,15 @@ public player_spawn(id)
     else
         cs_set_user_money(id, clamp((cs_get_user_money(id) + get_pcvar_num(pCvar_ctf_spawnmoney)), get_pcvar_num(pCvar_mp_startmoney), 16000))
 
-    // xSelectGuns(id);
+    g_bAlreadySelectedGun[id] = false;
+    xSelectGuns(id);
 }
 
 public xSelectGuns(id)
 {
     new xFmtx[1024], xKey[24], i
     
-    formatex(xFmtx, charsmax(xFmtx), "\y[ \rep1c gaming Brasil \y] \r~ \wMENU \r| \yARMAS")
+    formatex(xFmtx, charsmax(xFmtx), "\y[ep1c gaming Brasil] \r~\w Menu de Armas")
     
     new xMenu = menu_create(xFmtx, "_xSelectGuns")
     
@@ -1935,11 +1952,13 @@ public xSelectGuns(id)
     menu_setprop(xMenu, MPROP_NEXTNAME, "Proxima")
     menu_setprop(xMenu, MPROP_EXITNAME, "Sair")
     menu_display(id, xMenu)
+
+    return PLUGIN_HANDLED;
 }
 
 public _xSelectGuns(id, menu, item)
 {
-    if(item == MENU_EXIT || !is_user_connected(id))
+    if(item == MENU_EXIT || !is_user_connected(id) || g_bAlreadySelectedGun[id])
     {
         menu_destroy(menu)
 
@@ -1954,6 +1973,26 @@ public _xSelectGuns(id, menu, item)
 
     xAction[id] = str_to_num(data)
 
+    // for (new slot = CS_WEAPONSLOT_PRIMARY; slot <= CS_WEAPONSLOT_PRIMARY; ++slot)
+    // {
+    //   new weapon_id = get_ent_data_entity(id, "CBasePlayer", "m_rgpPlayerItems", slot);
+    //   if (is_valid_ent(weapon_id))
+    //   {
+    //     new weapon_type = get_ent_data(weapon_id, "CBasePlayerItem", "m_iId");
+    //     if (weapon_type > 0 && weapon_type <= CSW_P90 && weapons[weapon_type][WEAPONID])
+    //     {
+    //       static weapon_name[32];
+    //       cs_get_item_alias(weapon_type, weapon_name, charsmax(weapon_name));
+
+    //       cs_set_weapon_ammo(weapon_id, weapons[weapon_type][CLIP]);
+    //       cs_set_user_bpammo(id, weapon_type, weapons[weapon_type][BPAMMO]);
+
+    //       // client_print_color(id, id, "%s Refilling ^3%s^1 ammo...", PREFIX_CHAT, weapon_name);
+    //     }
+    //   }
+    // }
+
+    g_bAlreadySelectedGun[id] = true;
     give_item(id, xGunsPrimary[ xAction[id]][xGunGiveId])
     cs_set_user_bpammo(id, xGunsPrimary[ xAction[id]][xGunGiveCSW], xGunsPrimary[ xAction[id]][xAmmoBackPack])
 }
@@ -1978,8 +2017,11 @@ public player_spawnEquipament(id)
 {
     id += TASK_EQUIPAMENT
 
-    if(!g_bAlive[id])
+    if(!g_bAlive[id] || !is_user_alive(id))
+    {
+        g_bAlive[id] = false
         return
+    }
 
     strip_user_weapons(id)
 
@@ -1990,14 +2032,18 @@ public player_spawnEquipament(id)
     give_item(id, "ammo_50ae")
     give_item(id, "ammo_50ae")
     give_item(id, "ammo_50ae")
+
+    player_buyWeapon(id, CSW_FLASHBANG)
+    player_buyWeapon(id, CSW_FLASHBANG)
+    player_buyWeapon(id, CSW_HEGRENADE)
     // give_item(id, "weapon_hegrenade")
     // give_item(id, "weapon_flashbang")
     // give_item(id, "weapon_flashbang")
-    give_item(id, "weapon_m4a1");
-    give_item(id, "ammo_556nato");
-    give_item(id, "ammo_556nato");
-    give_item(id, "ammo_556nato");
-    // give_item(id, "item_assaultsuit")
+    // give_item(id, "weapon_m4a1");
+    // give_item(id, "ammo_556nato");
+    // give_item(id, "ammo_556nato");
+    // give_item(id, "ammo_556nato");
+    give_item(id, "item_assaultsuit")
 }
 #endif // FEATURE_BUY
 public player_protection(id, iStart)
@@ -2797,7 +2843,7 @@ public player_adrenalineDrain(id)
                 new iHealth = get_user_health(id)
 
                 if(iHealth < (g_iMaxHealth[id] + REGENERATE_EXTRAHP))
-                    set_user_health(id, iHealth + 1)
+                    set_user_health(id, min(iHealth + 5, g_iMaxHealth[id] + REGENERATE_EXTRAHP))
 
                 else
                 {
@@ -3650,69 +3696,87 @@ public player_buyWeapon(id, iWeapon)
         }
 
         case W_FLASHBANG:
-        {
-            new iGrenades = cs_get_user_bpammo(id, W_FLASHBANG)
+		{
+			new iGrenades = cs_get_user_bpammo(id, W_FLASHBANG)
 
-            if(iGrenades >= 2)
-            {
-                client_print(id, print_center, "%L", id, "BUY_NOMORE_FLASH")
-                return
-            }
+			if(iGrenades >= 2)
+			{
+				client_print(id, print_center, "%L", id, "BUY_NOMORE_FLASH")
+				return
+			}
 
-            new iCvar = get_pcvar_num(pCvar_ctf_nospam_flash)
-            new Float:fGameTime = get_gametime()
+			new iCvar = get_pcvar_num(pCvar_ctf_nospam_flash)
 
-            if(g_fLastBuy[id][iGrenades] > fGameTime)
-            {
-                client_print(id, print_center, "%L", id, "BUY_DELAY_FLASH", iCvar)
-                return
-            }
+			if (iCvar < 0)
+			{
+				client_print(id, print_center, "Proibido a compra de Flashbangs neste mapa!")
+				return
+			}
+			new Float:fGameTime = get_gametime()
+			if(g_fLastBuy[id][iGrenades] > fGameTime)
+			{
+				new fDelta = floatround(g_fLastBuy[id][iGrenades] - fGameTime);
+				client_print(id, print_center, "%L", id, "BUY_DELAY_FLASH", fDelta, (fDelta != 1 ? "s!" : "!"))
+				return
+			}
 
-            g_fLastBuy[id][iGrenades] = fGameTime + iCvar
+			g_fLastBuy[id][iGrenades] = fGameTime + iCvar
 
-            if(iGrenades == 1)
-                g_fLastBuy[id][0] = g_fLastBuy[id][iGrenades]
-        }
+			if(iGrenades == 1)
+				g_fLastBuy[id][0] = g_fLastBuy[id][iGrenades]
+		}
 
         case W_HEGRENADE:
-        {
-            if(cs_get_user_bpammo(id, W_HEGRENADE) >= 1)
-            {
-                client_print(id, print_center, "%L", id, "BUY_NOMORE_HE")
-                return
-            }
+		{
+			if(cs_get_user_bpammo(id, W_HEGRENADE) >= 1)
+			{
+				client_print(id, print_center, "%L", id, "BUY_NOMORE_HE")
+				return
+			}
 
-            new iCvar = get_pcvar_num(pCvar_ctf_nospam_he)
-            new Float:fGameTime = get_gametime()
+			new iCvar = get_pcvar_num(pCvar_ctf_nospam_he)
 
-            if(g_fLastBuy[id][2] > fGameTime)
-            {
-                client_print(id, print_center, "%L", id, "BUY_DELAY_HE", iCvar)
-                return
-            }
+			if (iCvar < 0)
+			{
+				client_print(id, print_center, "Proibido a compra de Granadas neste mapa!")
+				return
+			}
+			new Float:fGameTime = get_gametime()
+			if(g_fLastBuy[id][2] > fGameTime)
+			{
+				new fDelta = floatround(g_fLastBuy[id][2] - fGameTime);
+				client_print(id, print_center, "%L", id, "BUY_DELAY_HE", fDelta, (fDelta != 1 ? "s!" : "!"))
+				return
+			}
 
-            g_fLastBuy[id][2] = fGameTime + iCvar
-        }
+			g_fLastBuy[id][2] = fGameTime + iCvar
+		}
 
-        case W_SMOKEGRENADE:
-        {
-            if(cs_get_user_bpammo(id, W_SMOKEGRENADE) >= 1)
-            {
-                client_print(id, print_center, "%L", id, "BUY_NOMORE_SMOKE")
-                return
-            }
+		case W_SMOKEGRENADE:
+		{
+			if(cs_get_user_bpammo(id, W_SMOKEGRENADE) >= 1)
+			{
+				client_print(id, print_center, "%L", id, "BUY_NOMORE_SMOKE")
+				return
+			}
 
-            new iCvar = get_pcvar_num(pCvar_ctf_nospam_smoke)
-            new Float:fGameTime = get_gametime()
+			new iCvar = get_pcvar_num(pCvar_ctf_nospam_smoke)
 
-            if(g_fLastBuy[id][3] > fGameTime)
-            {
-                client_print(id, print_center, "%L", id, "BUY_DELAY_SMOKE", iCvar)
-                return
-            }
+			if (iCvar < 0)
+			{
+				client_print(id, print_center, "Proibido a compra de Granadas de Gelo neste mapa!")
+				return
+			}
+			new Float:fGameTime = get_gametime()
+			if(g_fLastBuy[id][3] > fGameTime)
+			{
+				new fDelta = floatround(g_fLastBuy[id][3] - fGameTime);
+				client_print(id, print_center, "%L", id, "BUY_DELAY_SMOKE", fDelta, (fDelta != 1 ? "s!" : "!"))
+				return
+			}
 
-            g_fLastBuy[id][3] = fGameTime + iCvar
-        }
+			g_fLastBuy[id][3] = fGameTime + iCvar
+		}
     }
 
     if(1 <= g_iWeaponSlot[iWeapon] <= 2)
