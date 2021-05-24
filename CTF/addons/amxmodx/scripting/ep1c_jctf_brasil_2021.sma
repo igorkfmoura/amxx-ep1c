@@ -38,7 +38,7 @@ new const MOD_VERSION[] = "0.1 + 5.1.B"                                    /* If
 #define REWARD_PICKUP         500,   0, 5
 #define PENALTY_DROP          -1500, 0, -15
 #define REWARD_KILL           500,   0, 5
-#define REWARD_KILLCARRIER    700,   0, 3
+#define REWARD_KILLCARRIER    700,   0, 5
 #define PENALTY_SUICIDE       -800,  0, -20
 #define PENALTY_TEAMKILL      -1000, 0, -20
 
@@ -48,8 +48,8 @@ const ADMIN_RETURNWAIT =            15                // time the flag needs to 
 const ITEM_MEDKIT_GIVE =            25                // medkit award health for picking up
 
 new const bool: CHAT_SHOW_COMMANDS =    false        // show commands (like /buy) in chat, true or false
-new const bool: ITEM_DROP_AMMO =        true        // toggle if killed players drop ammo items
-new const bool: ITEM_DROP_MEDKIT =        true        // toggle if killed players drop medkit items
+new const bool: ITEM_DROP_AMMO =        false        // toggle if killed players drop ammo items
+new const bool: ITEM_DROP_MEDKIT =      true        // toggle if killed players drop medkit items
 
 // Feature Adrenaline
 #if FEATURE_ADRENALINE == true
@@ -66,7 +66,7 @@ const Float:SPEED_ADRENALINE =            1.3                    // speed while 
 const Float:BERSERKER_SPEED1 =            0.7                    // primary weapon shooting speed percent while in berserk
 const Float:BERSERKER_SPEED2 =            0.3                    // secondary weapon shooting speed percent while in berserk
 const Float:BERSERKER_DAMAGE =            2.0                    // weapon damage percent while in berserk
-const INSTANTSPAWN_COST =                10                    // instant spawn (/spawn) adrenaline cost
+const INSTANTSPAWN_COST =                25                    // instant spawn (/spawn) adrenaline cost
 const ITEM_ADRENALINE =                    2                     // item adrenaline
 const ADRENALINE_SPEED =                1
 const ADRENALINE_BERSERK =                2
@@ -122,7 +122,7 @@ new const Float:FLAG_SPAWN_ANGLES[3] =        {0.0, 0.0, 0.0}
 new const Float:FLAG_DROP_VELOCITY[3] =        {0.0, 0.0, 50.0}
 new const Float:FLAG_PICKUPDISTANCE =        80.0
 new const Float:BASE_HEAL_DISTANCE =        96.0                    // healing distance for flag
-const Float:SPEED_FLAG =            0.9                                // speed while carying the enemy flag
+const Float:SPEED_FLAG =            1.0                                // speed while carying the enemy flag
 
 // Constas
 const FLAG_SKIPTHINK =                20            /* FLAG_THINK * FLAG_SKIPTHINK = 2.0 seconds ! */
@@ -967,29 +967,29 @@ public plugin_init()
     // CVARS
 
     pCvar_ctf_flagcaptureslay = register_cvar("ctf_flagcaptureslay", "0")
-    pCvar_ctf_flagheal = register_cvar("ctf_flagheal", "1")
-    pCvar_ctf_flagreturn = register_cvar("ctf_flagreturn", "120")
-    pCvar_ctf_respawntime = register_cvar("ctf_respawntime", "5")
-    pCvar_ctf_protection = register_cvar("ctf_protection", "7")
-    pCvar_ctf_glows = register_cvar("ctf_glow", "1")
-    pCvar_ctf_weaponstay = register_cvar("ctf_weaponstay", "3")
-    pCvar_ctf_spawnmoney = register_cvar("ctf_spawnmoney", "3500")
-    pCvar_ctf_itempercent = register_cvar("ctf_itempercent", "5")
+    pCvar_ctf_flagheal        = register_cvar("ctf_flagheal", "1")
+    pCvar_ctf_flagreturn      = register_cvar("ctf_flagreturn", "120")
+    pCvar_ctf_respawntime     = register_cvar("ctf_respawntime", "5")
+    pCvar_ctf_protection      = register_cvar("ctf_protection", "7")
+    pCvar_ctf_glows           = register_cvar("ctf_glow", "1")
+    pCvar_ctf_weaponstay      = register_cvar("ctf_weaponstay", "3")
+    pCvar_ctf_spawnmoney      = register_cvar("ctf_spawnmoney", "3500")
+    pCvar_ctf_itempercent     = register_cvar("ctf_itempercent", "5")
 
 #if FEATURE_BUY == true
 
     pCvar_ctf_nospam_flash = register_cvar("ctf_nospam_flash", "20")
-    pCvar_ctf_nospam_he = register_cvar("ctf_nospam_he", "20")
+    pCvar_ctf_nospam_he    = register_cvar("ctf_nospam_he", "20")
     pCvar_ctf_nospam_smoke = register_cvar("ctf_nospam_smoke", "20")
 
     gMsg_BuyClose = get_user_msgid("BuyClose")
 
 #endif // FEATURE_BUY
 
-    pCvar_ctf_sound[EVENT_TAKEN] = register_cvar("ctf_sound_taken", "1")
-    pCvar_ctf_sound[EVENT_DROPPED] = register_cvar("ctf_sound_dropped", "1")
+    pCvar_ctf_sound[EVENT_TAKEN]    = register_cvar("ctf_sound_taken", "1")
+    pCvar_ctf_sound[EVENT_DROPPED]  = register_cvar("ctf_sound_dropped", "1")
     pCvar_ctf_sound[EVENT_RETURNED] = register_cvar("ctf_sound_returned", "1")
-    pCvar_ctf_sound[EVENT_SCORE] = register_cvar("ctf_sound_score", "1")
+    pCvar_ctf_sound[EVENT_SCORE]    = register_cvar("ctf_sound_score", "1")
 
 #if FEATURE_C4 == true
 
@@ -1088,15 +1088,15 @@ public plugin_postCfg()
 {
     // set_cvar_num("mp_freezetime", 0)
     // set_cvar_num("mp_limitteams", 0)
-    set_cvar_num("mp_buytime", -1)
-    set_cvar_num("mp_refill_bpammo_weapons", 2)
-    set_cvar_num("mp_item_staytime", 15)
-    server_cmd("sv_alltalk 1")
-    server_cmd("sv_restart 1")
-    server_cmd("amx_cvar mp_round_infinite 1")
-    server_cmd("amx_cvar mp_timelimit 30")
-    server_cmd("amx_cvar mp_respawn_immunitytime %i", get_pcvar_num(pCvar_ctf_protection))
-    set_cvar_string("mp_round_infinite", "1")
+    // set_cvar_num("mp_buytime", -1)
+    // set_cvar_num("mp_refill_bpammo_weapons", 2)
+    // set_cvar_num("mp_item_staytime", 15)
+    // server_cmd("sv_alltalk 1")
+    // server_cmd("sv_restart 1")
+    // server_cmd("amx_cvar mp_round_infinite 1")
+    // server_cmd("amx_cvar mp_timelimit 30")
+    // server_cmd("amx_cvar mp_respawn_immunitytime %i", get_pcvar_num(pCvar_ctf_protection))
+    // set_cvar_string("mp_round_infinite", "1")
 
     // new str[10]
     // get_pcvar_string(pCvar_ctf_protection, str, charsmax(str))
@@ -1758,9 +1758,8 @@ public base_think(ent)
 
             if(iHealth < g_iMaxHealth[id])
             {
-                set_user_health(id, iHealth + 1)
-
-                player_healingEffect(id)
+                set_user_health(id, min(iHealth + 3, 100))
+                // player_healingEffect(id)
             }
         }
 
@@ -1887,6 +1886,7 @@ public player_spawn(id)
 
     task_remove(id - TASK_PROTECTION)
     task_remove(id - TASK_EQUIPAMENT)
+    task_remove(id - TASK_DAMAGEPROTECTION)
     task_remove(id - TASK_TEAMBALANCE)
     task_remove(id - TASK_ADRENALINE)
     task_remove(id - TASK_DEFUSE)
@@ -2182,8 +2182,19 @@ public player_useWeaponSec(ent)
 #endif // FEATURE_ADRENALINE
 public player_damage(id, iWeapon, iAttacker, Float:fDamage, iType)
 {
-#if FEATURE_ADRENALINE == true
+    if(g_bProtected[id])
+	{
+		// player_updateRender(id, fDamage)
 
+		// task_remove(id - TASK_DAMAGEPROTECTION)
+		// task_set(0.1, "player_damageProtection", id - TASK_DAMAGEPROTECTION)
+
+		entity_set_vector(id, EV_VEC_punchangle, FLAG_SPAWN_ANGLES)
+
+		return HAM_SUPERCEDE
+	}
+
+#if FEATURE_ADRENALINE == true
     if(1 <= iAttacker <= g_iMaxPlayers && g_iAdrenalineUse[iAttacker] == ADRENALINE_BERSERK && get_user_team(iAttacker) != get_user_team(id))
     {
         SetHamParamFloat(4, fDamage * BERSERKER_DAMAGE)
@@ -2210,6 +2221,16 @@ public player_damage(id, iWeapon, iAttacker, Float:fDamage, iType)
 
     return HAM_IGNORED
 }
+
+public player_damageProtection(id)
+{
+	id += TASK_DAMAGEPROTECTION
+
+	if(g_bAlive[id])
+		player_updateRender(id)
+}
+
+
 public player_killed(id, killer)
 {
     g_bAlive[id] = false
@@ -4351,7 +4372,7 @@ player_award(id, iMoney, iFrags, iAdrenaline, szText[], any:...)
     {
         cs_set_user_money(id, clamp(cs_get_user_money(id) + iMoney, 0, 16000), 1)
 
-        formatex(szMoney, charsmax(szMoney), "%s%d$", iMoney > 0 ? "+" : NULL, iMoney)
+        formatex(szMoney, charsmax(szMoney), "%s$%d", iMoney > 0 ? "+" : NULL, iMoney)
     }
 
     if(iFrags != 0)
