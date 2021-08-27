@@ -190,6 +190,7 @@ enum (+= 64)
 {
     TASK_RESPAWN = 64,
     TASK_PROTECTION,
+	TASK_DAMAGEPROTECTION,
     TASK_EQUIPAMENT,
     TASK_PUTINSERVER,
     TASK_TEAMBALANCE,
@@ -840,7 +841,7 @@ public plugin_init()
     RegisterHam(Ham_TakeDamage, PLAYER, "player_damage")
 
     register_clcmd("say", "player_cmd_say")
-    register_clcmd("say_team", "player_cmd_sayTeam")
+    register_clcmd("say_team", "player_cmd_say")
 
 #if FEATURE_ADRENALINE == true
 
@@ -1082,17 +1083,23 @@ public plugin_cfg()
     flag_spawn(TEAM_RED)
     flag_spawn(TEAM_BLUE)
 
+
     task_set(6.5, "plugin_postCfg")
 }
 public plugin_postCfg()
 {
+    
+    new cfg_dir[32]
+    get_configsdir(cfg_dir, charsmax(cfg_dir))
+    server_cmd("exec %s/amxx.cfg", cfg_dir)
+    
     // set_cvar_num("mp_freezetime", 0)
     // set_cvar_num("mp_limitteams", 0)
     // set_cvar_num("mp_buytime", -1)
     // set_cvar_num("mp_refill_bpammo_weapons", 2)
     // set_cvar_num("mp_item_staytime", 15)
     // server_cmd("sv_alltalk 1")
-    // server_cmd("sv_restart 1")
+    server_cmd("sv_restart 1")
     // server_cmd("amx_cvar mp_round_infinite 1")
     // server_cmd("amx_cvar mp_timelimit 30")
     // server_cmd("amx_cvar mp_respawn_immunitytime %i", get_pcvar_num(pCvar_ctf_protection))
@@ -2626,66 +2633,7 @@ public player_cmd_say(id)
     return PLUGIN_CONTINUE
 }
 
-public player_cmd_sayTeam(id)
-{
-    static Float:fLastUsage[33]
 
-    new Float:fGameTime = get_gametime()
-
-    if((fLastUsage[id] + 0.5) > fGameTime)
-        return PLUGIN_HANDLED
-
-    fLastUsage[id] = fGameTime
-
-    new szMsg[128]
-
-    read_args(szMsg, charsmax(szMsg))
-    remove_quotes(szMsg)
-    trim(szMsg)
-
-    if(equal(szMsg, NULL))
-        return PLUGIN_HANDLED
-
-    if(equal(szMsg[0], "@"))
-        return PLUGIN_CONTINUE
-
-#if FEATURE_BUY == true
-
-    if(equali(szMsg, "/buy"))
-    {
-        player_menu_buy(id, 0)
-
-        return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
-    }
-
-#endif // FEATURE_BUY
-
-#if FEATURE_ADRENALINE == true
-
-    if(equali(szMsg, "/spawn"))
-    {
-        player_cmd_buySpawn(id)
-
-        return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
-    }
-
-    if(equali(szMsg, "/adrenaline"))
-    {
-        player_cmd_adrenaline(id)
-
-        return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
-    }
-
-#endif // FEATURE_ADRENALINE
-
-    if(equali(szMsg, "/dropflag"))
-    {
-        player_cmd_dropFlag(id)
-
-        return CHAT_SHOW_COMMANDS ? PLUGIN_CONTINUE : PLUGIN_HANDLED
-    }
-    return PLUGIN_CONTINUE
-}
 public player_cmd_setLights(id, const szMsg[])
 {
     switch(szMsg[1])

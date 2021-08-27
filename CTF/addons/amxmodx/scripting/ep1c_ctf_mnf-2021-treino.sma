@@ -101,7 +101,7 @@ new const WEAPONBOX[] =					"weaponbox"
 new const PLAYER[] =					"player"
 
 // Itens
-new const FLAG_MODEL[] =				"models/jctf/ctf_flag.mdl"
+new const FLAG_MODEL[] =				"models/ep1c/flag_ep1c_b_03_04.mdl"
 new const ITEM_MODEL_AMMO[] =			"models/w_chainammo.mdl"
 new const ITEM_MODEL_MEDKIT[] =			"models/w_medkit.mdl"
 new const SND_GETAMMO[] =				"items/9mmclip1.wav"

@@ -1,4 +1,5 @@
-#include < amxmodx >
+#include <amxmodx>
+#include <reapi>
 
 #define PLUGIN   "ep1c AutoRestart"
 #define VERSION  "0.2"
@@ -35,13 +36,13 @@ new sounds[Sounds][64] =
 
 public plugin_precache()
 {
-    precache_generic(sounds[WIN]);
+    precache_generic(fmt("sounds/%s", sounds[WIN]));
 }
 
 
 public plugin_init()
 {
-    register_plugin("Auto Restart", "0.0.1", "Developer");
+    register_plugin(PLUGIN, VERSION, AUTHOR);
 
     // Register: EVENT
     register_event("TeamScore", "event_update_score", "a");

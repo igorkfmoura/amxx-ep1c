@@ -42,12 +42,12 @@ public cmdSpecList(id)
 {
 	if( gOnOff[id] )
 	{
-		client_print(id, print_chat, "[AMXX] Você não verá quem está telando você.");
+		client_print(id, print_chat, "[AMXX] Vocï¿½ nï¿½o verï¿½ quem estï¿½ telando vocï¿½.");
 		gOnOff[id] = false;
 	}
 	else
 	{
-		client_print(id, print_chat, "[AMXX] Você verá quem está telando você.");
+		client_print(id, print_chat, "[AMXX] Vocï¿½ verï¿½ quem estï¿½ telando vocï¿½.");
 		gOnOff[id] = true;
 	}
 	

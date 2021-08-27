@@ -73,7 +73,7 @@ new const gDispenserClassname[ ] = "NiceDispenser:D";
 new const gDispenserActive[ ] = "buttons/button9.wav";
 new const gMetalGibsMdl[ ] = "models/computergibs.mdl";
 
-new const gDispenserMdl[] = "models/dispenser_ep1c.mdl";
+new const gDispenserMdl[] = "models/dispenser_ep1c_04.mdl";
 
 //new const gHealingSprite[ ] = "sprites/laserbeam.spr";
 
