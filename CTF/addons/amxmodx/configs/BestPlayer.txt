@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <style>
+      body {
+        background: url("http://fast.mgthost1.com.br/2033/cstrike/extra/ep1c_banner.bmp");
+        background-repeat: no-repeat;
+        background-size: 100%;
+      }
+      #box {
+        background-color: rgba(0, 0, 0, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="box">
+      <hr noshade="" />
+      <font size="5" face="Arial" color="white">
+        <center>
+          O melhor jogador do mapa <font color="lime">$map$</font>:
+          <hr noshade="" />
+          <font size="7" color="royalblue">$name$</font><br />
+          - com <font color="red">$kills$ kills</font> (<font color="lime">$headshots$ headshots</font>), <font color="red">$assists$ assists</font> e <font color="red">$deaths$ mortes</font> -<br />
+          <br />
+        </center>
+          Taxa Kills/Deaths: <font color="magenta">$kdratio$</font><br />
+          Taxa de HS: <font color="magenta">$hsratio$</font>.<br />
+          <br /> 
+          Acertou <font color="magenta">$hits$ tiros</font> e causou <font color="magenta">$damage$</font> de dano.<br />
+          Capturou <font color="magenta">$flags$ bandeiras</font>!<br />
+          Pegou <font color="magenta">$knifes$ na faca</font> e tomou <font color="magenta">$knifedeaths$ facadas!</font><br />
+          <hr noshade="" />
+      </font>
+    </div>
+  </body>
+</html>

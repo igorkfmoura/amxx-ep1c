@@ -68,7 +68,7 @@ public show_menu_mute(id)
     formatex(g_item, charsmax(g_item), "Microfone: %s.", g_voiceoff[id][0]?"(Desativado)":"(Ativados")
     menu_additem(menu, g_item, "2", 0, g_callback)
     
-    menu_additem(menu, "Visualizar quem mutou você.", "3", 0, g_callback)
+    menu_additem(menu, "Visualizar quem mutou vocï¿½.", "3", 0, g_callback)
     
     formatex(g_item, charsmax(g_item), "Alltalk: %s.^n", (g_voiceoff[id][1] || !get_pcvar_num(cvar_alltalk))?"(Desativado)":"(Ativado)")
     menu_additem(menu, g_item, "4", 0, g_callback)
@@ -127,8 +127,7 @@ public show_menu_muteaplayer(id)
     {
         if(!is_user_connected(i) || id == i) continue
         
-        if((!get_pcvar_num(cvar_alltalk) || g_voiceoff[id][1]) && get_user_team(id) != 3
-        && get_user_team(id) != get_user_team(i)) continue
+        if((!get_pcvar_num(cvar_alltalk) || g_voiceoff[id][1]) && get_user_team(id) != 3) continue
             
         get_user_name(i, name, 31)
         

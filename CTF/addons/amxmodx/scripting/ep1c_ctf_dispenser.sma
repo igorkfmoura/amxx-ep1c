@@ -27,11 +27,10 @@ lonewolf implementou:
 
 #pragma semicolon 1
 
-#define PLUGIN  "ep1c-CTF-Dispenser"
-#define VERSION "#1.0.6.4"
+#define PLUGIN  "ep1c_ctf_dispenser"
+#define VERSION "#1.0.6.5"
 #define AUTHOR  "tuty + lonewolf"
 
-#define PREFIX "^4[ep1c gaming Brasil]^1"
 
 #if AMXX_VERSION_NUM < 183
 #define MAX_PLAYERS        32
@@ -68,20 +67,23 @@ new const gDamageSounds[ ][ ] =
 	"Construindo um dispenser..."
 };*/
 
+new const PREFIX_CHAT[ ] = "^4[ep1c gaming Brasil]^1";
+new const PREFIX_MENU[ ] = "\yep1c gaming Brasil";
+
 new const gDispenserClassname[ ] = "NiceDispenser:D";
 
 new const gDispenserActive[ ] = "buttons/button9.wav";
 new const gMetalGibsMdl[ ] = "models/computergibs.mdl";
 
-new const gDispenserMdl[] = "models/dispenser_ep1c_04.mdl";
+new const gDispenserMdl[] = "models/dispenser_hd.mdl";
 
 //new const gHealingSprite[ ] = "sprites/laserbeam.spr";
 
 static const gTeamColors[CsTeams][3] = 
 {
   {  0,  0,   0},
-  {255, 50,   0},
-  {  0, 50, 255},
+  {255, 25,   0},
+  {  0, 25, 255},
   {  0,  0,   0},
 };
 
@@ -212,16 +214,19 @@ public CommandDispenserBuild( id )
 		return PLUGIN_CONTINUE;
 	}
 
-	if( bDispenserBuild[ id ] == true )
+	if( bDispenserBuild[ id ] == true && is_valid_ent( gUserDispenser[ id ] ) )
 	{
-		client_print_color(id, print_team_default, "%s Você já tem um ^3Dispenser^1 construido!", PREFIX );
+		client_print_color(id, print_team_default, "%s Você já tem um ^3Dispenser^1 construido!", PREFIX_CHAT );
 
 		return PLUGIN_HANDLED;
 	}
 
+	bDispenserBuild[ id ] = false;
+	gUserDispenser[ id ] = 0;
+
 	if( !( pev( id, pev_flags ) & FL_ONGROUND ) )
 	{
-		client_print_color(id, print_team_default, "%s Você precisa estar no chão para construir um ^3Dispenser^1!", PREFIX );
+		client_print_color(id, print_team_default, "%s Você precisa estar no chão para construir um ^3Dispenser^1!", PREFIX_CHAT );
 
 		return PLUGIN_HANDLED;
 	}
@@ -231,7 +236,7 @@ public CommandDispenserBuild( id )
 
 	if( iMoney < iCost )
 	{
-		client_print_color(id, print_team_default, "%s Você precisa de ^4$%d^1 para construir um ^3Dispenser^1!", PREFIX, iCost );
+		client_print_color(id, print_team_default, "%s Você precisa de ^4$%d^1 para construir um ^3Dispenser^1!", PREFIX_CHAT, iCost );
 		
 		return PLUGIN_HANDLED;
 	}
@@ -286,9 +291,107 @@ public CommandDispenserBuild( id )
 	
 	cs_set_user_money( id, iMoney - iCost, 1 );
 
-	client_print_color(id, id, "%s Você comprou um ^3Dispenser^1 por ^4$%d^1!", PREFIX, iCost );
+	client_print_color(id, id, "%s Você comprou um ^3Dispenser^1 por ^4$%d^1!", PREFIX_CHAT , iCost );
 
 	return PLUGIN_HANDLED;
+}
+
+public MenuDestroy( id )
+{
+	if( !is_user_connected( id ) )
+	{
+		return PLUGIN_CONTINUE;
+	}
+
+	if ( !(get_user_flags( id ) & gDispenserAdminFlag) )
+	{
+		client_print_color( id, print_team_red, "%s Menu Destroy disponível apenas para ^3Administradores^1.", PREFIX_CHAT );
+		return PLUGIN_CONTINUE;
+	}
+
+	new iMenu = menu_create( fmt( "%s \r~\w Destruir Dispenser^n\d(say /destroymenu)\w", PREFIX_MENU ), "MenuDestroyHandler" );
+
+	new iDispenserCount = 0;
+
+	for ( new iOwner = 1; iOwner <= MaxClients; ++iOwner )
+	{
+		if ( !bDispenserBuild[ iOwner ] || !is_user_connected( iOwner ) )
+		{
+			continue;
+		}
+
+		new iHealth = pev( gUserDispenser[ iOwner ], pev_health );
+
+		new CsTeams:iTeam = cs_get_user_team( iOwner );
+		new szTeams[ CsTeams ][] = { "", "\rTR\w", "\wCT\w", "" };
+
+		new szOwner[ 32 ];
+		get_user_name( iOwner, szOwner, charsmax( szOwner ) );
+
+		new szItem[ 96 ];
+		formatex( szItem, charsmax( szItem ), "\r» \w|%s| \r~\w |\y%s\w| \r~ \w|\yHP: \r%d\w|", szTeams[ iTeam ], szOwner, iHealth );
+
+		new szInfo[6];
+		num_to_str( iOwner, szInfo, charsmax( szInfo ) );
+
+		menu_additem( iMenu, szItem, szInfo, gDispenserAdminFlag );
+
+		++iDispenserCount;
+	}
+
+	if ( !iDispenserCount )
+	{
+		menu_addtext2( iMenu, "\d(Não há dispensers no mapa!)" );
+	}
+
+	menu_setprop( iMenu, MPROP_BACKNAME, "Página Anterior" );
+	menu_setprop( iMenu, MPROP_NEXTNAME, "Proxima Página" );
+	menu_setprop( iMenu, MPROP_EXITNAME, "Fechar" );
+
+	menu_display(id, iMenu);
+
+	return PLUGIN_HANDLED;
+}
+
+public MenuDestroyHandler( id, iMenu, iSlot )
+{
+	if( iSlot == MENU_EXIT )
+	{
+		menu_destroy( iMenu );
+
+		return PLUGIN_HANDLED;
+	}
+
+	new szId[6];
+	menu_item_getinfo( iMenu, iSlot, _, szId, charsmax( szId ) );
+
+	new iOwner = str_to_num( szId );
+
+	if( bDispenserBuild[ iOwner ] )
+	{
+		new szAdmin[ 32 ];
+		new szName[ 32 ];
+		get_user_name( iOwner, szName, charsmax( szName ) );
+		get_user_name( id, szAdmin, charsmax( szAdmin ) );
+
+		client_print_color( id, iOwner, "%s Você destruiu o ^4Dispenser^1 de ^3%s^1!", PREFIX_CHAT, szName );
+		client_print_color( iOwner, id, "%s Administrador ^3%s^1 destruiu seu ^4Dispenser^1 via menu!", PREFIX_CHAT, szAdmin );
+
+		client_cmd( iOwner, "speak ^"vox/bizwarn computer destroyed^"" );
+		DestroyDispenser( iOwner );
+
+	}
+
+	set_task( 0.5, "MenuDestroyDelayed", 1631 + iOwner );
+	menu_destroy( iMenu );
+
+	return PLUGIN_HANDLED;
+}
+
+public MenuDestroyDelayed( iOwner )
+{
+	iOwner -= 1631;
+	MenuDestroy( iOwner );
 }
 
 public CommandSay( id )
@@ -301,6 +404,12 @@ public CommandSay( id )
 
 	if( !equal( szCommand, "/destroy" ) )
 	{
+		if ( equal( szCommand, "/destroymenu" ) )
+		{
+			MenuDestroy( id );
+			return PLUGIN_HANDLED;
+		}
+
 		return PLUGIN_CONTINUE;
 	}
 
@@ -310,7 +419,7 @@ public CommandSay( id )
 
 		if( !iPlayer )
 		{
-			client_print_color(id, print_team_default, "%s, Player não encontrado!", PREFIX );
+			client_print_color(id, print_team_default, "%s Player não encontrado!", PREFIX_CHAT );
 			return PLUGIN_HANDLED;
 		}
 
@@ -319,23 +428,26 @@ public CommandSay( id )
 
 		if( !bDispenserBuild[ iPlayer ] )
 		{
-			client_print_color(id, iPlayer, "%s Jogador ^3%s^1 não tem um ^3Dispenser^1!", PREFIX, szName );
+			client_print_color(id, iPlayer, "%s Jogador ^3%s ^1não tem um ^4dispenser^1!", PREFIX_CHAT, szName );
 			return PLUGIN_HANDLED;
 		}
 
 		DestroyDispenser( iPlayer );
-		client_print_color(id, iPlayer, "%s Você destruiu o ^3Dispenser^1 de ^3%s!", PREFIX, szName );
+		client_print_color(id, iPlayer, "%s Você destruiu o ^4Dispenser de ^3%s", PREFIX_CHAT, szName );
 	}
 	else
 	{
 		if( !bDispenserBuild[ id ] )
 		{
-			client_print_color(id, id, "%s Você não tem um ^3Dispenser^1!", PREFIX );
+			client_print_color(id, print_team_default, "%s Você^1 não tem um ^4dispenser^1!", PREFIX_CHAT );
 			return PLUGIN_HANDLED;
 		}
 
+		if ( is_valid_ent( gUserDispenser[ id ] ) )
+		{
+			client_print_color(id, print_team_default, "%s Você^1 destruiu seu próprio ^4Dispenser^1.", PREFIX_CHAT );
+		}
 		DestroyDispenser( id );
-		client_print_color(id, id, "%s Você destruiu seu próprio ^3Dispenser^1!", PREFIX );
 	}
 
 	return PLUGIN_HANDLED;
@@ -343,7 +455,10 @@ public CommandSay( id )
 
 DestroyDispenser( id )
 {
-	set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
+	if ( is_valid_ent( gUserDispenser[ id ] ) )
+	{
+		set_pev( gUserDispenser[ id ], pev_flags, pev( gUserDispenser[ id ], pev_flags ) | FL_KILLME );
+	}
 	bDispenserBuild[ id ] = false;
 	gUserDispenser[ id ] = 0;
 }
@@ -371,20 +486,20 @@ public bacon_TakeDamage( ent, idinflictor, idattacker, Float:damage, damagebits 
 
 			if( idattacker == iOwner )
 			{
-				client_print_color(iOwner, print_team_default, "%s Você destruiu seu próprio ^3Dispenser^1!", PREFIX );
+				client_print_color(iOwner, print_team_default, "%s Você destruiu seu próprio ^3Dispenser^1!", PREFIX_CHAT );
 			}
 			else
 			{
 				if (cs_get_user_team( iOwner ) != cs_get_user_team( idattacker ) )
 				{
 					client_print( iOwner, print_center, "%s destruiu seu Dispenser!", szName ); // centro da tela
-					client_print_color(iOwner, idattacker, "%s Jogador ^3%s^1 destruiu seu Dispenser!", PREFIX, szName); // no chat com cor
+					client_print_color(iOwner, idattacker, "%s Jogador ^3%s^1 destruiu seu Dispenser!", PREFIX_CHAT, szName); // no chat com cor
 				}
 				else
 				{
 					new szOwner[ 32 ];
 					get_user_name( iOwner, szOwner, charsmax( szOwner ) );
-					client_print_color(0, idattacker, "%s Jogador ^3%s^1 destruiu o Dispenser do aliado ^3%s^1!", PREFIX, szName, szOwner); // vingança
+					client_print_color(0, idattacker, "%s Jogador ^3%s^1 destruiu o Dispenser do aliado ^3%s^1!", PREFIX_CHAT, szName, szOwner); // vingança
 				}
 			}
 
@@ -671,10 +786,13 @@ stock UTIL_DestroyDispensers( )
 
 	while( ( iEnt = find_ent_by_class( iEnt, gDispenserClassname ) ) )
 	{
-		new iOwner = pev( iEnt, pev_iuser2 );
+		if ( is_valid_ent( iEnt ) )
+		{
+			new iOwner = pev( iEnt, pev_iuser2 );
 
-		bDispenserBuild[ iOwner ] = false;
-		set_pev( iEnt, pev_flags, pev( iEnt, pev_flags ) | FL_KILLME );
+			bDispenserBuild[ iOwner ] = false;
+			set_pev( iEnt, pev_flags, pev( iEnt, pev_flags ) | FL_KILLME );
+		}
 	}
 }
 
