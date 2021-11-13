@@ -1,10 +1,6 @@
 #include <amxmodx>
 #include <hamsandwich>
 #include <nvault>
-//#include <ep1c_ctf_killassist>
-//#include <jctf>
-
-#define FLAG_CAPTURED 1
 
 //Comment if you're not using Counter-Strike.
 #define USE_CSTRIKE
@@ -29,11 +25,6 @@
 #define ARG_KDRATIO "$kdratio$"
 #define ARG_KDRATIO_SB "$kdratio_sb$"
 #define ARG_HSRATIO "$hsratio$"
-#define ARG_ASSISTS "$assists$"
-#define ARG_FLAGS "$flags$"
-#define ARG_KNIFES "$knifes$"
-#define ARG_KNIFEDEATHS "$knifedeaths$"
-
 
 #if defined USE_CSTRIKE
 	#include <cstrike>
@@ -60,8 +51,7 @@ enum _:Cvars
 	bpm_obey_team,
 	#endif
 	bpm_stats_header,
-	bpm_save_type,
-	bpm_ignore_restart
+	bpm_save_type
 }
 
 enum _:PlayerData
@@ -77,11 +67,7 @@ enum _:PlayerData
 	Float:PDATA_DAMAGE,
 	Float:PDATA_KDRATIO,
 	Float:PDATA_KDRATIO_SB,
-	Float:PDATA_HSRATIO,
-	PDATA_ASSISTS,
-	PDATA_FLAGS,
-	PDATA_KNIFES,
-	PDATA_KNIFEDEATHS
+	Float:PDATA_HSRATIO
 }
 
 new g_eCvars[Cvars], g_iSaveType, g_iVault
@@ -111,8 +97,6 @@ public plugin_init()
 	#endif
 	g_eCvars[bpm_stats_header] = register_cvar("bpm_stats_header", "Player Stats: $name$")
 	g_eCvars[bpm_save_type] = register_cvar("bpm_save_type", "0")
-	g_eCvars[bpm_ignore_restart] = register_cvar("bpm_ignore_restart", "0")
-
 	get_mapname(g_szMap, charsmax(g_szMap))
 	g_iVault = nvault_open("BestPlayer")
 }
@@ -170,9 +154,6 @@ public Cmd_MyStats(id)
 
 public OnRestartRound()
 {
-	if (get_pcvar_num(bpm_ignore_restart))
-		return
-
 	new iPlayers[32], iPnum
 	get_players(iPlayers, iPnum)
 	
@@ -189,14 +170,6 @@ public OnTakeDamage(iVictim, iInflictor, iAttacker, Float:fDamage, iDamageBits)
 	}
 }
 
-public jctf_flag(event, id, team, bool:is_assist)
-{
-	if (event == FLAG_CAPTURED && is_user_connected(id))
-	{
-		g_ePlayerData[id][PDATA_FLAGS]++
-	}
-}
-
 public OnPlayerKilled()
 {
 	new iAttacker = read_data(1),
@@ -210,16 +183,6 @@ public OnPlayerKilled()
 		
 		if(read_data(3))
 			g_ePlayerData[iAttacker][PDATA_HEADSHOTS]++
-
-		new xWpn[32]
-		read_data(4, xWpn, charsmax(xWpn))
-
-		if (equal(xWpn, "knife"))
-		{
-			g_ePlayerData[iAttacker][PDATA_KNIFES]++
-			g_ePlayerData[iVictim][PDATA_KNIFEDEATHS]++
-		}
-		
 	}
 }
 
@@ -339,10 +302,6 @@ any:get_score_by_formula(const id, const iNum, const szFormula[])
 		case '8': return g_ePlayerData[id][PDATA_KDRATIO]
 		case '9': return g_ePlayerData[id][PDATA_KDRATIO_SB]
 		case 'a': return g_ePlayerData[id][PDATA_HSRATIO]
-		case 'b': return g_ePlayerData[id][PDATA_ASSISTS]
-		case 'c': return g_ePlayerData[id][PDATA_FLAGS]
-		case 'd': return g_ePlayerData[id][PDATA_KNIFES]
-		case 'e': return g_ePlayerData[id][PDATA_KNIFEDEATHS]
 	}
 	
 	return 0
@@ -403,18 +362,6 @@ apply_replacements(const id, szMessage[], const iLen)
 	if(has_argument(szMessage, ARG_BEST_TEAM))
 		replace_all(szMessage, iLen, ARG_BEST_TEAM, g_szTeams[get_winning_team()])
 	#endif
-
-	if(has_argument(szMessage, ARG_ASSISTS))
-		replace_num(szMessage, iLen, ARG_ASSISTS, g_ePlayerData[id][PDATA_ASSISTS])
-
-	if(has_argument(szMessage, ARG_FLAGS))
-		replace_num(szMessage, iLen, ARG_FLAGS, g_ePlayerData[id][PDATA_FLAGS])
-
-	if(has_argument(szMessage, ARG_KNIFES))
-		replace_num(szMessage, iLen, ARG_KNIFES, g_ePlayerData[id][PDATA_KNIFES])
-
-	if(has_argument(szMessage, ARG_KNIFEDEATHS))
-		replace_num(szMessage, iLen, ARG_KNIFEDEATHS, g_ePlayerData[id][PDATA_KNIFEDEATHS])
 }
 
 #if defined USE_CSTRIKE
@@ -435,10 +382,6 @@ reset_player_stats(const id)
 	g_ePlayerData[id][PDATA_KDRATIO] = _:0.0
 	g_ePlayerData[id][PDATA_KDRATIO_SB] = _:0.0
 	g_ePlayerData[id][PDATA_HSRATIO] = _:0.0
-	g_ePlayerData[id][PDATA_ASSISTS] = 0
-	g_ePlayerData[id][PDATA_FLAGS] = 0
-	g_ePlayerData[id][PDATA_KNIFES] = 0
-	g_ePlayerData[id][PDATA_KNIFEDEATHS] = 0
 }
 
 use_vault(const id, const iType, const szInfo[])
@@ -508,11 +451,7 @@ public plugin_natives()
 {
 	register_library("bestplayer")
 	register_native("bpm_force_intermission", "_bpm_force_intermission")
-	register_native("bpm_force_reset",		"_bpm_force_reset")
 }
 
 public _bpm_force_intermission(iPlugin, iParams)
 	OnIntermission()
-
-public _bpm_force_reset(iPlugin, iParams)
-	OnRestartRound()
