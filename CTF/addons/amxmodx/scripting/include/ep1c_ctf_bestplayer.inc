@@ -3,6 +3,7 @@
 #endif
 
 #define _bestplayer_included
+#pragma library bestplayer
 
 /** 
  * Forces the plugin to run the intermission event.
@@ -11,7 +12,7 @@
 native bpm_force_intermission()
 
 /** 
- * Forces the plugin to run the intermission event.
+ * Forces the plugin to run the reset event.
  * @noreturn
  */
 native bpm_force_reset()

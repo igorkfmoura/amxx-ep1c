@@ -227,9 +227,9 @@ public CBasePlayer_Killed_Pre(iVictim, iKiller)
 			write_short(get_member(iAssistant, m_iTeam))
 			message_end()
 		}
-	}
 
-	ExecuteForward(g_iFW_assist, _, iAssistant)
+	    ExecuteForward(g_iFW_assist, _, iAssistant)
+	}
 
 	EnableHookChain(g_pCBasePlayer_Killed_Post)
 	return HC_CONTINUE

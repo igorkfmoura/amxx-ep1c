@@ -2,9 +2,10 @@
 #include <reapi>
 #include <jctf>
 #include <map_manager>
+#include <bestplayer>
 
 #define PLUGIN  "ep1c_ctf_match"
-#define VERSION "0.6"
+#define VERSION "0.6.2"
 #define AUTHOR  "lonewolf"
 
 #define TASKID_CLIENT_CMD 9352
@@ -45,7 +46,8 @@ enum _:CTFMatchConfig
   CTF_FORCERESPAWN,
   CTF_ALLTALK,
   CTF_KNIFE,
-  CTF_VOTEMAP
+  CTF_VOTEMAP,
+  CTF_DEMO
 };
 new cvars[CTFMatchConfig];
 new config_bak[CTFMatchConfig];
@@ -91,6 +93,7 @@ public plugin_init()
   cvars[CTF_ALLTALK]      = create_cvar("ctf_match_alltalk",      "2");
   cvars[CTF_KNIFE]        = create_cvar("ctf_match_knife",        "0");
   cvars[CTF_VOTEMAP]      = create_cvar("ctf_match_votemap",      "1");
+  cvars[CTF_DEMO]         = create_cvar("ctf_match_demo",         "1");
 
   register_concmd("ctf_match_start", "match_start", ADMIN_CVAR);
   register_concmd("ctf_match_end",   "match_end", ADMIN_CVAR);
@@ -178,11 +181,12 @@ public menu_ctf_handler(id, menu, item)
 
       if (get_cvar_num("mp_freezetime") == 1337)
       {
-        set_cvar_num("mp_freezetime", 0);
+        set_cvar_num("mp_freezetime", config_bak[CTF_FREEZETIME]);
         show_hudmessage(0, "TIMES DESTRAVADOS");
       }
       else
       {
+        config_bak[CTF_FREEZETIME] = get_cvar_num("mp_freezetime");
         set_cvar_num("mp_freezetime", 1337);
         show_hudmessage(0, "TIMES TRAVADOS NA BASE");
       }
@@ -329,11 +333,14 @@ public event_OnRoundFreezeEnd(id)
   {
     countdown_ent = rg_create_entity("info_target");
     SetThink(countdown_ent, "event_countdown");
-    set_entvar(countdown_ent, var_classname, "countdown");
+    set_entvar(countdown_ent, var_classname, "ctf_countdown");
   }
 
   countdown = roundtime - 1;
+  set_entvar(countdown_ent, var_iuser1, countdown);
   set_entvar(countdown_ent, var_nextthink, now + 1.0);
+  
+  set_cvar_num("bpm_ignore_restart", 0);
 
   return HC_CONTINUE;
 }
@@ -347,6 +354,7 @@ public event_countdown(ent)
   }
 
   countdown--;
+  set_entvar(countdown_ent, var_iuser1, countdown);
 
   static text[64];
   num_to_word(countdown, text, charsmax(text));
@@ -393,6 +401,7 @@ public event_countdown(ent)
       set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
       show_hudmessage(0, "TROCA DE LADO, VALENDO!");
 
+      set_cvar_num("bpm_ignore_restart", 1);
       server_cmd("sv_restart 1");
 
       match[CTF_IS_1STHALF] = 0;
@@ -414,6 +423,7 @@ public event_countdown(ent)
 
   return HC_CONTINUE;
 }
+
 
 public proper_swap_config()
 {
@@ -585,14 +595,17 @@ public match_start()
     match[CTF_IS_1STHALF] = true;
   }
 
-  // set_cvar_num("amx_demo_auto",   1);
-  // set_cvar_num("amx_demo_time",   1);
-  // set_cvar_num("amx_demo_map",    1);
-  // set_cvar_num("amx_demo_steam",  0);
-  // set_cvar_num("amx_demo_nick",   1);
-  // set_cvar_num("amx_demo_notify", 1);
-
-  // server_cmd("amx_demoall");
+  if (get_pcvar_num(cvars[CTF_DEMO]))
+  {
+    set_cvar_num("amx_demo_auto",   1);
+    set_cvar_num("amx_demo_time",   1);
+    set_cvar_num("amx_demo_map",    1);
+    set_cvar_num("amx_demo_steam",  0);
+    set_cvar_num("amx_demo_nick",   1);
+    set_cvar_num("amx_demo_notify", 1);
+  
+    server_cmd("amx_demoall");
+  } 
 
   set_cvar_num("sv_restart", 1)
   client_cmd(0, "spk deeoo");
@@ -614,18 +627,24 @@ public match_end()
   match[CTF_IS_2NDHALF] = false;
   
   generate_motd();
+  bpm_force_intermission()
 
   client_cmd(0, "spk deeoo");
   set_cvar_num("sv_restart", 1)
-  server_cmd("amx_warmup_start");
-  
+
+  if (get_cvar_num("amx_warmup"))
+  {
+    set_cvar_num("ctf_menuarmas", 0);
+    server_cmd("amx_warmup_start");
+  }
+
   set_cvar_float("mp_freezetime", float(config_bak[CTF_FREEZETIME]));
   set_cvar_float("mp_roundtime",  float(config_bak[CTF_ROUNDTIME]));
   set_cvar_num("sv_alltalk",      config_bak[CTF_ALLTALK]);
 
-  set_cvar_num("ctf_menuarmas", 0);
   if (get_pcvar_num(cvars[CTF_VOTEMAP]))
   {
+    set_cvar_num("ctf_menuarmas", 0);
     mapm_start_vote(VOTE_BY_CMD);
   }
   

@@ -1,13 +1,16 @@
 #include <amxmodx>
 #include <hamsandwich>
 #include <nvault>
+#include <ep1c_ctf_killassist>
+#include <jctf>
+#include <reapi>
 
 //Comment if you're not using Counter-Strike.
 #define USE_CSTRIKE
 
-#define PLUGIN_VERSION "1.2.2"
-#define MOTD_BEST "addons/amxmodx/configs/BestPlayer.txt"
-#define MOTD_STATS "addons/amxmodx/configs/BestPlayerStats.txt"
+#define PLUGIN_VERSION "1.3.1"
+#define MOTD_BEST "addons/amxmodx/configs/BestPlayer/BestPlayer.html"
+#define MOTD_STATS "addons/amxmodx/configs/BestPlayer/BestPlayerStats.html"
 #define MAX_MOTD_LENGTH 1536
 #define MAX_HEADER_LENGTH 175
 #define MAX_FORMULA_CYCLES 10
@@ -25,6 +28,12 @@
 #define ARG_KDRATIO "$kdratio$"
 #define ARG_KDRATIO_SB "$kdratio_sb$"
 #define ARG_HSRATIO "$hsratio$"
+#define ARG_ASSISTS "$assists$"
+#define ARG_FLAGS "$flags$"
+#define ARG_KNIFES "$knifes$"
+#define ARG_KNIFEDEATHS "$knifedeaths$"
+#define ARG_DATETIME "$datetime$"
+#define ARG_SCORE "$score$"
 
 #if defined USE_CSTRIKE
 	#include <cstrike>
@@ -51,7 +60,8 @@ enum _:Cvars
 	bpm_obey_team,
 	#endif
 	bpm_stats_header,
-	bpm_save_type
+	bpm_save_type,
+	bpm_ignore_restart
 }
 
 enum _:PlayerData
@@ -64,6 +74,10 @@ enum _:PlayerData
 	PDATA_DEATHS_SB,
 	PDATA_HEADSHOTS,
 	PDATA_HITS,
+	PDATA_ASSISTS,
+	PDATA_FLAGS,
+	PDATA_KNIFES,
+	PDATA_KNIFEDEATHS,
 	Float:PDATA_DAMAGE,
 	Float:PDATA_KDRATIO,
 	Float:PDATA_KDRATIO_SB,
@@ -75,7 +89,7 @@ new g_ePlayerData[33][PlayerData], g_szStats[MAX_MOTD_LENGTH], g_szMap[32]
 
 public plugin_init()
 {
-	register_plugin("Best Player MOTD", PLUGIN_VERSION, "OciXCrom")
+	register_plugin("CTF Best Player MOTD", PLUGIN_VERSION, "OciXCrom + lonewolf")
 	register_cvar("CRXBestPlayer", PLUGIN_VERSION, FCVAR_SERVER|FCVAR_SPONLY|FCVAR_UNLOGGED)
 	
 	#if defined USE_CSTRIKE
@@ -84,19 +98,22 @@ public plugin_init()
 	
 	RegisterHam(Ham_TakeDamage, "player", "OnTakeDamage", 1)
 	register_event("DeathMsg", "OnPlayerKilled", "a")
-	register_message(SVC_INTERMISSION, "OnIntermission")
+	//register_message(SVC_INTERMISSION, "OnIntermission")
 	register_logevent("OnRestartRound", 2, "0=World triggered", "1&Restart_Round")
 	register_clcmd("say /mystats", "Cmd_MyStats")
 	register_clcmd("say_team /mystats", "Cmd_MyStats")
+	register_clcmd("force_bestplayer", "OnIntermission", ADMIN_CVAR)
 	
 	g_eCvars[bpm_formula] = register_cvar("bpm_formula", "157")
 	g_eCvars[bpm_min_players] = register_cvar("bpm_min_players", "6")
-	g_eCvars[bpm_motd_header] = register_cvar("bpm_motd_header", "Best Player: $name$")
+	g_eCvars[bpm_motd_header] = register_cvar("bpm_motd_header", "Melhor Jogador: $name$")
 	#if defined USE_CSTRIKE
 	g_eCvars[bpm_obey_team] = register_cvar("bpm_obey_team", "0")
 	#endif
-	g_eCvars[bpm_stats_header] = register_cvar("bpm_stats_header", "Player Stats: $name$")
+	g_eCvars[bpm_stats_header] = register_cvar("bpm_stats_header", "Status do jogador: $name$")
 	g_eCvars[bpm_save_type] = register_cvar("bpm_save_type", "0")
+	g_eCvars[bpm_ignore_restart] = register_cvar("bpm_ignore_restart", "0")
+
 	get_mapname(g_szMap, charsmax(g_szMap))
 	g_iVault = nvault_open("BestPlayer")
 }
@@ -154,6 +171,11 @@ public Cmd_MyStats(id)
 
 public OnRestartRound()
 {
+	if (get_pcvar_num(g_eCvars[bpm_ignore_restart]))
+	{
+		return
+	}
+
 	new iPlayers[32], iPnum
 	get_players(iPlayers, iPnum)
 	
@@ -170,6 +192,22 @@ public OnTakeDamage(iVictim, iInflictor, iAttacker, Float:fDamage, iDamageBits)
 	}
 }
 
+public onKillAssist(id)
+{
+	if (is_user_connected(id))
+	{
+		g_ePlayerData[id][PDATA_ASSISTS]++
+	}
+}
+
+public jctf_flag(event, id, team, bool:is_assist)
+{
+	if (event == FLAG_CAPTURED && is_user_connected(id))
+	{
+		g_ePlayerData[id][PDATA_FLAGS]++
+	}
+}
+
 public OnPlayerKilled()
 {
 	new iAttacker = read_data(1),
@@ -183,6 +221,16 @@ public OnPlayerKilled()
 		
 		if(read_data(3))
 			g_ePlayerData[iAttacker][PDATA_HEADSHOTS]++
+
+		new xWpn[32]
+		read_data(4, xWpn, charsmax(xWpn))
+
+		if (equal(xWpn, "knife"))
+		{
+			g_ePlayerData[iAttacker][PDATA_KNIFES]++
+			g_ePlayerData[iVictim][PDATA_KNIFEDEATHS]++
+		}
+		
 	}
 }
 
@@ -280,7 +328,7 @@ public OnIntermission()
 	apply_replacements(iBest, szMotd, charsmax(szMotd))
 	apply_replacements(iBest, szHeader, charsmax(szHeader))
 	show_motd(0, szMotd, szHeader)
-	send_intermission()
+	// send_intermission()
 	return PLUGIN_HANDLED
 }
 
@@ -302,6 +350,10 @@ any:get_score_by_formula(const id, const iNum, const szFormula[])
 		case '8': return g_ePlayerData[id][PDATA_KDRATIO]
 		case '9': return g_ePlayerData[id][PDATA_KDRATIO_SB]
 		case 'a': return g_ePlayerData[id][PDATA_HSRATIO]
+		case 'b': return g_ePlayerData[id][PDATA_ASSISTS]
+		case 'c': return g_ePlayerData[id][PDATA_FLAGS]
+		case 'd': return g_ePlayerData[id][PDATA_KNIFES]
+		case 'e': return g_ePlayerData[id][PDATA_KNIFEDEATHS]
 	}
 	
 	return 0
@@ -362,6 +414,32 @@ apply_replacements(const id, szMessage[], const iLen)
 	if(has_argument(szMessage, ARG_BEST_TEAM))
 		replace_all(szMessage, iLen, ARG_BEST_TEAM, g_szTeams[get_winning_team()])
 	#endif
+
+	if(has_argument(szMessage, ARG_ASSISTS))
+		replace_num(szMessage, iLen, ARG_ASSISTS, g_ePlayerData[id][PDATA_ASSISTS])
+
+	if(has_argument(szMessage, ARG_FLAGS))
+		replace_num(szMessage, iLen, ARG_FLAGS, g_ePlayerData[id][PDATA_FLAGS])
+
+	if(has_argument(szMessage, ARG_KNIFES))
+		replace_num(szMessage, iLen, ARG_KNIFES, g_ePlayerData[id][PDATA_KNIFES])
+
+	if(has_argument(szMessage, ARG_KNIFEDEATHS))
+		replace_num(szMessage, iLen, ARG_KNIFEDEATHS, g_ePlayerData[id][PDATA_KNIFEDEATHS])
+
+	if(has_argument(szMessage, ARG_DATETIME))
+	{
+		new datetime[64]; //23 de outubro de 2021 - 20:13
+  		format_time(datetime, charsmax(datetime), "%Y/%m/%d - %H:%M:%S", get_systime());
+		replace_all(szMessage, iLen, ARG_DATETIME, datetime)
+	}
+	
+	if(has_argument(szMessage, ARG_SCORE))
+	{
+		new score[12];
+  		formatex(score, charsmax(score), "%2d - %2d", get_member_game(m_iNumTerroristWins), get_member_game(m_iNumCTWins));
+		replace_all(szMessage, iLen, ARG_SCORE, score)
+	}
 }
 
 #if defined USE_CSTRIKE
@@ -382,6 +460,10 @@ reset_player_stats(const id)
 	g_ePlayerData[id][PDATA_KDRATIO] = _:0.0
 	g_ePlayerData[id][PDATA_KDRATIO_SB] = _:0.0
 	g_ePlayerData[id][PDATA_HSRATIO] = _:0.0
+	g_ePlayerData[id][PDATA_ASSISTS] = 0
+	g_ePlayerData[id][PDATA_FLAGS] = 0
+	g_ePlayerData[id][PDATA_KNIFES] = 0
+	g_ePlayerData[id][PDATA_KNIFEDEATHS] = 0
 }
 
 use_vault(const id, const iType, const szInfo[])
@@ -440,18 +522,26 @@ replace_num_f(szMessage[], const iLen, const szPlaceholder[], const Float:fNum)
 	replace_all(szMessage, iLen, szPlaceholder, szBuffer)
 }
 
-send_intermission()
-{
-	message_begin(MSG_ALL, SVC_FINALE)
-	write_string("")
-	message_end()
-}
+// send_intermission()
+// {
+// 	message_begin(MSG_ALL, SVC_FINALE)
+// 	write_string("")
+// 	message_end()
+// }
 
 public plugin_natives()
 {
 	register_library("bestplayer")
 	register_native("bpm_force_intermission", "_bpm_force_intermission")
+	// register_native("bpm_force_reset",		  "_bpm_force_reset")
 }
 
 public _bpm_force_intermission(iPlugin, iParams)
+{
 	OnIntermission()
+}
+
+// public _bpm_force_reset(iPlugin, iParams)
+// {
+// 	OnRestartRound()
+// }

@@ -1,0 +1,84 @@
+body {
+    background: url("http://fast.mgthost1.com.br/2033/cstrike/extra/BestPlayer/background.bmp");
+    background-repeat: no-repeat;
+    background-size: 100%;
+    font-size: .8em;
+    color: white;
+    font-family: Arial;
+  }
+  #box {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+  .g, .y, .b, #m, b {
+    text-shadow: 0px 2px 5px rgba(0,0,0,.5);
+    font-weight: 800;
+  }
+  .g {
+    color: #00923f;
+  }
+  .y {
+    color: #f7c200;
+  }
+  .b {
+    color: #6550b4;
+  }
+  b {
+    font-size: 1.5em;
+  }
+  .centered {
+    margin: 0 auto;
+    width: 50%;
+    outline: 1px solid red;
+  }
+  .panel1{
+    outline: 1px solid red;
+  }
+  .panel2 {
+    outline: 1px solid blue;
+  }
+  .container {
+  }
+  .container > div {
+    display: inline-block;
+    vertical-align: top;
+    margin: 5px auto;
+    padding: 5px;
+  }
+  table, tbody, tr {
+    display: block;
+  }
+  td, th {
+    padding: 0.2em .5em;
+  }
+  .ta, .tb {
+    outline: 1px solid #2d2d2d;
+    background-size: cover;
+
+  }
+  .ta {
+    background-image: url("http://fast.mgthost1.com.br/2033/cstrike/extra/BestPlayer/team_a.bmp");
+  }
+  .tb {
+    background-image: url("http://fast.mgthost1.com.br/2033/cstrike/extra/BestPlayer/team_b.bmp");
+  }
+  .img {
+    height: 15%;
+    width: 40%;
+  }
+  .a > div {
+    width: 48%;
+  }
+  .c > div {
+    font-weight: bold;
+    margin: 0 auto;
+    width: 30%;
+    vertical-align: middle;
+    text-align: center;
+  }
+  .c > div * {
+    margin: 5px auto;
+  }
+  #m {
+    font-size: 4em;
+    width: 20%;
+  }
