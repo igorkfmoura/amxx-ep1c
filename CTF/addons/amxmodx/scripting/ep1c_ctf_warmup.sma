@@ -2,7 +2,7 @@
 #include <reapi>
 
 #define PLUGIN   "ep1c: Aquecimento"
-#define VERSION  "0.3"
+#define VERSION  "0.3.1"
 #define AUTHOR   "lonewolf"
 
 new const PREFIX[] = "^4[ep1c gaming Brasil]^1";
@@ -11,6 +11,8 @@ static const g_szSound[] = "ep1c/ep1c_knife_rr.wav";
 const TASK = 100;
 new g_hookEventCurWeapon, HookChain:g_hookRoundRestart, HookChain:g_hookSpawn, HookChain:g_hookKilled;
 new gCount;
+
+new forcerespawn_bak;
 
 enum _:Cvars
 {
@@ -60,13 +62,16 @@ public cmd_warmup_start(id)
 	enable_event(g_hookEventCurWeapon);
 
 	EnableHookChain(g_hookSpawn);
-	EnableHookChain(g_hookKilled);
+	// EnableHookChain(g_hookKilled);
 
 	DisableHookChain(g_hookRoundRestart);
 	
 	server_cmd("sv_gravity 800");
 	set_cvar_num("amx_maxjumps", 99999);
 	set_cvar_num("ctf_menuarmas", 0);
+
+	forcerespawn_bak = get_cvar_num("mp_forcerespawn");
+ 	set_cvar_num("mp_forcerespawn", 1);
   
 
 	if (task_exists(TASK))
@@ -83,13 +88,20 @@ public cmd_warmup_start(id)
 public cmd_warmup_end(id)
 {
 	DisableHookChain(g_hookSpawn);
-	DisableHookChain(g_hookKilled);
+	// DisableHookChain(g_hookKilled);
 	DisableHookChain(g_hookRoundRestart);
 	disable_event(g_hookEventCurWeapon);
+
+	if (task_exists(TASK))
+	{
+		remove_task(TASK);
+	}
 
 	set_cvar_num("amx_maxjumps", 1);
 	// set_cvar_num("mp_autoteambalance", 2);
 	set_cvar_num("ctf_menuarmas", 1);
+	set_cvar_num("mp_forcerespawn", forcerespawn_bak);
+  
   
 	client_cmd(0, "stopsound");
 	
