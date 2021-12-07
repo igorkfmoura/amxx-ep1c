@@ -1,0 +1,46 @@
+Loading Music II plugin FAQ
+---------------------------
+
+Contents:
+
+Q: MP3 files are not played on team select.
+Q: WAV files are not played in loop mode.
+Q: MP3 is not played on client connection.
+Q: MP3 is not played on client spectating.
+
+
+Answers:
+
+Q: MP3 files are not played on team select.
+A: They won't. Only WAV files supported. HL1 can't play looping MP3 good. 
+There will be always a short gap on track restart. You can test it by yourself 
+via 'mp3 loop <filename>' command in console.
+
+
+Q: WAV files are not played in loop mode.
+A: You should know that HL1 play WAV files as loops if they have a special
+cue markers inside WAV file only. Execute 'soundlist' in console. Loop samples
+are marked with 'L', e.g.:
+
+L( 8b)  24053 : loading/HipHop.wav
+L( 8b)  33091 : loading/Shogo436.WAV
+L( 8b) 101473 : loading/ShogoTheme.wav
+L( 8b)  48272 : loading/Spaceman
+
+To make your own looping WAV files you need a knowledge of any sound editor:
+Sound Forge, Cool Edit etc.
+
+
+Q: MP3 is not played on client connection.
+A: Check whether it is placed in precache folder on server 
+(it it a 'sound' folder) if admin allows to distribute this file by server.
+Next try to play that file on any client via 'mp3 play <filename>' command.
+HL1 has a limited support of MP3 files. They should be 192 kbit max. VBR is
+not supported. Also check official MP3 files which come with the game (look
+into 'media' folder of your MOD) and make your tracks characteristics exactly 
+the same. Don't bother me with questions about MP3 standart, please.
+
+
+Q: MP3 is not played on client spectating.
+A: Check whether 'amx_loading_flags' cvar contains flag 'b'. Also make sure 
+you've read a previous Q, please.
