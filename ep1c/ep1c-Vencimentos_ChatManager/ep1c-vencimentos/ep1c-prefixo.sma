@@ -210,8 +210,10 @@ public plugin_init()
 
 	file_admin_expired()
 
+	
 	register_forward(FM_ClientUserInfoChanged, "OnNameChange", 1)
 	register_forward(FM_ClientUserInfoChanged, "ClientUserInfoChanged")
+	
 
 	set_task(DELAY_ON_REGISTER, "RegisterCommands")
 	g_fwdOnPlayerDataUpdated = CreateMultiForward("cm_on_player_data_updated", ET_IGNORE, FP_CELL)
@@ -382,8 +384,9 @@ public OnNameChange(id)
 	UpdateData(id)
 	unregister_forward(FM_ClientUserInfoChanged, g_fwdUserNameChanged)
 }
-
+/*
 public ClientUserInfoChanged(id)
+
 {
     static const name[] = "name"
     static szOldName[32], szNewName[32]
@@ -399,7 +402,7 @@ public ClientUserInfoChanged(id)
     }
     return FMRES_HANDLED;
 }
-
+*/
 public crxranks_user_level_updated(id, iLevel)
 {
 	set_task(DELAY_ON_CHANGE, "UpdateData", id)
@@ -1507,3 +1510,6 @@ public _cm_update_player_data(iPlugin, iParams)
 {
 	UpdateData(get_param(1))
 }
+/* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
+*{\\ rtf1\\ ansi\\ deff0{\\ fonttbl{\\ f0\\ fnil Tahoma;}}\n\\ viewkind4\\ uc1\\ pard\\ lang1046\\ f0\\ fs16 \n\\ par }
+*/
