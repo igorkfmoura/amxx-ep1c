@@ -20,7 +20,7 @@
 #define WARNING_TIME 		10
 #define WARNING_TIME 		10
 #define CHECK_FREQ 		5
-#define SELECTMAPS		6						
+#define SELECTMAPS		10						
 #define MAX_MAPS 		100
 #define BLOCK_MAPS		10
 #define FILE_BLOCKEDMAPS 	"addons/amxmodx/data/mm_last.ini"
@@ -56,7 +56,7 @@
 
 new bool:gPrimeiraVez4fun;
 
-new const Pug_TagPrefix_hud[] = "ep1c gaming Brasil" // hud não colocar cor so nome padrao  
+new const Pug_TagPrefix_hud[] = "ep1c gaming Brasil" // hud nï¿½o colocar cor so nome padrao  
 new const Pug_TagPrefix[] = "^x04[ep1c gaming Brasil]^x01:"
 new const Pug_MenuPrefix[] = "Pug Menu"
 
@@ -528,7 +528,7 @@ public EventNewRnd()
 		set_task(8.0, "resetFrag")
 		
 		//if(g_iNums[iRounds] == 15 || g_bBooleans[iOvT] && g_iNums[iRounds] == 3)
-		if((g_iNums[iCTsPlacar] + g_iNums[iTRsPlacar]) == 14 || g_bBooleans[iOvT] && g_iNums[iRounds] == 3) // EDIÇÃO ALEX
+		if((g_iNums[iCTsPlacar] + g_iNums[iTRsPlacar]) == 14 || g_bBooleans[iOvT] && g_iNums[iRounds] == 3) // EDIï¿½ï¿½O ALEX
 		
 		{
 			client_cmd(0, "spk ^"doop.final round^"")
@@ -1798,13 +1798,18 @@ ReadyCMD(id)
 		set_pcvar_num(VarLockReady,1)
 		set_pcvar_num(VarEagleAkc, 0)
 		
-		if(getAdminsNum() <= 0)
+		if (get_pcvar_num(VarRandomize))
 		{
-			if(get_pcvar_num(VarRandomize))
 			set_task(3.0,"RandomizeVote")
 		}
-		
-		else if(get_pcvar_num(VarFFVote) ? set_task(3.0,"FFVotacao") : set_task(3.0,"MD3Votacao", TASK_votacao))
+		else if (get_pcvar_num(VarFFVote))
+		{
+			set_task(3.0,"FFVotacao")
+		}
+		else if (get_pcvar_num(VarVoteMd3))
+		{
+			set_task(3.0,"MD3Votacao", TASK_votacao)
+		}
 			
 		removeAllRdy()
 	}
@@ -2854,6 +2859,8 @@ public PUG_AdminMenu(id)
 		formatex(szItem, charsmax(szItem), "Desligar o pug %s%s", get_pcvar_num(VarDisable) ? "\y": "\r", get_pcvar_num(VarDisable) ? "[ON]": "[OFF]")
 		menu_additem(iMenu, szItem)
 		
+		formatex(szItem, charsmax(szItem),"Mudar map")
+		menu_additem(iMenu, szItem)
 		
 		menu_display(id, iMenu)
 	}
@@ -2888,7 +2895,12 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			{
 				if(!needPlayers(id) && !g_bBooleans[g_bVoteRunning])
 				{	
-					if(get_pcvar_num(VarFFVote))
+					if (get_pcvar_num(VarRandomize))
+					{
+						set_task(3.0,"RandomizeVote")
+						CC_SendMatched(0, RED,"O admin ^x04%s^x01 iniciou a votacao para habilitar o^x04 Randomize!", g_dUserData[id][szName])
+					}
+					else if(get_pcvar_num(VarFFVote))
 					{
 						set_pcvar_num(VarLockReady,1)
 						removeAllRdy()
@@ -2897,18 +2909,14 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 						CC_SendMatched(0, RED,"O admin ^x04%s^x01 iniciou a votacao para habilitar o^x04 TK!", g_dUserData[id][szName])
 					}
 					else if(get_pcvar_num(VarVoteMd3))
-					{	// alex edição
-						
-			
+					{	// alex ediï¿½ï¿½o
 						set_task(2.0,"MD3Votacao")
 						CC_SendMatched(0, RED,"O admin ^x04%s^x01 iniciou a votacao para^x04 Live ou MD3!", g_dUserData[id][szName])	
 						
-						
-					 }
-					
+					}
 					else
 					 {	
-						// alex edição
+						// alex ediï¿½ï¿½o
 						g_bBooleans[bMD3] = false
 						set_task(3.0, "SetMode", 0)
 						
@@ -3194,6 +3202,10 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			}
 
 			PUG_AdminMenu(id)
+		}
+		case 13:
+		{
+			client_cmd(id, "amx_mapmenu")
 		}
 	}
 	menu_destroy(iMenu)

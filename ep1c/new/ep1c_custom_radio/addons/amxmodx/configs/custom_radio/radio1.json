@@ -1,0 +1,367 @@
+//
+//	Flags:
+//	t_only - Radio message marked with this flag will be available to terrorists only.
+//	ct_only - Radio message marked with this flag will be available to counter-terrorists only.
+//	admin_only - Radio message marked with this flag will be available to server-admins only (see crc_adminflags cvar).
+//	notadmin_only - Radio messages marked with this flag will be available to players who don't have admin access.
+//	bomber_only - Radio message marked with this flag will only be available to players with a bomb.
+//	bomb_planted - Radio message marked with this flag will be available only after bomb planted.
+//	map_with_a - map with one bomb site.
+//	map_with_ab - map with two bomb sites.
+//	map_with_abc - map with three bomb sites.
+//	map_with_hostages - map with hostages.
+//
+
+{
+	"title"				:	"TITLE_MENU_A",
+	"messages"			:
+	[
+		//////////////////////////////////////////////////////////////////////
+		//						MAP WITH ONE BOMB SITE						//
+		//////////////////////////////////////////////////////////////////////
+		{
+			"text"		:	"#Cover_me",
+			"flags"		:	[ "map_with_a" ],
+			"sounds"	:	[ "%!MRAD_COVERME" ]
+		},
+		{
+			"text"		:	"#Hold_this_position",
+			"flags"		:	[ "map_with_a" ],
+			"sounds"	:	[ "%!MRAD_POSITION" ]
+		},
+		{
+			"text"		:	"#Taking_fire",
+			"flags"		:	[ "map_with_a" ],
+			"sounds"	:	[ "%!MRAD_HITASSIST" ]
+		},
+		{
+			"text"		:	"BOMBPLACE_CLEAR",
+			"flags"		:	[ "map_with_a" ],
+			"sounds"	:	[ "radio/custom/radio1/bplaceclear/bplaceclear.wav" ]
+		},
+		{
+			"text"		:	"CAMP_BOMBPLACE",
+			"flags"		:	[ "map_with_a" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/campbplace/campbplace.wav",
+				"radio/custom/radio1/campbplace/campbplace1.wav",
+				"radio/custom/radio1/campbplace/campbplace2.wav",
+				"radio/custom/radio1/campbplace/campbplace3.wav"
+			]
+		},
+		{
+			"text"		:	"GONNA_PLANT",
+			"flags"		:	[ "t_only", "bomber_only", "map_with_a" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/goplant/goplant.wav",
+				"radio/custom/radio1/goplant/goplant3.wav",
+				"radio/custom/radio1/goplant/goplant4.wav",
+				"radio/custom/radio1/goplant/goplant5.wav",
+				"radio/custom/radio1/goplant/goplant6.wav",
+				"radio/custom/radio1/goplant/goplant7.wav",
+				"radio/custom/radio1/goplant/goplant8.wav",
+				"radio/custom/radio1/goplant/goplant9.wav"
+			]
+		},
+		{
+			"text"		:	"DEFUSE_BOMB",
+			"flags"		:	[ "ct_only", "bomb_planted", "map_with_a" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/goplant/goplant.wav",
+				"radio/custom/radio1/goplant/goplant3.wav",
+				"radio/custom/radio1/goplant/goplant4.wav",
+				"radio/custom/radio1/goplant/goplant5.wav",
+				"radio/custom/radio1/goplant/goplant6.wav",
+				"radio/custom/radio1/goplant/goplant7.wav",
+				"radio/custom/radio1/goplant/goplant8.wav",
+				"radio/custom/radio1/goplant/goplant9.wav"
+			]
+		},
+
+		//////////////////////////////////////////////////////////////////////
+		//						MAP WITH TWO BOMB SITES						//
+		//////////////////////////////////////////////////////////////////////
+		{
+			"text"		:	"PLANT_A",
+			"flags"		:	[ "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/A/a.wav",
+				"radio/custom/radio1/A/a1.wav",
+				"radio/custom/radio1/A/a3.wav",
+				"radio/custom/radio1/A/a4.wav"
+			]
+		},
+		{
+			"text"		:	"PLANT_B",
+			"flags"		:	[ "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/B/b.wav",
+				"radio/custom/radio1/B/b1.wav",
+				"radio/custom/radio1/B/b2.wav",
+				"radio/custom/radio1/B/b3.wav",
+				"radio/custom/radio1/B/b4.wav"
+			]
+		},
+		{
+			"text"		:	"BOMB_PLANTED_A",
+			"flags"		:	[ "ct_only", "bomb_planted", "map_with_ab" ],
+			"sounds"	:	[ "radio/custom/radio1/bombhere/bombhereA.wav" ]
+		},
+		{
+			"text"		:	"BOMB_PLANTED_B",
+			"flags"		:	[ "ct_only", "bomb_planted", "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/bombhere/bombhereB.wav",
+				"radio/custom/radio1/bombhere/bombhereB1.wav"
+			]
+		},
+		{
+			"text"		:	"CAMP_BOMBPLACE_A",
+			"flags"		:	[ "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/campbplace/campbplaceA.wav",
+				"radio/custom/radio1/campbplace/campbplaceA1.wav",
+				"radio/custom/radio1/campbplace/campbplaceA2.wav"
+			]
+		},
+		{
+			"text"		:	"CAMP_BOMBPLACE_B",
+			"flags"		:	[ "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/campbplace/campbplaceB.wav",
+				"radio/custom/radio1/campbplace/campbplaceB1.wav",
+				"radio/custom/radio1/campbplace/campbplaceB2.wav"
+			]
+		},
+		{
+			"text"		:	"WHERE_BOMB",
+			"flags"		:	[ "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/gdebomba/gdebomba.wav",
+				"radio/custom/radio1/gdebomba/gdebomba1.wav",
+				"radio/custom/radio1/gdebomba/gdebomba2.wav",
+				"radio/custom/radio1/gdebomba/gdebomba3.wav",
+				"radio/custom/radio1/gdebomba/gdebomba4.wav",
+				"radio/custom/radio1/gdebomba/gdebomba5.wav"
+			]
+		},
+		{
+			"text"		:	"GONNA_PLANT_A",
+			"flags"		:	[ "t_only", "bomber_only", "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/goplant/goplantA.wav",
+				"radio/custom/radio1/goplant/goplantA1.wav"
+			]
+		},
+		{
+			"text"		:	"GONNA_PLANT_B",
+			"flags"		:	[ "t_only", "bomber_only", "map_with_ab" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/goplant/goplantB.wav",
+				"radio/custom/radio1/goplant/goplantB1.wav"
+			]
+		},
+
+		//////////////////////////////////////////////////////////////////////
+		//						MAP WITH THREE BOMB SITES					//
+		//////////////////////////////////////////////////////////////////////
+		{
+			"text"		:	"PLANT_A",
+			"flags"		:	[ "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/A/a.wav",
+				"radio/custom/radio1/A/a1.wav",
+				"radio/custom/radio1/A/a3.wav",
+				"radio/custom/radio1/A/a4.wav"
+			]
+		},
+		{
+			"text"		:	"PLANT_B",
+			"flags"		:	[ "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/B/b.wav",
+				"radio/custom/radio1/B/b1.wav",
+				"radio/custom/radio1/B/b2.wav",
+				"radio/custom/radio1/B/b3.wav",
+				"radio/custom/radio1/B/b4.wav"
+			]
+		},
+		{
+			"text"		:	"PLANT_C",
+			"flags"		:	[ "map_with_abc" ],
+			"sounds"	:	[ "radio/custom/radio1/C/c.wav" ]
+		},
+		{
+			"text"		:	"BOMB_PLANTED_A",
+			"flags"		:	[ "ct_only", "bomb_planted", "map_with_abc" ],
+			"sounds"	:	[ "radio/custom/radio1/bombhere/bombhereA.wav" ]
+		},
+		{
+			"text"		:	"BOMB_PLANTED_B",
+			"flags"		:	[ "ct_only", "bomb_planted", "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/bombhere/bombhereB.wav",
+				"radio/custom/radio1/bombhere/bombhereB1.wav"
+			]
+		},
+		{
+			"text"		:	"CAMP_BOMBPLACE_A",
+			"flags"		:	[ "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/campbplace/campbplaceA.wav",
+				"radio/custom/radio1/campbplace/campbplaceA1.wav",
+				"radio/custom/radio1/campbplace/campbplaceA2.wav"
+			]
+		},
+		{
+			"text"		:	"CAMP_BOMBPLACE_B",
+			"flags"		:	[ "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/campbplace/campbplaceB.wav",
+				"radio/custom/radio1/campbplace/campbplaceB1.wav",
+				"radio/custom/radio1/campbplace/campbplaceB2.wav"
+			]
+		},
+		{
+			"text"		:	"CAMP_BOMBPLACE_C",
+			"flags"		:	[ "map_with_abc" ],
+			"sounds"	:	[ "radio/custom/radio1/campbplace/campbplaceC.wav" ]
+		},
+		{
+			"text"		:	"WHERE_BOMB",
+			"flags"		:	[ "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/gdebomba/gdebomba.wav",
+				"radio/custom/radio1/gdebomba/gdebomba1.wav",
+				"radio/custom/radio1/gdebomba/gdebomba2.wav",
+				"radio/custom/radio1/gdebomba/gdebomba3.wav",
+				"radio/custom/radio1/gdebomba/gdebomba4.wav",
+				"radio/custom/radio1/gdebomba/gdebomba5.wav"
+			]
+		},
+		{
+			"text"		:	"GONNA_PLANT_A",
+			"flags"		:	[ "t_only", "bomber_only", "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/goplant/goplantA.wav",
+				"radio/custom/radio1/goplant/goplantA1.wav"
+			]
+		},
+		{
+			"text"		:	"GONNA_PLANT_B",
+			"flags"		:	[ "t_only", "bomber_only", "map_with_abc" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/goplant/goplantB.wav",
+				"radio/custom/radio1/goplant/goplantB1.wav"
+			]
+		},
+		{
+			"text"		:	"GONNA_PLANT_C",
+			"flags"		:	[ "bomber_only", "map_with_abc" ],
+			"sounds"	:	[ "radio/custom/radio1/goplant/goplantC.wav" ]
+		},
+
+		//////////////////////////////////////////////////////////////////////
+		//						MAP WITH HOSTAGES							//
+		//////////////////////////////////////////////////////////////////////
+		{
+			"text"		:	"#Cover_me",
+			"flags"		:	[ "map_with_hostages" ],
+			"sounds"	:	[ "%!MRAD_COVERME" ]
+		},
+		{
+			"text"		:	"#Hold_this_position",
+			"flags"		:	[ "map_with_hostages" ],
+			"sounds"	:	[ "%!MRAD_POSITION" ]
+		},
+		{
+			"text"		:	"#Taking_fire",
+			"flags"		:	[ "map_with_hostages" ],
+			"sounds"	:	[ "%!MRAD_HITASSIST" ]
+		},
+		{
+			"text"		:	"CAMP_HOSTAGES",
+			"flags"		:	[ "map_with_hostages", "t_only" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/icamphost/icamphost.wav",
+				"radio/custom/radio1/icamphost/icamphost1.wav",
+				"radio/custom/radio1/icamphost/icamphost2.wav",
+				"radio/custom/radio1/icamphost/icamphost3.wav",
+				"radio/custom/radio1/icamphost/icamphost4.wav",
+				"radio/custom/radio1/icamphost/icamphost5.wav",
+				"radio/custom/radio1/icamphost/icamphost6.wav"
+			]
+		},
+		{
+			"text"		:	"GOTO_HOSTAGES",
+			"flags"		:	[ "map_with_hostages", "ct_only" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/igohostage/igohostage1.wav",
+				"radio/custom/radio1/igohostage/igohostage2.wav",
+				"radio/custom/radio1/igohostage/igohostage5.wav",
+				"radio/custom/radio1/igohostage/igohostage6.wav"
+			]
+		},
+		{
+			"text"		:	"GOTO_RESCUE",
+			"flags"		:	[ "map_with_hostages" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/igorescue/igorescue.wav",
+				"radio/custom/radio1/igorescue/igorescue1.wav",
+				"radio/custom/radio1/igorescue/igorescue2.wav",
+				"radio/custom/radio1/igorescue/igorescue4.wav",
+				"radio/custom/radio1/igorescue/igorescue5.wav"
+			]
+		},
+		{
+			"text"		:	"RESCUING_HOSTAGES",
+			"flags"		:	[ "map_with_hostages", "ct_only" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/ihavehost/ihavehost.wav",
+				"radio/custom/radio1/ihavehost/ihavehost1.wav",
+				"radio/custom/radio1/ihavehost/ihavehost2.wav",
+				"radio/custom/radio1/ihavehost/ihavehost3.wav"
+			]
+		},
+		{
+			"text"		:	"TOOK_HOSTAGES",
+			"flags"		:	[ "map_with_hostages", "t_only" ],
+			"sounds"	:
+			[
+				"radio/custom/radio1/takehostage/takehostage.wav",
+				"radio/custom/radio1/takehostage/takehostage1.wav",
+				"radio/custom/radio1/takehostage/takehostage10.wav",
+				"radio/custom/radio1/takehostage/takehostage2.wav",
+				"radio/custom/radio1/takehostage/takehostage3.wav",
+				"radio/custom/radio1/takehostage/takehostage4.wav",
+				"radio/custom/radio1/takehostage/takehostage5.wav",
+				"radio/custom/radio1/takehostage/takehostage6.wav",
+				"radio/custom/radio1/takehostage/takehostage8.wav",
+				"radio/custom/radio1/takehostage/takehostage9.wav"
+			]
+		}
+	]
+}

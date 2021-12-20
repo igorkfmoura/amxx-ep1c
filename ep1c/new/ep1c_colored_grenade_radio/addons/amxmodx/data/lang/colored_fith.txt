@@ -1,0 +1,14 @@
+[en]
+CFITH_HEGRENADE = ^1%n (RADIO): Fire in the hole! ^3[Grenade]
+CFITH_SMOKEGRENADE = ^1%n (RADIO): Fire in the hole! ^4[Smoke]
+CFITH_FLASHBANG = ^1%n (RADIO): Fire in the hole! ^3[Flashbang]
+
+[bp]
+CFITH_HEGRENADE = ^1%n (RADIO): Fire in the hole! ^3[Grenade]
+CFITH_SMOKEGRENADE = ^1%n (RADIO): Fire in the hole! ^4[Smoke]
+CFITH_FLASHBANG = ^1%n (RADIO): Fire in the hole! ^3[Flashbang]
+
+[ru]
+CFITH_HEGRENADE = ^1%n (РАДИО): ^3Осторожно, граната!
+CFITH_SMOKEGRENADE = ^1%n (РАДИО): ^4Осторожно, граната!
+CFITH_FLASHBANG = ^1%n (РАДИО): ^3Осторожно, граната!

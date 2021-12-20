@@ -26,7 +26,7 @@
 #define USE_RELIABLE
 
 // Path to custom smoke sprite
-new const SMOKE_SPRITE[ ] = "sprites/gas_puff_gray_opaque.spr";
+new const SMOKE_SPRITE[ ] = "sprites/gas_puff_gray_transparent.spr";
 
 // Sprites count in 'fps friendly' mode
 #define FPS_MODE_SPRITES_COUNT 100

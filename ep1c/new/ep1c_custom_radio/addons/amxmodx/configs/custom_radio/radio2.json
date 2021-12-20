@@ -1,0 +1,20 @@
+//
+//	Flags:
+//	t_only - Radio message marked with this flag will be available to terrorists only.
+//	ct_only - Radio message marked with this flag will be available to counter-terrorists only.
+//	admin_only - Radio message marked with this flag will be available to server-admins only (see crc_adminflags cvar).
+//	notadmin_only - Radio messages marked with this flag will be available to players who don't have admin access.
+//	bomber_only - Radio message marked with this flag will only be available to players with a bomb.
+//	bomb_planted - Radio message marked with this flag will be available only after bomb planted.
+//	map_with_a - map with one bomb site.
+//	map_with_ab - map with two bomb sites.
+//	map_with_abc - map with three bomb sites.
+//	map_with_hostages - map with hostages.
+//
+
+{
+	"title"				: "Radio 2",
+	"messages"			:
+	[
+	]
+}

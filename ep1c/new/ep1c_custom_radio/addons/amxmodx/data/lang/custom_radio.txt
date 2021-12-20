@@ -1,0 +1,47 @@
+[en]
+TITLE_MENU_A = Map targets
+PLANT_A = Bomb place A
+PLANT_B = Bomb place B
+PLANT_C = Bomb place C
+BOMB_PLANTED_A = Bomb planted at A
+BOMB_PLANTED_B = Bomb planted at B
+BOMBPLACE_CLEAR = Bomb place is clear
+CAMP_BOMBPLACE = I am camping bomb place
+CAMP_BOMBPLACE_A = I am camping A
+CAMP_BOMBPLACE_B = I am camping B
+CAMP_BOMBPLACE_C = I am camping C
+DEFUSE_BOMB = Defuse the bomb
+WHERE_BOMB = Where is the bomb?!
+GONNA_PLANT = I am gonna go plant the bomb
+GONNA_PLANT_A = I am gonna go plant the bomb at A
+GONNA_PLANT_B = I am gonna go plant the bomb at B
+GONNA_PLANT_C = I am gonna go plant the bomb at C
+CAMP_HOSTAGES = I am camping hostages
+GOTO_HOSTAGES = I am gonna go to hostages
+GOTO_RESCUE = I am go to hostage rescue zone
+RESCUING_HOSTAGES = Rescuing hostages
+TOOK_HOSTAGES = They took the hostages
+
+[ru]
+TITLE_MENU_A = Цели карты
+PLANT_A = На бомбплейсе A
+PLANT_B = На бомбплейсе B
+PLANT_C = На бомбплейсе C
+BOMB_PLANTED_A = Бомба заложена на A
+BOMB_PLANTED_B = Бомба заложена на B
+BOMBPLACE_CLEAR = На бомбплейсе чисто
+CAMP_BOMBPLACE = Охраняю бомбплейс
+CAMP_BOMBPLACE_A = Охраняю бомбплейс A
+CAMP_BOMBPLACE_B = Охраняю бомбплейс B
+CAMP_BOMBPLACE_C = Охраняю бомбплейс C
+DEFUSE_BOMB = Разминируйте бомбу
+WHERE_BOMB = Где бомба?!
+GONNA_PLANT = Иду ставить бомбу
+GONNA_PLANT_A = Иду ставить бомбу на A
+GONNA_PLANT_B = Иду ставить бомбу на B
+GONNA_PLANT_C = Иду ставить бомбу на C
+CAMP_HOSTAGES = Охраняю заложников
+GOTO_HOSTAGES = Иду к заложникам
+GOTO_RESCUE = Иду на зону спасения
+RESCUING_HOSTAGES = Вывожу заложников
+TOOK_HOSTAGES = Они выводят заложников
