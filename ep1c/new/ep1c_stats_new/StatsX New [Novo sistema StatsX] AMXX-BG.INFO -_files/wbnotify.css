@@ -1,0 +1,15 @@
+@keyframes wbblink-notify {
+	from {color: #FF0000;}
+    to {visibility: hidden;}
+}
+
+@-webkit-keyframes wbblink-notify {
+	from {color: #FF0000;}
+    to {visibility: hidden;}
+}
+
+.wbicon_notify strong{
+	color: #FF0000;
+	animation: wbblink-notify 1s steps(2, start) infinite;
+	-webkit-animation: wbblink-notify 1s steps(2, start) infinite;
+}
