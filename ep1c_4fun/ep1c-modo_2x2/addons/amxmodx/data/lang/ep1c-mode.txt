@@ -1,5 +1,5 @@
 [ru]
-MODE_PREFIX = ^1[^4Mode^1]
+MODE_PREFIX = ^1[^4ep1c gaming Brail^1]
 MODE_MESSAGE_MAP_OPENED = Карта открыта
 MODE_MESSAGE_MAP_CLOSED = Карта закрыта
 MODE_MESSAGE_TOUCH = К сожалению^3 Проход закрыт^4,^1 по причине мало игроков.
@@ -89,7 +89,7 @@ MODE_DEV_MENU_SCALE_3 = ^nСкайл:\y   %0.3f^n^n\r1.\w %0.3f\y++^n\r2.\w %0.3
 
 
 [en]
-MODE_PREFIX = ^1[^4Mode^1]
+MODE_PREFIX = ^1[^4ep1c gaming Brail^1]
 MODE_MESSAGE_MAP_OPENED = Map opened
 MODE_MESSAGE_MAP_CLOSED = Map closed
 MODE_MESSAGE_TOUCH = I'm sorry^3 Path closed^4,^1 in reason not enough players.
@@ -133,6 +133,100 @@ MODE_DEV_NO = No
 
 MODE_DEV_HIDE = \dHide
 MODE_DEV_SHOW = \yShow
+
+MODE_DEV_SAVE = Save
+MODE_DEV_CHANGE = Change
+
+MODE_DEV_SOLID = \wSolid:\y
+MODE_DEV_SOLID_D = \dSolid:
+
+MODE_DEV_FAILED_1 = * Block not found *
+MODE_DEV_FAILED_2 = * This block already copy *
+MODE_DEV_FAILED_3 = * You as far back not copied block *
+MODE_DEV_FAILED_4 = * First you need to create the block *
+MODE_DEV_FAILED_5 = * You haven't completed Create/Change previous block *
+
+MODE_DEV_SUCCESS_1 = * Block deleted *
+MODE_DEV_SUCCESS_2 = * Block copied *
+MODE_DEV_SUCCESS_3 = * Success saved *
+MODE_DEV_SUCCESS_4 = * The block properties saved *
+MODE_DEV_SUCCESS_5 = * The block is ready for changes *
+MODE_DEV_SUCCESS_6 = * Installed the property: "%s" *
+
+MODE_DEV_TITLE = Description
+MODE_DEV_WALL = Wall
+MODE_DEV_NULL = Null
+
+MODE_DEV_COORD = Coordinates
+MODE_DEV_ANGLES = Angles
+MODE_DEV_SIZE = The block size
+MODE_DEV_MINS = The block size \rMins
+MODE_DEV_MAXS = The block size \rMaxs
+MODE_DEV_SPRITE = Size sprite
+
+MODE_DEV_MENU_MAIN = \yCreation the block^n\dБлоки: %d^n^n\r1.%s Create block^n\r2.%s Remove block^n\r3.%s %L block^n^n\r4.%s Properties^n\r5.\w Configuration^n^n\r6.%s Copy^n\r7.%s Paste^n^n^n^n\r9.%s Save all^n\r0.\w Exit
+MODE_DEV_MENU_CONFIG = \yCreation the block \d>>\w Configuration^n^n\r1. %L %s^n\r2.%s Wall's: %L^n\r3.\w Online \rLow\w:\y %d^n\r4.\w Online \rHigh\w:\y %d^n\r5.\w Noclip:\y %L^n^n\r6.\w Advanced property:\y %L^n^n^n^n^n^n^n^n^n\r0.\w Back
+
+MODE_DEV_MENU_TITLE = \yCreation the block \d>>\w Settings^n
+MODE_DEV_MENU_COORD = ^nLocation:\y   %0.1f   %0.1f   %0.1f^n^n\r1.\w X\y++^n\r2.\w Y\y++^n\r3.\w Z\y++^n^n\r4.\w X\r--^n\r5.\w Y\r--^n\r6.\w Z\r--^n^n\r7.\w Interval:\y x%0.1f
+MODE_DEV_MENU_ANGLES = ^nAngles:\y   %0.1f   %0.1f   %0.1f^n^n\r1.\w X\y++^n\r2.\w Y\y++^n\r3.\w Z\y++^n^n\r4.\w X\r--^n\r5.\w Y\r--^n\r6.\w Z\r--^n^n\r7.\w Interval:\y x%0.1f
+MODE_DEV_MENU_SIZE = ^nSize:   \w[\r Mins \y   %0.1f   %0.1f   %0.1f   \w]\t[\r Maxs\y   %0.1f   %0.1f   %0.1f   \w]^n^n\r1.\w X\y++^n\r2.\w Y\y++^n\r3.\w Z\y++^n^n\r4.\w X\r--^n\r5.\w Y\r--^n\r6.\w Z\r--^n^n\r7.\w Interval:\y x%0.1f
+MODE_DEV_MENU_ADDON = ^n\r8.\w Action:\y %L^n\r9.\w Sprite:\y %L^n^n\r0.\w Back
+
+MODE_DEV_MENU_SCALE_1 = ^nScale:\y   %0.3f^n^n\r1.\w %0.1f\y++^n\r2.\w %0.1f\r--^n^n^n^n^n^n^n\r7.\w Interval:\y x%0.1f
+MODE_DEV_MENU_SCALE_2 = ^nScale:\y   %0.3f^n^n\r1.\w %0.2f\y++^n\r2.\w %0.2f\r--^n^n^n^n^n^n^n\r7.\w Interval:\y x%0.2f
+MODE_DEV_MENU_SCALE_3 = ^nScale:\y   %0.3f^n^n\r1.\w %0.3f\y++^n\r2.\w %0.3f\r--^n^n^n^n^n^n^n\r7.\w Interval:\y x%0.3f
+
+
+
+
+
+
+[bp]
+MODE_PREFIX = ^1[^4ep1c gaming Brail^1]
+MODE_MESSAGE_MAP_OPENED = Mapa aberto
+MODE_MESSAGE_MAP_CLOSED = Mapa fechado
+MODE_MESSAGE_TOUCH = Desculpa,^3 mapa fechado^4,^1 por ter poucos jogadores no servidor.
+MODE_NOT_USED = On the map missing target^3 /mode^1 mode.
+MODE_ADMIN_BUSY_CHANGE = I'm sorry^4,^1 admin^3 %s^1 uses the command.
+MODE_VOTE = Now start the voting.
+MODE_START_VOTE = The voting is going on.
+MODE_WAIT_NEW_ROUND = Aguarde até o próximo round.
+MODE_ADMIN_CHANGED = Admin^3 %L^1 o mapa no próximo round.
+MODE_ADMIN_CHANGED_ADMINS = ^3%s^1 %L o mapa no próximo round /change.
+MODE_ADMIN_CLOSED = fechado
+MODE_ADMIN_OPENED = aberto
+MODE_VOTE_CLOSED = fechamento
+MODE_VOTE_OPENED = abertura
+MODE_RESULT_CLOSED = fechado
+MODE_RESULT_OPENED = aberto
+MODE_TITLE_CLOSED = Fechar
+MODE_TITLE_OPENED = Abrir
+MODE_VOTE_LEFT = Will be available through^3 %s.
+MODE_SECOND = ^1segundos
+MODE_SECUNDE = ^1segundo
+MODE_SECONDS = ^1segundos
+MODE_MINUT = ^1minutos
+MODE_MINUTE = ^1minuto
+MODE_MINUTES = ^1minutos
+MODE_AND = %s и^3 %s
+MODE_VOTED = ^3%s^1 said ^3/mode.^1 Voted for %L map [^3%d^1/^3%d^1]
+MODE_VOTE_ALREADY = Votação finalizada. Total de votos [^3%d^1/^3%d^1]
+MODE_MESSAGE_VOTE_START = A votação começara em^3 %d ^1segundos.
+MODE_VOTE_YES = Sim
+MODE_VOTE_NO = Não
+MODE_VOTE_FORMAT = ^3%s ^1:  [^4 %L ^1]
+MODE_VOTE_RESULT = Sim ^4-^1 [^3%d^1] ^4|^1 Não ^4-^1 [^3%d^1] ^4|^1 Total ^4-^1 [^3%d^1]
+MODE_VOTE_SUCCESS = O mapa^3 %L^1 no próximo round.
+MODE_VOTE_FAILED = Falha na votação.
+MODE_VOTE_POSTSTART_MENU = \wPergunta:\y %L mapa?^n^n\r1.\w Sim^n\r2.\w Não
+MODE_VOTE_PRESTART_MENU = \dPergunta: %L mapa?^nComeçará em  %d segundos^n^n1. Sim^n2. Não
+
+MODE_DEV_YES = Sim
+MODE_DEV_NO = Não
+
+MODE_DEV_HIDE = \dOcultar
+MODE_DEV_SHOW = \yMostar
 
 MODE_DEV_SAVE = Save
 MODE_DEV_CHANGE = Change
