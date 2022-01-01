@@ -181,20 +181,31 @@ public menu_admin_handler(id, menu, item)
     return PLUGIN_HANDLED;
   }
 
+  new bool:redeploy = false;
+
   switch (item)
   {
     case 0: server_cmd("sv_restart 3");
     case 1: client_cmd(id, "amx_mapmenu");
     case 2: client_cmd(id, "amx_kickmenu");
     case 3: client_cmd(id, "amx_banmenu");
-    case 4: server_cmd(sv_alltalk == 0 ? "sv_alltalk 1" : "sv_alltalk 0");
+    case 4:
+    {
+      server_cmd(sv_alltalk == 0 ? "sv_alltalk 1" : "sv_alltalk 0");
+      redeploy = true;
+    }
     case 5: client_cmd(id, "amx_swapteams");
     case 6: client_cmd(id, "amx_shuffleteams");
     case 7: client_cmd(id, "say /vencimento");
   }
 
   menu_destroy(menu);
-  set_task(0.5, "menu_admin_delayed", 1631 + id);
+
+  if (redeploy)
+  {
+    set_task(0.5, "menu_admin_delayed", 1631 + id);
+  }
+
   return PLUGIN_HANDLED;
 }
 
