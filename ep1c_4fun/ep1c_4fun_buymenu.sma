@@ -26,13 +26,14 @@ public plugin_init()
 	
 	RegisterHam(Ham_Spawn, "player", "xHamSpawnPost", true)
 
-	get_mapname(xmapname, charsmax(xmapname))
+	// Pra desabilitar vai ser no /configs/maps/*.cfg
 
-	if(equal(xmapname, "awp_", 4) || equal(xmapname, "aim_", 4) || equal(xmapname, "35hp_", 5) || equal(xmapname, "fy_", 3)
-	|| equal(xmapname, "he_", 3))
-	{
-		pause("a")
-	}
+	// get_mapname(xmapname, charsmax(xmapname))
+	// if(equal(xmapname, "awp_", 4) || equal(xmapname, "aim_", 4) || equal(xmapname, "35hp_", 5) || equal(xmapname, "fy_", 3)
+	// || equal(xmapname, "he_", 3))
+	// {
+	// 	pause("a")
+	// }
 
 	xRegisterSay("armas", "xShowMenuGuns")
 }

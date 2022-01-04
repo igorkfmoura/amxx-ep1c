@@ -9,10 +9,11 @@
 #include <cromchat>
 #include <nvault>
 #include <time>
+#include <reapi>
 
 #define PLUGIN	"ep1c: Pug mix"
-#define VERSION	"1.1"
-#define AUTHOR	"EFFx / IceeedR / alex rafael"
+#define VERSION	"1.2"
+#define AUTHOR	"EFFx / IceeedR / alex rafael / lonewolf"
 
 #define FOLDER	"pug_perfect"
 
@@ -638,29 +639,29 @@ public EventEndRnd()
 					g_bBooleans[bMD3] = false
 					g_bBooleans[iLive] = true
 				}
-				if(g_iNums[iTempo] == 2 && !g_bBooleans[g_Swapped])
-				{
-					CC_SendMatched(0, RED, "O^x04 MD3^x01 empatou, iniciando o^x04 live..")
-					g_iNums[iCTsPlacar] = 0
-					g_iNums[iTRsPlacar] = 0
+				// if(g_iNums[iTempo] == 2 && !g_bBooleans[g_Swapped])
+				// {
+				// 	CC_SendMatched(0, RED, "O^x04 MD3^x01 empatou, iniciando o^x04 live..")
+				// 	g_iNums[iCTsPlacar] = 0
+				// 	g_iNums[iTRsPlacar] = 0
 					
-					//restartRound(3)
-					client_cmd(0, "spk ^"doop.no team victor^"")
+				// 	//restartRound(3)
+				// 	client_cmd(0, "spk ^"doop.no team victor^"")
 					
-					g_bBooleans[bMD3] = false
-					g_bBooleans[iLive] = true
-				}
-				else if(g_iNums[iTempo] == 2 && g_bBooleans[g_Swapped])
-				{
-					CC_SendMatched(0, RED, "O^x04 MD3^x01 empatou, restaurando o placar e iniciando o^x04 live..")
-					g_bBooleans[bMD3] = false
-					g_bBooleans[iLive] = true
+				// 	g_bBooleans[bMD3] = false
+				// 	g_bBooleans[iLive] = true
+				// }
+				// else if(g_iNums[iTempo] == 2 && g_bBooleans[g_Swapped])
+				// {
+				// 	CC_SendMatched(0, RED, "O^x04 MD3^x01 empatou, restaurando o placar e iniciando o^x04 live..")
+				// 	g_bBooleans[bMD3] = false
+				// 	g_bBooleans[iLive] = true
 						
-					restartRound(1)
-					g_iNums[iCTsPlacar] = nvault_get( StatsVault , "TScore")
-					g_iNums[iTRsPlacar] = nvault_get( StatsVault , "CTScore")
-					client_cmd(0, "spk ^"doop.am d three victor^"")
-				}
+				// 	restartRound(1)
+				// 	g_iNums[iCTsPlacar] = nvault_get( StatsVault , "TScore")
+				// 	g_iNums[iTRsPlacar] = nvault_get( StatsVault , "CTScore")
+				// 	client_cmd(0, "spk ^"doop.am d three victor^"")
+				// }
 			}
 			return
 		}
@@ -1871,7 +1872,7 @@ public RandomizeVotacao_Finalizada()
 	else if(g_iVote[vRT][1] > g_iVote[vRT][0])
 	{
 		CC_SendMatched(0, RED,"Os players decidiram ^x04nao misturar os times.")
-		MD3Votacao()
+		// MD3Votacao()
 
 	}
 	else if(g_iVote[vRT][0] == g_iVote[vRT][1])
@@ -2533,6 +2534,7 @@ public SetMode(iMode)
 			}
 			else set_task(3.0, "threeRRs")
 			
+			set_member_game(m_bGameStarted, true)
 			restartRound(1)
 		}
 		case 1:// Eagle
