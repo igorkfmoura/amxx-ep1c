@@ -1,9 +1,9 @@
 /*
-xREDIRECT - redirect menu plugin - © 2006-2011 x0R (xor@x-base.org) - www.x-base.org
+xREDIRECT - redirect menu plugin - ï¿½ 2006-2011 x0R (xor@x-base.org) - www.x-base.org
 Original file: xredirect.sma/xredirect.amxx
 
 License:
-¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
 Free Software Foundation; either version 2 of the License, or (at
@@ -31,7 +31,7 @@ version.
 
 
 Description/Features:
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 First of all, if you are too lazy to read all this don't bother me with problems or questions!
 
 The plugin does several things that all can be turned on or off seperately by CVAR's:
@@ -70,7 +70,7 @@ The plugin does several things that all can be turned on or off seperately by CV
 
 
 Server List File:
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 The file is in ini format. The section name is the server name. The following keys are recognized:
 - address = server address (can be IP or DNS name)
@@ -89,7 +89,7 @@ doesn't have a default value
 
 Here is an example how the server file could look like:
 
-/¯¯¯¯¯¯¯¯¯¯ serverlist.ini ¯¯¯¯¯¯¯¯¯¯¯¯\
+/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ serverlist.ini ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\
 [my example server]
 address=example.n-ice.org
 localaddress=192.168.0.3
@@ -115,7 +115,7 @@ MAX_SERVERFORWARDS the other servers will be ignored.
 
 
 Available CVAR's:
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 redirect_active			- 1/0 activate/deactivate redirect plugin - when this is set to 0 all other CVAR's are ignored, default 0
 redirect_auto			- 0 = disable automatic redirection
 					- 1 = only redirect when server is full, redirect to random server
@@ -148,7 +148,7 @@ Advanced users should also check out the defines for more options, especially QU
 
 
 Min. Requirements:
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 - Metamod v1.18
 - HLDS v3.1.1.1
 - AMXX v1.70
@@ -156,7 +156,7 @@ Min. Requirements:
 
 
 Modules:
-¯¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 The plugin requires the modules engine and sockets to be loaded. You can enable them in your modules.ini.
 If you don't want to load the sockets module search for the line containing require_module("sockets")
 and comment it out or delete it. When doing this you can only use redirect_check_method 0. If you set
@@ -165,14 +165,14 @@ this to something different your server might crash or other problems arise.
 
 
 Known issues:
-¯¯¯¯¯¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #1	some people report crashes with CS 1.6 and redirect_check_method 1/2 if the server being checked
 	is on the same IP (only different port) so set to 0 if your server hangs after some time
 #2	as the length of menu items is limited don't specify too long server names - if an item is too long it is just truncated
  
  
 Changelog:
-¯¯¯¯¯¯¯¯¯¯
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 Note:
 The first version that was released to the public was v0.3. v0.1 and v0.2  were only running on my
@@ -716,13 +716,6 @@ public plugin_end()
 public plugin_natives()
 {
 	register_native("redirect", "native_redirect", 1)
-}
-
-/// <summary>This is used to tell AMXX that the sockets module is required.</summary>
-/// <remarks>Can be safely removed from the code when only redirect_check_method 0 will be used.</remarks>
-public plugin_modules()
-{
-	require_module("sockets")
 }
 
 /// <summary>Load servers from server list file.</summary>
@@ -1898,7 +1891,7 @@ public query_servers()
 			{
 				new sEmptyBufferDummy[512]
 				new nEndlessProtection = 0
-				while ((socket_change(nQuerySocket, 1)) && (nEndlessProtection < 500))
+				while ((socket_is_readable(nQuerySocket, 1)) && (nEndlessProtection < 500))
 				{
 					//log_amx("emptying socket %i (%s)", nQuerySocket, g_saServerNames[nServerCount])
 					socket_recv(nQuerySocket, sEmptyBufferDummy, 512)
@@ -2106,7 +2099,7 @@ public receive_serverquery_answers()
 			new nCmdBackup = g_naServerCmdBackup[nServerCount]
 			g_baServerResponding[nServerCount] = false
 			new nSocket = g_naServerSockets[nServerCount]
-			while (socket_change(nSocket, 1) && (nRecvCount <= nCmdBackup))
+			while (socket_is_readable(nSocket, 1) && (nRecvCount <= nCmdBackup))
 			{
 				// socket debug
 				//log_amx("socket changed: %i (%s)", nSocket, g_saServerNames[nServerCount])
@@ -2217,7 +2210,7 @@ public get_admin_count()
 /// <summary>This handler makes sure people that have been in queue while disconnecting are removed from it.</summary>
 /// <summary>Furthermore it resets the "last server" information for this now empty player slot.</summary>
 /// <param name="id">Slot ID of player that was disconnected.</param>
-public client_disconnect(id)
+public client_disconnected(id)
 {
 	queue_remove(id, -1)
 	g_nLastServer[id - 1] = -1
