@@ -160,13 +160,16 @@ public menu_admin(id)
 {
   new menu = menu_create(fmt("%s - Menu Admin", PREFIX_MENU), "menu_admin_handler");
 
-  menu_additem(menu, "Restart \d(sv_restart 3)");
+  menu_additem(menu, "Restart \d(sv_restart 1)");
   menu_additem(menu, "Mudar de mapa \d(amx_mapmenu)");
   menu_additem(menu, "Kickar um jogador \d(amx_kickmenu)");
   menu_additem(menu, "Banir um jogador \d(amx_banmenu)");
   menu_additem(menu, sv_alltalk == 0 ? "\yLigar alltalk \d(sv_alltalk 1)" : "\rDesligar alltalk \d(sv_alltalk 0)")
   menu_additem(menu, "Trocar times de lado \d(amx_swapteams)");
   menu_additem(menu, "Embaralhar times \d(amx_shuffleteams)");
+  menu_additem(menu, "Mudar time de um jogador \d(amx_teammenu)");
+  menu_additem(menu, "Dar tapa ou matar um jogador \d(amx_slapmenu)");
+  menu_additem(menu, "Iniciar votação de mapa \d(mapm_start_vote)");
   menu_additem(menu, "Vencimento de admin \d(say /vencimento)");
   
   menu_display(id, menu);
@@ -185,25 +188,65 @@ public menu_admin_handler(id, menu, item)
 
   switch (item)
   {
-    case 0: server_cmd("sv_restart 3");
+    case 0:
+    {
+      redeploy = true;
+
+      set_task(1.0, "restart_delayed");
+      client_cmd(0, "spk ^"doop^"");
+      client_cmd(id, "say @b Restarting...; say @y Restarting...; say @g Restarting...");
+    }
     case 1: client_cmd(id, "amx_mapmenu");
     case 2: client_cmd(id, "amx_kickmenu");
     case 3: client_cmd(id, "amx_banmenu");
     case 4:
     {
-      server_cmd(sv_alltalk == 0 ? "sv_alltalk 1" : "sv_alltalk 0");
       redeploy = true;
+     
+      new alltalk = !sv_alltalk;
+
+      if (alltalk)
+      {
+        server_cmd("sv_alltalk 1");
+        client_cmd(0, "spk ^"fvox/voice_on^"");
+        client_cmd(id, "say @g AllTalk [ON]");
+      }
+      else
+      {
+        server_cmd("sv_alltalk 0");
+        client_cmd(0, "spk ^"fvox/voice_off^"");
+        client_cmd(id, "say @o AllTalk [OFF]");
+      }
     }
-    case 5: client_cmd(id, "amx_swapteams");
-    case 6: client_cmd(id, "amx_shuffleteams");
-    case 7: client_cmd(id, "say /vencimento");
+    case 5:
+    {
+      redeploy = true;
+      client_cmd(id, "amx_swapteams");
+    }
+    case 6: 
+    {
+      redeploy = true;
+      client_cmd(id, "amx_shuffleteams");
+    }
+    case 7: client_cmd(id, "amx_teammenu");
+    case 8: client_cmd(id, "amx_slapmenu");
+    case 9:
+    {
+      redeploy = true;
+      client_cmd(id, "mapm_start_vote");
+    }
+    case 10:
+    {
+      redeploy = true;
+      client_cmd(id, "say /vencimento");
+    }
   }
 
   menu_destroy(menu);
 
   if (redeploy)
   {
-    set_task(0.5, "menu_admin_delayed", 1631 + id);
+    set_task(0.1, "menu_admin_delayed", 1631 + id);
   }
 
   return PLUGIN_HANDLED;
@@ -212,4 +255,9 @@ public menu_admin_handler(id, menu, item)
 public menu_admin_delayed(id)
 {
   menu_admin(id - 1631);
+}
+
+public restart_delayed(id)
+{
+  server_cmd("sv_restart 1");
 }
