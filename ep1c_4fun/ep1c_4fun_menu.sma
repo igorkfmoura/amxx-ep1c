@@ -171,6 +171,7 @@ public menu_admin(id)
   menu_additem(menu, "Dar tapa ou matar um jogador \d(amx_slapmenu)");
   menu_additem(menu, "Iniciar votação de mapa \d(mapm_start_vote)");
   menu_additem(menu, "Vencimento de admin \d(say /vencimento)");
+  menu_additem(menu, "Menu de ban de voz \d(amx_gagmenu)");
   
   menu_display(id, menu);
 }
@@ -240,6 +241,7 @@ public menu_admin_handler(id, menu, item)
       redeploy = true;
       client_cmd(id, "say /vencimento");
     }
+    case 11: client_cmd(id, "amx_gagmenu");
   }
 
   menu_destroy(menu);
