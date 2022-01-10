@@ -1,11 +1,22 @@
 #include <amxmodx>
 #include <reapi>
 
+#define PLUGIN  "ep1c_notify_round"
+#define VERSION "0.1"
+#define AUTHOR  "lonewolf"
+
 static const NOTIFY_FILE[] = "sound/ep1c/notify_alert.mp3";
-// static const NOTIFY_FILE[] = "sound/ep1c/loading/ep1cbemvindoclaudinho.mp3";
-new CMD_STRING[64];
+
+new CMD_STRING[128];
 
 new subscribed;
+
+static const cmds[][12] =
+{
+    "notify",
+    "alert",
+    "alerta"
+};
 
 public plugin_precache()
 {
@@ -14,11 +25,46 @@ public plugin_precache()
 
 public plugin_init()
 {
-    RegisterHookChain(RG_RoundEnd, "event_RG_RoundEnd");
+    register_plugin(PLUGIN, VERSION, AUTHOR);
 
+    RegisterHookChain(RG_RoundEnd, "event_RG_RoundEnd");
     formatex(CMD_STRING, charsmax(CMD_STRING), "mp3 play ^"%s^"", NOTIFY_FILE);
-    register_clcmd("say /notify", "cmd_notify");
+    
+    for (new i = 0; i < sizeof(cmds); ++i)
+    {
+        new tmp[24];
+        format(tmp, charsmax(tmp), "say /%s", cmds[i]);
+        register_clcmd(tmp, "cmd_notify");
+
+        format(tmp, charsmax(tmp), "say .%s", cmds[i]);
+        register_clcmd(tmp, "cmd_notify");
+
+        format(tmp, charsmax(tmp), "say_team /%s", cmds[i]);
+        register_clcmd(tmp, "cmd_notify");
+
+        format(tmp, charsmax(tmp), "say_team /%s", cmds[i]);
+        register_clcmd(tmp, "cmd_notify");
+    }
+    
+    register_clcmd("debug_notify", "cmd_debug");
 }
+
+
+new debug_id = 0;
+
+public cmd_debug(id)
+{
+    if (!is_user_connected(id))
+    {
+        return PLUGIN_CONTINUE;
+    }
+
+    client_print(id, print_console, "[debug] CMD_STRING: %s", CMD_STRING);
+    client_print(id, print_console, "[debug] subscribed: %d", subscribed);
+    
+    return PLUGIN_CONTINUE;
+}
+
 
 public client_connect(id)
 {
@@ -57,7 +103,7 @@ public event_RG_RoundEnd()
         if (subscribed & (1 << id-1) && is_user_connected(id))
         {
             client_cmd(id, CMD_STRING);
-            client_print_color(id, id, "^4[ep1c gaming Brasil]^1 Para desabilitar notificações de fim de round digite ^4/notify^1.");
+            client_print_color(id, id, "^4[ep1c gaming Brasil]^1 Para desabilitar notificações de fim de round digite ^4/alerta^1.");
         }
     }
 }
