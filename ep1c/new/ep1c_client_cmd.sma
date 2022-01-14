@@ -1,7 +1,7 @@
 #include <amxmodx>
 
 #define PLUGIN  "cliend_cmd"
-#define VERSION "0.1"
+#define VERSION "0.1.1"
 #define AUTHOR  "lonewolf"
 
 #define PREFIX_CHAT    "^4[ExecCMD]^1"
@@ -103,7 +103,7 @@ public cmd_client_cmd(admin)
       {
         continue;
       }
-      client_cmd(0, cmd);
+      client_cmd(id, cmd);
     }
 
     return PLUGIN_HANDLED;
