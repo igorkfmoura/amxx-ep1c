@@ -82,7 +82,7 @@ public task_buytime(id)
 
 public player_spawn(id)
 {
-	if(is_user_alive(id))
+	if(is_user_alive(id) && in_buytime)
 	{
 		bought_this_round[id] = false;
 		set_task(0.5, "task_giveitems", TASK_BUYMENU + id);
