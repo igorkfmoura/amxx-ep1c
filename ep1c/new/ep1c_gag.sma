@@ -132,7 +132,7 @@ public plugin_init( )
 	
 	// Gag times for the gag menu (amx_gagmenu)
 	// Default values: 60 300 600 1800 3600 7200 86400
-	new const iDefaultTimes[ ] = { 60, 300, 600, 1800, 3600, 7200, 86400, 0 };
+	new const iDefaultTimes[ ] = { 60, 300, 600, 1800 };
 	
 	// Load up standart times
 	for( new i = 0; i < sizeof( iDefaultTimes ); i++ )
@@ -344,7 +344,7 @@ public client_putinserver( id )
 	}
 	
 	// default flags to "abc"
-	g_iMenuFlags[ id ] = GAG_CHAT | GAG_TEAMSAY | GAG_VOICE;
+	g_iMenuFlags[ id ] = GAG_VOICE;
 }
 
 public client_authorized( id )
@@ -1000,7 +1000,7 @@ public CmdGagMenu( const id, const iLevel, const iCid )
 		return PLUGIN_HANDLED;
 	}
 	
-	g_iMenuOption[ id ] = 0;
+	g_iMenuOption[ id ] = 1;
 	arrayset( g_iMenuPlayers[ id ], 0, 32 );
 	
 	DisplayGagMenu( id, g_iMenuPosition[ id ] = 0 );
