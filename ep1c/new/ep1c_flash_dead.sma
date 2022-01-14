@@ -1,7 +1,7 @@
 #include <amxmodx>
 
 #define PLUGIN  "ep1c_flash_dead"
-#define VERSION "0.1"
+#define VERSION "0.2"
 #define AUTHOR  "lonewolf"
 
 new MSG_ID_SCREENFADE;
@@ -38,6 +38,7 @@ public msg_ScreenFade(msgid, msgdest, msgent)
   new alpha = get_msg_arg_int(7);
   if (alpha != 255)
   {
+    ClearSyncHud(msgent, hudsync1);
     return PLUGIN_CONTINUE;
   }
   
