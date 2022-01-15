@@ -13,10 +13,9 @@
 
 new terrorist_list[MAX_PLAYERS + 1];
 new terrorist_count;
-new bool:first_receive = true;
 
+new bool:first_receive = true;
 new bomb_only_steam;
-new bool:c4_handled = false;
 
 
 public plugin_init()
@@ -27,7 +26,6 @@ public plugin_init()
 
   register_logevent("event_spawn_c4", 3, "2=Spawned_With_The_Bomb");
 
-  RegisterHookChain(RG_CSGameRules_GiveC4, "event_stop_c4", .post=true);
   RegisterHookChain(RG_CSGameRules_RestartRound, "event_restartround");
 
 }
@@ -36,7 +34,6 @@ public plugin_init()
 public event_restartround()
 {
   first_receive = true;
-  c4_handled = false;
 
   terrorist_count = 0;
   for (new id = 1; id <= MaxClients; ++id)
@@ -57,7 +54,7 @@ public event_spawn_c4()
 {
   new id = get_log_user();
 
-  if (c4_handled || !is_user_connected(id) || !is_user_alive(id))
+  if (!is_user_connected(id) || !is_user_alive(id))
   {
     return PLUGIN_CONTINUE;
   }
@@ -81,19 +78,6 @@ public event_spawn_c4()
   }
 
   return PLUGIN_CONTINUE;
-}
-
-
-public event_stop_c4()
-{
-  remove_task(TASK_STOPC4);
-  set_task(1.0, "task_stop_c4", TASK_STOPC4);
-}
-
-
-public task_stop_c4(id)
-{
-  c4_handled = true;
 }
 
 
