@@ -1,12 +1,13 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <engine>
 #include <cstrike>
 #include <hamsandwich>
 #include <fun>
 
 #define PLUGIN  "ep1c: Menu de Armas"
-#define VERSION "1.2"
+#define VERSION "1.3"
 #define AUTHOR  "SHERMAN + lonewolf"
 
 #define TASK_BUYMENU 1096
@@ -28,6 +29,14 @@ public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 	
+	if (!find_ent_by_class(-1, "func_buyzone"))
+	{
+		new mapname[64];
+		get_mapname(mapname, charsmax(mapname));
+		console_print(0, "[%s] Current map ^"%s^" dont have buyzone, pausing.", PLUGIN, mapname);
+		pause("ad");
+	} 
+
 	bind_pcvar_float(get_cvar_pointer("mp_buytime"), buytime);
 
 	RegisterHam(Ham_Spawn, "player", "player_spawn", true);
