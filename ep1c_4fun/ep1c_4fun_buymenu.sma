@@ -29,13 +29,13 @@ public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 	
-	if (!find_ent_by_class(-1, "func_buyzone"))
-	{
-		new mapname[64];
-		get_mapname(mapname, charsmax(mapname));
-		console_print(0, "[%s] Current map ^"%s^" dont have buyzone, pausing.", PLUGIN, mapname);
-		pause("ad");
-	} 
+	// if (!find_ent_by_class(-1, "func_buyzone"))
+	// {
+	// 	new mapname[64];
+	// 	get_mapname(mapname, charsmax(mapname));
+	// 	console_print(0, "[%s] Current map ^"%s^" dont have buyzone, pausing.", PLUGIN, mapname);
+	// 	pause("ad");
+	// } 
 
 	bind_pcvar_float(get_cvar_pointer("mp_buytime"), buytime);
 
@@ -103,7 +103,7 @@ public task_giveitems(id)
 {
 	id -= TASK_BUYMENU;
 
-	if(!is_user_connected(id))
+	if(!is_user_connected(id) || !cs_get_user_buyzone(id))
 	{
 		return;
 	}
