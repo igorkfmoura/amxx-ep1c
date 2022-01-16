@@ -1,0 +1,8 @@
+[bp]
+AFK_PREFIX = [^4ep1c gaming Brasil^1]
+AFK_ID_WARNING = Você não está ativo! ^3Aviso^1: ^4%i/%i^1.
+AFK_ALL_TRANSFER_SPECTATOR = ^4%n ^1Transferido para spec por estar afk.
+AFK_ID_KICK_SPECTATOR = Você foi kickado por está away durante um longo tempo.
+AFK_ALL_KICK_SPECTATOR = ^4%n ^1foi removido do servidor por estar away.
+AFK_BOMB_DROP = ^4%n ^1Dropou a C4 por estar away.
+AFK_BOMB_TRANSFER = ^4%n ^1away, C4 transferida ^4%n^1.
