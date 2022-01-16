@@ -5,7 +5,7 @@
 #include <fakemeta>
 //#include <project-x/project-x_level_system>
 
-new const PLUGIN_VERSION[] = "1.0"
+new const PLUGIN_VERSION[] = "1.0.1"
 const Float:DELAY_ON_REGISTER = 1.0
 const Float:DELAY_ON_CONNECT = 1.0
 const Float:DELAY_ON_CHANGE = 0.1
@@ -199,7 +199,7 @@ new g_eSettings[Settings],
 
 public plugin_init()
 {
-	register_plugin("\r[ep1c] \y[ADDON]: \wChat Manager", PLUGIN_VERSION, "BhK-")
+	register_plugin("ep1c-prefixo", PLUGIN_VERSION, "BhK-")
 	register_cvar("px_prefixes", PLUGIN_VERSION, FCVAR_SERVER|FCVAR_SPONLY|FCVAR_UNLOGGED)
 	register_event("SayText", "OnSayTextNameChange", "a", "2=#Cstrike_Name_Change")
 
@@ -290,16 +290,30 @@ public show_expire(id)
 		return PLUGIN_HANDLED
 
 	if(g_expired[id] == -1)
-		client_print_color(id, print_team_default, "^4[^1ep1c gaming Brasil^4] ^1Parabéns seu admin é ^4Permanente^1!!!")
+		client_print_color(id, print_team_default, "^4[ep1c gaming Brasil] ^1Parabéns seu admin é ^4Permanente^1!!!")
 
 	else
-		client_print_color(id, print_team_default, "^4[^1ep1c gaming Brasil^4] ^1Seu admin termina no dia: ^4%s ^3| Estado atual: ^4%s", g_szDate[id], g_expired[id] ? "VENCIDO" : "ATIVADO")
+		client_print_color(id, print_team_default, "^4[ep1c gaming Brasil] ^1Seu admin termina no dia: ^4%s ^3| Estado atual: ^4%s", g_szDate[id], g_expired[id] ? "VENCIDO" : "ATIVADO")
 
 	return PLUGIN_HANDLED
 }
 
+check_admins()
+{
+	for (new i = 1; i <= MaxClients; ++i)
+	{
+		check_admin(i);
+	}
+}
+
+
 check_admin(id)
 {
+	if (!is_user_connected(id))
+	{
+		return
+	}
+
 	new admin[ADM], bool:found
 	for(new i; i < ArraySize(g_arrAdmins); i++)
 	{
@@ -336,6 +350,8 @@ file_admin_expired()
 
 	new szText[110], admin[ADM], szPass[32], szAccess[25], szFlags[8]
 
+	ArrayClear(g_arrAdmins);
+	
 	while(!feof(iFile))
 	{
 		fgets(iFile, szText, charsmax(szText))
@@ -803,7 +819,13 @@ public Cmd_Reload(id, iLevel, iCid)
 		return PLUGIN_HANDLED
 	}
 
+	server_cmd("amx_reloadadmins");
+	server_exec();
+	
+	file_admin_expired();
 	ReadFile()
+	check_admins();
+	
 	console_print(id, "[PX] Recarregado com Sucesso!")
 
 	if(is_user_connected(id))
