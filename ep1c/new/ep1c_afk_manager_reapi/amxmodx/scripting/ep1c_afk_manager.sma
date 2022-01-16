@@ -3,7 +3,7 @@
 #include <xs>
 
 
-#define PLUGIN	"ep1c: AFK Manager 2.0"
+#define PLUGIN	"ep1c: AFK Manager"
 #define VERSION	"1.2"
 #define AUTHOR	"Xramer"
 
@@ -12,7 +12,7 @@
 #define BIT_ADD(%1,%2) %1 |= (1 << (%2 & 31))
 #define BIT_SUB(%1,%2) %1 &= ~(1 << (%2 & 31))
 
-new const g_szConfigName[] = "afk_manager";
+new const g_szConfigName[] = "ep1c_afk_manager";
 
 new g_szFlag[32], Float:g_iTimeCheck, g_iMaxWarning, g_iMaxSpect, Float:g_iTimeCheckSpect
 new g_iTrnsferBomb, g_iNoticeSpec, g_iNoticeKick, g_iNoticeTransfer
