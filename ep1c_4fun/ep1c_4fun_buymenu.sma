@@ -25,6 +25,9 @@ new do_not_open[MAX_PLAYERS + 1];
 new Float:buytime;
 new bool:in_buytime = true;
 
+new menu_ids[MAX_PLAYERS + 1];
+
+
 public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
@@ -39,7 +42,10 @@ public plugin_init()
 
 	bind_pcvar_float(get_cvar_pointer("mp_buytime"), buytime);
 
-	RegisterHam(Ham_Spawn, "player", "player_spawn", true);
+	RegisterHam(Ham_Spawn,  "player", "player_spawn", true);
+	RegisterHam(Ham_Killed, "player", "player_killed", true);
+
+	register_event("StatusIcon", "event_player_leave_buyzone", "be", "1=0", "2=buyzone");
 
 	register_event("HLTV", "event_new_round", "a", "1=0", "2=0");
 	register_say("armas", "menu_guns");
@@ -81,7 +87,8 @@ public task_buytime(id)
 		{
 			// todo: check activity?
 			client_print_color(i, print_team_default, "%s Compra automática pois acabou o tempo de compra!", PREFIX_CHAT);
-			_menu_guns(i, 0, item_saved[i]);
+			cancel_buymenu(i);
+			_menu_guns(i, -1, item_saved[i]);
 		}
 	}
 	
@@ -89,12 +96,41 @@ public task_buytime(id)
 }
 
 
+public player_killed(id)
+{
+	cancel_buymenu(id);
+}
+
+
+public event_player_leave_buyzone(id)
+{
+	cancel_buymenu(id);
+}
+
+
+public cancel_buymenu(id)
+{
+	if (is_user_connected(id) && (menu_ids[id] >= 0))
+	{
+		new dummy;
+  		new newmenu;
+
+  		if (player_menu_info(id, dummy, newmenu) && newmenu == menu_ids[id])
+  		{
+			menu_destroy(menu_ids[id]);
+			client_cmd(id, "slot10");
+		}
+
+		menu_ids[id] = -1;
+	}
+}
+
 public player_spawn(id)
 {
 	if(is_user_alive(id) && in_buytime)
 	{
 		bought_this_round[id] = false;
-		set_task(0.5, "task_giveitems", TASK_BUYMENU + id);
+		set_task(0.6, "task_giveitems", TASK_BUYMENU + id);
 	}
 }
 
@@ -116,7 +152,7 @@ public task_giveitems(id)
 	
 	if(remember_buy[id])
 	{
-		_menu_guns(id, 0, item_saved[id]);
+		_menu_guns(id, -1, item_saved[id]);
 	}
 	else 
 	{
@@ -136,6 +172,7 @@ public menu_guns(id)
 	formatex(xFmtx, charsmax(xFmtx), "%s \wMenu de armas", PREFIX_MENUS);
 
 	new xMenu = menu_create(xFmtx, "_menu_guns");
+	menu_ids[id] = xMenu;
 
 	new xTeam = get_user_team(id);
 	if(xTeam == 1)
@@ -166,15 +203,16 @@ public menu_guns(id)
 
 public _menu_guns(id, menu, item)
 {
-	if(item == MENU_EXIT)
+	menu_ids[id] = -1;
+
+	if (menu >= 0)
 	{
 		menu_destroy(menu);
-		return PLUGIN_HANDLED;
 	}
 
-	if (menu)
+	if(item == MENU_EXIT)
 	{
-		menu_destroy(menu);
+		return PLUGIN_HANDLED;
 	}
 
 	switch (item)
