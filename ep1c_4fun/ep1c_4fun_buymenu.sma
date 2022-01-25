@@ -7,7 +7,7 @@
 #include <fun>
 
 #define PLUGIN  "ep1c: Menu de Armas"
-#define VERSION "1.3"
+#define VERSION "1.4"
 #define AUTHOR  "SHERMAN + lonewolf"
 
 #define TASK_BUYMENU 1096
@@ -83,7 +83,7 @@ public task_buytime(id)
 {
 	for (new i = 1; i <= MaxClients; ++i)
 	{
-		if (is_user_alive(i) && !bought_this_round[i] && cs_get_user_buyzone(i))
+		if (is_user_alive(i) && !bought_this_round[i] && !do_not_open[i] && cs_get_user_buyzone(i))
 		{
 			// todo: check activity?
 			client_print_color(i, print_team_default, "%s Compra automática pois acabou o tempo de compra!", PREFIX_CHAT);
