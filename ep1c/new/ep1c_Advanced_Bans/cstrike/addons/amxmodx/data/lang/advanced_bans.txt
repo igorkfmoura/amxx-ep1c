@@ -100,12 +100,12 @@ AB_NAME = Nom
 AB_IP = IP
 AB_STEAMID = SteamID
 AB_REASON = Raison
-AB_BAN_LENGTH = Dur�e du ban
-AB_UNBAN_TIME = Heure � laquelle vous serez unban
+AB_BAN_LENGTH = Durée du ban
+AB_UNBAN_TIME = Heure à laquelle vous serez unban
 AB_ADMIN_NAME = Nom de l'admin
 AB_ADMIN_STEAMID = Admin SteamID
-AB_WEBSITE = Si tu penses que tu as �t� banni sans raison, d�pose une plainte sur notre site:
-AB_NOT_AUTHORIZED = La cible n'est pas autoris� sur le serveur ! Ne peut Bannir !
+AB_WEBSITE = Si tu penses que tu as été banni sans raison, dépose une plainte sur notre site:
+AB_NOT_AUTHORIZED = La cible n'est pas autorisé sur le serveur ! Ne peut Bannir !
 AB_ALREADY_BANNED_STEAMID = Le SteamID de ce joueur est actuellement banni.
 AB_ALREADY_BANNED_IP = L' IP de ce joueur est actuellement banni.
 AB_PERMANENT_BAN = Ban Permanent
@@ -116,7 +116,7 @@ AB_NOT_IN_BAN_LIST = Ne peut trouver %s dans le banlist.
 AB_NO_BANS = Il n'y a personne de banni actuellement.
 AB_BAN_LIST_NUM = Liste des joueurs bannis %i - %i.
 AB_BAN_LIST_NEXT = Utilise amx_banlist %i pour le prochain joueur de la liste
-AB_MAX_BAN_TIME = La dur�e maximum d'un ban est : %i. 
+AB_MAX_BAN_TIME = La durée maximum d'un ban est : %i. 
 
 [ro]
 AB_BAN_INFORMATION = Informatii despre Ban
@@ -191,28 +191,28 @@ AB_BAN_LIST_NEXT = Gebruik amx_banlist %i om de volgende personen in de lijst op
 AB_MAX_BAN_TIME = De maximaal toegestane bantijd is %i.
  
 [bp]
-AB_BAN_INFORMATION = Informacao sobre Bans
+AB_BAN_INFORMATION = Informação sobre o Ban
 AB_NAME = Nome
 AB_IP = IP
 AB_STEAMID = SteamID
 AB_REASON = Motivo
-AB_BAN_LENGTH = Duracao do ban
-AB_UNBAN_TIME = Hora da remocao do ban
+AB_BAN_LENGTH = Duração do ban
+AB_UNBAN_TIME = Hora da remoção do ban
 AB_ADMIN_NAME = Nome do Admin
 AB_ADMIN_STEAMID = SteamID do Admin
-AB_WEBSITE = Se voce acha que foi banido injustamente, entre contato conosco pelo discord https://discord.gg/fKjuTf4qxe
-AB_NOT_AUTHORIZED = Alvo nao autorizado neste servidor! Nao eh possivel banir!
-AB_ALREADY_BANNED_STEAMID = O SteamID deste jogador ja foi banido!
-AB_ALREADY_BANNED_IP = Este jogador ja foi banido!
+AB_WEBSITE = Se você acha que foi banido injustamente, entre em contato conosco!
+AB_NOT_AUTHORIZED = Alvo não autorizado neste servidor! Não é possivel banir!
+AB_ALREADY_BANNED_STEAMID = O SteamID deste jogador já foi banido!
+AB_ALREADY_BANNED_IP = Este jogador já foi banido!
 AB_PERMANENT_BAN = Ban Permanente
-AB_INVALID_STEAMID = SteamID Invalido!
+AB_INVALID_STEAMID = SteamID Inválido!
 AB_VALID_STEAMID_FORMAT = Formatacao correta: STEAM_0:X:XXXXXXX
-AB_INVALID_IP = IP Invalido!
-AB_NOT_IN_BAN_LIST = Nao foi possivel encontrar %s na lista de bans!
-AB_NO_BANS = Nao ha ninguem banido neste momento.
+AB_INVALID_IP = IP Inválido!
+AB_NOT_IN_BAN_LIST = Não foi possivel encontrar %s na lista de bans!
+AB_NO_BANS = Não há ninguem banido neste momento.
 AB_BAN_LIST_NUM = Listando jogadores banidos %i - %i.
 AB_BAN_LIST_NEXT = Use amx_banlist %i para as proximas pessoas da lista.
-AB_MAX_BAN_TIME = O tempo maximo permitido para bans eh %i.
+AB_MAX_BAN_TIME = O tempo máximo permitido para bans é de %i.
 
 [ru]
 AB_BAN_INFORMATION = Informacija o bane
