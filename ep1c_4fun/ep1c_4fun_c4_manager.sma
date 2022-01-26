@@ -6,7 +6,7 @@
 #pragma semicolon 1;
 
 #define PLUGIN  "ep1c_4fun_c4_manager"
-#define VERSION "0.1.1"
+#define VERSION "0.1.2"
 #define AUTHOR  "lonewolf"
 
 #define TASK_STOPC4 79822
@@ -35,17 +35,6 @@ public event_restartround()
 {
   first_receive = true;
 
-  terrorist_count = 0;
-  for (new id = 1; id <= MaxClients; ++id)
-  {
-    if (is_user_connected(id) && (get_member(id, m_iTeam) == TEAM_TERRORIST) && is_user_steam(id))
-    {
-      terrorist_list[terrorist_count] = id;
-      terrorist_count++;
-    }
-  }
-
-  terrorist_list[terrorist_count] = 0;
   return HC_CONTINUE;
 }
 
@@ -67,8 +56,25 @@ public event_spawn_c4()
     return PLUGIN_CONTINUE;
   }
 
-  if (bomb_only_steam && is_user_alive(id) && !is_user_steam(id) && terrorist_count)
+  if (bomb_only_steam && is_user_alive(id) && !is_user_steam(id))
   {
+    terrorist_count = 0;
+    for (new i = 1; i <= MaxClients; ++i)
+    {
+      if (is_user_connected(i) && (get_member(i, m_iTeam) == TEAM_TERRORIST) && is_user_steam(i))
+      {
+        terrorist_list[terrorist_count] = i;
+        terrorist_count++;
+      }
+    }
+
+    terrorist_list[terrorist_count] = 0;
+
+    if (!terrorist_count)
+    {
+      return PLUGIN_CONTINUE;
+    }
+
     new receiver = terrorist_list[random_num(0, (terrorist_count - 1))];
 
     if (id != receiver && is_user_alive(receiver))
