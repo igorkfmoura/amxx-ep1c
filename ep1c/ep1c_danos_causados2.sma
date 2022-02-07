@@ -1,9 +1,12 @@
 #include <amxmodx>
 #include <reapi>
+#include <engine>
 
 #define PLUGIN  "ep1c_danos_causados"
 #define VERSION "0.1"
 #define AUTHOR  "lonewolf"
+
+new const PREFIX[] = "^4[ep1c gaming Brasil]^1";
 
 enum DamageType
 {
@@ -22,23 +25,41 @@ new cvars[Cvars];
 
 new spectators[MAX_PLAYERS + 1];
 
+new bool:disabled[MAX_PLAYERS + 1];
 
 public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 	
-	RegisterHookChain(RG_CBasePlayer_TakeDamage, "CBasePlayer_TakeDamage");
+	RegisterHookChain(RG_CBasePlayer_TakeDamage, "CBasePlayer_TakeDamage", .post=1);
 	RegisterHookChain(RG_CBasePlayer_Observer_FindNextPlayer, "CBasePlayer_Observer_FindNextPlayer_Pre");
 	RegisterHookChain(RG_CBasePlayer_Observer_FindNextPlayer, "CBasePlayer_Observer_FindNextPlayer_Post", .post=1);
+	RegisterHookChain(RG_CBasePlayer_Spawn, "CBasePlayer_Spawn_Post", .post=1);
 
 	bind_pcvar_num(create_cvar("amx_damage_enabled",      "1"), cvars[ENABLED]);
-	bind_pcvar_num(create_cvar("amx_damage_visible_only", "1"), cvars[VISIBLE_ONLY]);
-	bind_pcvar_num(create_cvar("amx_damage_radial",       "1"), cvars[RADIAL]);
+	bind_pcvar_num(create_cvar("amx_damage_visible_only", "0"), cvars[VISIBLE_ONLY]);
+	// bind_pcvar_num(create_cvar("amx_damage_radial",       "1"), cvars[RADIAL]);
 
 	register_concmd("debug_damage", "cmd_debug_damage");
 
+	register_clcmd("say /damage",      "cmd_say_damage");
+	register_clcmd("say /dano",        "cmd_say_damage");
+	register_clcmd("say /dmg",         "cmd_say_damage");
+	register_clcmd("say_team /damage", "cmd_say_damage");
+	register_clcmd("say_team /dano",   "cmd_say_damage");
+	register_clcmd("say_team /dmg",    "cmd_say_damage");
+
 	hud[GIVEN] = CreateHudSyncObj();
 	hud[TAKEN] = CreateHudSyncObj();
+}
+
+
+public cmd_say_damage(id)
+{
+	disabled[id] = !disabled[id]
+	client_print_color(id, print_team_red, "%s Damage indicator %s!", PREFIX, disabled[id] ? "^3disabled^1" : "^4enabled^1");
+
+	return PLUGIN_HANDLED;
 }
 
 
@@ -47,23 +68,36 @@ public cmd_debug_damage(id)
 	for (new i = 1; i <= 32; ++i)
 	{
 		new buffer[33];
-		for (new j = 0; j < 32; ++j)
+		for (new j = 31; j >= 0; --j)
 		{
 			buffer[j] = spectators[i] & (1 << j) ? '1' : '0';
 		}
 		buffer[32] = '^0';
 
-		console_print(id, "[%s] spectators[%d]: 0b%s", PLUGIN, i, buffer);
+		console_print(id, "[%s] spectators[%02d]: 0b%s", PLUGIN, i, buffer);
 	}
 }
 
 
 public client_disconnected(id)
 {
+	disabled[id] = false;
 	for (new i = 1; i <= 32; ++i)
 	{
 		spectators[i] &= ~(1 << (id - 1));
 	}
+}
+
+
+public CBasePlayer_Spawn_Post(id)
+{
+    if(is_user_connected(id))
+    {
+        for (new i = 1; i <= 32; ++i)
+		{
+			spectators[i] &= ~(1 << (id - 1));
+		}
+    }
 }
 
 
@@ -86,16 +120,21 @@ public CBasePlayer_Observer_FindNextPlayer_Post(const id, bool:reverse, const na
 	}
 }
 
+
 public CBasePlayer_TakeDamage(const victim, inflictor, const attacker, Float:damage)
 {
 	if (is_user_connected(victim))
 	{
 		set_hudmessage(255, 0, 0, 0.45, 0.50, 0, 0.1, 3.0, 0.1, 0.1)
-		ShowSyncHudMsg(victim, hud[TAKEN], "%.0f", damage);
+
+		if (!disabled[victim])
+		{
+			ShowSyncHudMsg(victim, hud[TAKEN], "%.0f", damage);
+		}
 
 		for (new i = 1; i <= 32; ++i)
 		{
-			if ((spectators[victim] & (1 << (i - 1))) && is_user_connected(i))
+			if (!disabled[i] && (spectators[victim] & (1 << (i - 1))) && is_user_connected(i))
 			{
 				ShowSyncHudMsg(i, hud[TAKEN], "%.0f", damage);
 			}
@@ -104,15 +143,49 @@ public CBasePlayer_TakeDamage(const victim, inflictor, const attacker, Float:dam
 
 	if (is_user_connected(attacker))
 	{
-		set_hudmessage(0, 100, 200, -1.0, 0.55, 0, 0.1, 3.0, 0.02, 0.02)
-		ShowSyncHudMsg(attacker, hud[GIVEN], "%.0f", damage);
-		for (new i = 1; i <= 32; ++i)
+		new bool:can_show = true;
+
+		if (cvars[VISIBLE_ONLY])
 		{
-			if ((spectators[attacker] & (1 << (i - 1))) && is_user_connected(i))
+			new Float:tmp[3];
+			new Float:eyes[3];
+
+			get_entvar(attacker, var_view_ofs, eyes);
+			get_entvar(attacker, var_origin, tmp);
+
+			eyes[0] += tmp[0];
+			eyes[1] += tmp[1];
+			eyes[2] += tmp[2];
+
+			get_entvar(victim, var_origin, tmp);
+
+			new Float:fraction;
+
+			trace_line(-1, eyes, tmp, tmp);
+  			traceresult(TR_Fraction, fraction);
+
+			can_show = (fraction == 1.0);
+			// can_show = bool:is_in_viewcone(victim, eyes, .use3d=1);
+
+			// client_print_color(0, attacker, "^4[%s]^1 attacker: %d, fraction: %.1f, damage: %.1f", PLUGIN, attacker, fraction, damage);
+		}
+
+		if (can_show)
+		{
+			set_hudmessage(0, 100, 200, -1.0, 0.55, 0, 0.1, 3.0, 0.02, 0.02)
+
+			if (!disabled[attacker])
 			{
-				ShowSyncHudMsg(i, hud[GIVEN], "%.0f", damage);
+				ShowSyncHudMsg(attacker, hud[GIVEN], "%.0f", damage);
+			}
+
+			for (new i = 1; i <= 32; ++i)
+			{
+				if (!disabled[i] && (spectators[attacker] & (1 << (i - 1))) && is_user_connected(i))
+				{
+					ShowSyncHudMsg(i, hud[GIVEN], "%.0f", damage);
+				}
 			}
 		}
 	}
-	
 }
