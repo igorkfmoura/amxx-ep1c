@@ -254,7 +254,7 @@ new g_sVoteMap[SELECTMAPS+2][MAX_PLAYERS], g_iMapInMenu[SELECTMAPS+1], g_iVoteCo
 new VarMini,VarShowHP,VarSay,VarAfkKick,VarAfkTime, VarFriendly,VarPlr,OverTimeMoney, VarVoteMd3,VarLockReady,VarMoney,VarSpawnDelay,
 VarChangeMap,VarHostNamePlacar,VarTagReady, VarminKills, VarReadyTime,VarMiado, VarDescriptionPlacar,VarDeadMic, VarBan, 
 VarSelfTK, VarFFVote, VarPunishment, VarLockBombs, VarReset, VarEagleAkc, VarRandomize, VarAdminKick, VarChamados, VarHudMoney, 
-VarLeaver, VarBanLive, VarSurrender, VarLockSurrender, VarBestPlayers, VarCountDown, VarDonateMoney,VarAllowVote, VarMaxDonate, VarFreezePlacar, VarDisable, VarDebug
+VarLeaver, VarBanLive, VarSurrender, VarLockSurrender, VarBestPlayers, VarCountDown, VarDonateMoney,VarAllowVote, VarMaxDonate, VarFreezePlacar, VarDisable, VarDebug, VarLetsGo
 
 new g_iMic, gMsgMoney, g_iMsgMoney, gMaxPlayers, g_iDamage[MAX_PLAYERS + 1][MAX_PLAYERS + 1], g_iHits[MAX_PLAYERS + 1][MAX_PLAYERS + 1]
 
@@ -402,6 +402,7 @@ public plugin_init()
 	VarFreezePlacar = register_cvar("pug_freeze_placar", "1")
 	VarDisable = register_cvar("pug_disable", "1")
 	VarDebug = register_cvar("pug_debug", "1")
+	VarLetsGo = register_cvar("pug_letsgo", "1")
 
 	register_message(get_user_msgid("SayText"),"PugMsgSayText")
 	gMsgMoney = get_user_msgid("Money")
@@ -2339,10 +2340,14 @@ public chamarTime()
 	{
 		iNeeded = (iPlrLmt - iNum[CS_TEAM_T])
 
+		new LetsGo = get_pcvar_num(VarLetsGo)
+
 		for(new i; i < iNum[CS_TEAM_SPECTATOR];i++)
 		{
 			iSpecNum++
-			
+			if (!LetsGo)
+				continue;
+
 			id = iPlayers[i]
 		
 			if(!isTeam(id))
