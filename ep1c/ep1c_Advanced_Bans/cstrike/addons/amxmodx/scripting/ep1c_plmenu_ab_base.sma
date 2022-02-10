@@ -120,10 +120,10 @@ public plugin_init()
 	
 	g_slapsettings = ArrayCreate();
 	// Old default values
-	ArrayPushCell(g_slapsettings, 0); // First option is ignored - it is slay
 	ArrayPushCell(g_slapsettings, 0); // slap 0 damage
 	ArrayPushCell(g_slapsettings, 1);
 	ArrayPushCell(g_slapsettings, 5);
+	ArrayPushCell(g_slapsettings, 0); // Last option is ignored - it is slay
 	
 	
 	register_srvcmd("amx_plmenu_bantimes", "plmenu_setbantimes");
@@ -171,14 +171,13 @@ public plmenu_setslapdmg()
 	if (args <= 1)
 	{
 		server_print("usage: amx_plmenu_slapdmg <dmg1> [dmg2] [dmg3] ...");
-		server_print("   slay is automatically set for the first value.");
+		server_print("   slay is automatically set for the last value.");
 		
 		return;
 	}
 	
 	ArrayClear(g_slapsettings);
 	
-	ArrayPushCell(g_slapsettings, 0); // compensate for slay
 	
 	for (new i = 1; i < args; i++)
 	{
@@ -187,6 +186,7 @@ public plmenu_setslapdmg()
 		ArrayPushCell(g_slapsettings, str_to_num(buff));
 		
 	}
+	ArrayPushCell(g_slapsettings, 0); // compensate for slay
 	
 }
 public module_filter(const module[])
@@ -207,7 +207,7 @@ public native_filter(const name[], index, trap)
 
 /* Ban menu */
 
-public client_disconnect(id)
+public client_disconnected(id)
 {
 	g_ban_player[id] = 0;
 }
