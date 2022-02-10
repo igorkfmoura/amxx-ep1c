@@ -179,18 +179,18 @@ public CBasePlayer_TakeDamage_Post(iVictim, iWeapon, iAttacker, Float:fDamage) /
 	if(is_user_valid(iAttacker) && iVictim != iAttacker && rg_is_player_can_takedamage(iVictim, iAttacker))
 	{
 		#if ASSIST_ALGORITHM == ADVANCED
-			new Float:fHealth; get_entvar(iVictim, var_health, fHealth)
-			if(fDamage > fHealth) fDamage = fHealth
+			new Float:fHealth; get_entvar(iVictim, var_health, fHealth);
+			if(fDamage > fHealth) fDamage = fHealth;
 		#endif
-		g_ePlayerData[iAttacker][DAMAGE_ON][iVictim] += floatround(fDamage)
-		g_ePlayerData[iAttacker][DAMAGE_ON_TIME][iVictim] = get_gametime()
+		g_ePlayerData[iAttacker][DAMAGE_ON][iVictim] += floatround(fDamage, floatround_floor);
+		g_ePlayerData[iAttacker][DAMAGE_ON_TIME][iVictim] = get_gametime();
 	}
 }
 
 public CBasePlayer_Killed_Pre(iVictim, iKiller)
 {
 	new iAssistant, iMaxDamage, Float:fLastEndTime, ASSIST_TYPE:xAssistType;
-	new Float:fDamageForAssist = get_pcvar_float(g_pCvars[CVAR_DAMAGE])
+	new Float:fDamageForAssist = get_pcvar_float(g_pCvars[CVAR_DAMAGE]);
 
 	// client_print_color(0, print_team_red, "%s 1", PREFIX);
 
@@ -218,9 +218,11 @@ public CBasePlayer_Killed_Pre(iVictim, iKiller)
 		}
 	}
 
-	// client_print_color(0, print_team_red, "%s 2, iAssistant: ^4%d^1, iMaxDamage: ^4%d^1, xAssistType: ^4%d^1", PREFIX, iAssistant, iMaxDamage, _:xAssistType);
+	// client_print_color(0, print_team_red, "%s 2, iAssistant: ^4%d^1, iMaxDamage: ^4%d^1, iTotalDamage: ^4%d^1, xAssistType: ^4%d^1", PREFIX, iAssistant, iMaxDamage, iTotalDamage, _:xAssistType);
 
-	if (!iAssistant || (((float(iMaxDamage) / float(iTotalDamage)) * 100.0) < fDamageForAssist))
+	new Float:max_health = get_entvar(iVictim, var_max_health);
+
+	if (!iAssistant || (((float(iMaxDamage) / max_health) * 100.0) < fDamageForAssist))
 	{
 		new Float:gametime = get_gametime();
 
@@ -246,20 +248,20 @@ public CBasePlayer_Killed_Pre(iVictim, iKiller)
 		}
 	}
 #elseif ASSIST_ALGORITHM == CSSTATSX
-		new iNeedDamage = g_pCvarAssistHp ? get_pcvar_num(g_pCvarAssistHp) : floatround(fDamageForAssist)
-		for(new id = 1; id < g_iMaxPlayers; id++)
+	new iNeedDamage = g_pCvarAssistHp ? get_pcvar_num(g_pCvarAssistHp) : floatround(fDamageForAssist)
+	for(new id = 1; id < g_iMaxPlayers; id++)
+	{
+		if(g_ePlayerData[id][CONNECTED] && id != iKiller && g_ePlayerData[id][DAMAGE_ON][iVictim] > iMaxDamage)
 		{
-			if(g_ePlayerData[id][CONNECTED] && id != iKiller && g_ePlayerData[id][DAMAGE_ON][iVictim] > iMaxDamage)
+			if(g_ePlayerData[id][DAMAGE_ON][iVictim] > iNeedDamage)
 			{
-				if(g_ePlayerData[id][DAMAGE_ON][iVictim] > iNeedDamage)
-				{
-					iAssistant = id
-					iMaxDamage = g_ePlayerData[id][DAMAGE_ON][iVictim]
-				}
-				else if(g_ePlayerData[id][DAMAGE_ON][iVictim] == iNeedDamage)
-					iAssistant = g_ePlayerData[id][DAMAGE_ON_TIME][iVictim] > g_ePlayerData[iAssistant][DAMAGE_ON_TIME][iVictim] ? id : iAssistant
+				iAssistant = id
+				iMaxDamage = g_ePlayerData[id][DAMAGE_ON][iVictim]
 			}
+			else if(g_ePlayerData[id][DAMAGE_ON][iVictim] == iNeedDamage)
+				iAssistant = g_ePlayerData[id][DAMAGE_ON_TIME][iVictim] > g_ePlayerData[iAssistant][DAMAGE_ON_TIME][iVictim] ? id : iAssistant
 		}
+	}
 #endif
 
 	// client_print_color(0, print_team_red, "%s 3, iAssistant: ^4%d^1, iMaxDamage: ^4%d^1, xAssistType: ^4%d^1", PREFIX, iAssistant, iMaxDamage, _:xAssistType);
