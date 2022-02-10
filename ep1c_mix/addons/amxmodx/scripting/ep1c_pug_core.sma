@@ -2545,7 +2545,6 @@ public SetMode(iMode)
 			}
 			else set_task(3.0, "threeRRs")
 			
-			set_member_game(m_bGameStarted, true)
 			restartRound(1)
 		}
 		case 1:// Eagle
@@ -2778,6 +2777,8 @@ public SetMode(iMode)
 			set_task(4.0,"removeAllRdy")
 		}
 	}
+	
+	set_member_game(m_bGameStarted, true)
 	client_cmd(0, "speak deeoo")
 	execCfg(iMode)
 }
