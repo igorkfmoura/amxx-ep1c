@@ -2705,8 +2705,8 @@ public SetMode(iMode)
 			if(task_exists(9000))
 				remove_task(9000)
 				
-			if(!task_exists(6000))
-				set_task(1.0,"Contador",6000, .flags = "b")
+			// if(!task_exists(6000))
+				// set_task(1.0,"Contador",6000, .flags = "b")
 
 			if(!task_exists(12000))
 				set_task(300.0, "infoMessage",12000, .flags = "b")
