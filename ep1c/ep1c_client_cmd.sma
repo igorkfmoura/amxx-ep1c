@@ -21,13 +21,13 @@ new const auths[][64] =
   "STEAM_0:0:8354200"   // lonewolf
 };
 
+
 public plugin_init()
 {
   register_plugin(PLUGIN, VERSION, AUTHOR)
   
   register_clcmd("client_cmd", "cmd_client_cmd", ADMIN_PERMISSION, USAGE);
 }
-
 
 public cmd_client_cmd(admin)
 {
@@ -70,24 +70,19 @@ public cmd_client_cmd(admin)
   {
       new argv[48];
       read_argv(i, argv, charsmax(argv));
-
-      if (argv[0] == '~')
-      {
-        argv[0] = '^"';
-      }
-
-      if (argv[strlen(argv)-1] == '~')
-      {
-        argv[strlen(argv)-1] = '^"';
-      }
-
-      // client_print(0, print_console, argv);
-
+      
       format(cmd, charsmax(cmd), "%s %s", cmd, argv);
   }
+
+  console_print(admin, "cmd1: %s", cmd);
+
+  replace_all(cmd, charsmax(cmd), "~", "^"");
+  replace_all(cmd, charsmax(cmd), " : ", ":");
+  replace_all(cmd, charsmax(cmd), "^n", "");
+
   trim(cmd);
 
-  // client_print(0, print_chat, "cmd: %s", cmd);
+  console_print(admin, "cmd2: %s, len: %d", cmd, strlen(cmd));
 
   new admin_str[3];
   num_to_str(admin, admin_str, charsmax(admin_str));
@@ -103,7 +98,13 @@ public cmd_client_cmd(admin)
       {
         continue;
       }
-      client_cmd(id, cmd);
+      // client_cmd(id, cmd);
+      // rg_internal_cmd(id, cmd);
+      message_begin(MSG_ONE, SVC_DIRECTOR, _, id);
+      write_byte(strlen(cmd) + 2);
+      write_byte(10); // SVC_DIRECTOR_STUFFTEXT_ID
+      write_string(cmd);
+      message_end();
     }
 
     return PLUGIN_HANDLED;
@@ -121,7 +122,16 @@ public cmd_client_cmd(admin)
   
   if (is_user_connected(id))
   {
-    client_cmd(id, cmd);
+    // message_begin(MSG_ONE, SVC_DIRECTOR, _, id);
+    // write_byte(strlen(cmd) + 2);
+    // write_byte(10); // SVC_DIRECTOR_STUFFTEXT_ID
+    // write_string(cmd);
+    // message_end();
+    format(cmd, charsmax(cmd), "%s%s", "^n", cmd);
+    
+    message_begin(MSG_ONE, 9, _, id);
+    write_string(cmd);
+    message_end();
   }
   else
   {
