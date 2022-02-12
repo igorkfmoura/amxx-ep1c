@@ -45,8 +45,8 @@ public msg_ScreenFade(msgid, msgdest, msgent)
   new duration  = get_msg_arg_int(1);
   new Float:tmp = duration / 4096.0 / 3.0;
   
-  set_hudmessage(200, 50, 0, -1.0, -1.0, 1, tmp, tmp, 0.1, 0.1, -1);
-  ShowSyncHudMsg(msgent, hudsync1, "[FLASHED]");
+  set_dhudmessage(100, 255, 0, -1.0, 0.55, 0, tmp, tmp);
+  show_dhudmessage(msgent, "[JOGADOR ESTÁ CEGO]");
   
   set_msg_arg_int(7, ARG_BYTE, 180);
 
