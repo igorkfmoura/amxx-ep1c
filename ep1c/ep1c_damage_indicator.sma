@@ -56,7 +56,7 @@ public plugin_init()
 public cmd_say_damage(id)
 {
 	disabled[id] = !disabled[id]
-	client_print_color(id, print_team_red, "%s Damage indicator %s!", PREFIX, disabled[id] ? "^3disabled^1" : "^4enabled^1");
+	client_print_color(id, print_team_red, "%s Indicador de dano %s!", PREFIX, disabled[id] ? "^3desabilitado^1" : "^4habilitado^1");
 
 	return PLUGIN_HANDLED;
 }
