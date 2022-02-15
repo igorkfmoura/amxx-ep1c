@@ -1,12 +1,12 @@
 #include <amxmodx>
 
-#define PLUGIN  "ep1c_flash_dead"
-#define VERSION "0.2"
+#define PLUGIN  "ep1c_fade_dead"
+#define VERSION "0.1"
 #define AUTHOR  "lonewolf"
 
 new MSG_ID_SCREENFADE;
-new flash_dead;
-new hudsync1;
+new fade_dead;
+// new hudsync1;
 
 public plugin_init()
 {
@@ -15,15 +15,13 @@ public plugin_init()
   MSG_ID_SCREENFADE = get_user_msgid("ScreenFade");
   register_message(MSG_ID_SCREENFADE, "msg_ScreenFade");
 
-  bind_pcvar_num(create_cvar("amx_flash_dead", "1"), flash_dead);
-  
-  hudsync1 = CreateHudSyncObj();
+  bind_pcvar_num(create_cvar("amx_fade_dead", "1"), fade_dead);
 }
 
 
 public msg_ScreenFade(msgid, msgdest, msgent)
 {
-  if (!flash_dead || !is_user_connected(msgent) || is_user_alive(msgent))
+  if (!fade_dead || !is_user_connected(msgent) || is_user_alive(msgent))
   {
     return PLUGIN_CONTINUE;
   }
@@ -38,17 +36,22 @@ public msg_ScreenFade(msgid, msgdest, msgent)
   new alpha = get_msg_arg_int(7);
   if (alpha != 255)
   {
-    ClearSyncHud(msgent, hudsync1);
     return PLUGIN_CONTINUE;
   }
   
-  new duration  = get_msg_arg_int(1);
-  new Float:tmp = duration / 4096.0 / 3.0;
-  
-  set_hudmessage(200, 50, 0, -1.0, -1.0, 1, tmp, tmp, 0.1, 0.1, -1);
-  ShowSyncHudMsg(msgent, hudsync1, "[FLASHED]");
-  
-  set_msg_arg_int(7, ARG_BYTE, 180);
+  if (get_user_team(msgent) != _:CS_TEAM_SPECTATOR)
+  {
+    return PLUGIN_CONTINUE;
+  }
 
+  new r = get_msg_arg_int(4);
+  new g = get_msg_arg_int(5);
+  new b = get_msg_arg_int(5);
+
+  if ((r == g) && (g == b) && (b == 0))
+  {
+      set_msg_arg_int(7, ARG_BYTE, 0);
+  }
+  
   return PLUGIN_CONTINUE;
 }

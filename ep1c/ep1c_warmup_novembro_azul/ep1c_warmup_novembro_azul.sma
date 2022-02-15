@@ -1,4 +1,5 @@
 #include <amxmodx>
+#include <amxmisc>
 #include <reapi>
 #include <fakemeta>
 
@@ -13,8 +14,37 @@ const TASK = 100;
 new g_hookEventCurWeapon, HookChain:g_hookRoundRestart, HookChain:g_hookSpawn, HookChain:g_hookKilled;
 new gCount;
 
-new forcerespawn_bak;
-new alltalk_bak;
+new cfg_folder[32]        = "warmup"
+new cfg_warmup_start[128] = "warmup_start.cfg";
+new cfg_warmup_end[128]   = "warmup_end.cfg";
+
+new const cfg_default_start[][64] =
+{
+    "amx_maxspeed_enabled   ^"0^"",
+    "amx_weaponmenu_enabled ^"0^"",
+    "mp_autoteambalance     ^"0^"",
+    "mp_falldamage          ^"0^"",
+    "sv_airaccelerate       ^"100^"",
+    "sv_autobunnyhopping    ^"1^"",
+    "sv_enablebunnyhopping  ^"1^"",
+    "sv_alltalk             ^"1^"",
+    "mp_forcerespawn        ^"1^"",
+    "mp_round_infinite      ^"1^"",
+};
+
+new const cfg_default_end[][64] =
+{
+    "amx_maxspeed_enabled   ^"1^"",
+    "amx_weaponmenu_enabled ^"1^"",
+    "mp_autoteambalance     ^"2^"",
+    "mp_falldamage          ^"1^"",
+    "sv_airaccelerate       ^"10^"",
+    "sv_autobunnyhopping    ^"0^"",
+    "sv_enablebunnyhopping  ^"0^"",
+    "sv_alltalk             ^"0^"",
+    "mp_forcerespawn        ^"0^"",
+    "mp_round_infinite      ^"0^"",
+};
 
 enum _:Cvars
 {
@@ -37,6 +67,66 @@ public plugin_precache()
     precache_model(v_knife_path);
     precache_model(w_knife_path);
     precache_model(p_knife_path);
+}
+
+
+public plugin_cfg()
+{
+    new path[96];
+    get_configsdir(path, charsmax(path));
+    format(path, charsmax(path), "%s/%s", path, cfg_folder);
+
+    if (!dir_exists(path))
+    {
+        mkdir(path);
+    }
+
+    format(cfg_warmup_start, charsmax(cfg_warmup_start), "%s/%s", path, cfg_warmup_start);
+    format(cfg_warmup_end,   charsmax(cfg_warmup_end),   "%s/%s", path, cfg_warmup_end);
+
+    if (!file_exists(cfg_warmup_start))
+    {
+        server_print("[%s] Creating new warmup start file: ^"%s^"", PLUGIN, cfg_warmup_start);
+
+        new file = fopen(cfg_warmup_start, "at");
+        if (!file)
+        {
+            set_fail_state("ERROR: Config file not found or created: ^"%s^"", cfg_warmup_start);
+        }
+        else
+        {
+            new len = sizeof(cfg_default_start);
+            for (new i = 0; i < len; ++i)
+            {
+                fprintf(file, "%s^n", cfg_default_start[i]);
+                server_print("[%s] -> %s", PLUGIN, cfg_default_start[i]);
+            }
+
+            fclose(file);
+        }
+    }
+
+    if (!file_exists(cfg_warmup_end))
+    {
+        server_print("[%s] Creating new warmup start file: ^"%s^"", PLUGIN, cfg_warmup_end);
+
+        new file = fopen(cfg_warmup_end, "at");
+        if (!file)
+        {
+            set_fail_state("ERROR: Config file not found or created: ^"%s^"", cfg_warmup_end);
+        }
+        else
+        {
+            new len = sizeof(cfg_default_end);
+            for (new i = 0; i < len; ++i)
+            {
+                fprintf(file, "%s^n", cfg_default_end[i]);
+                server_print("[%s] -> %s", PLUGIN, cfg_default_end[i]);
+            }
+
+            fclose(file);
+        }
+    }
 }
 
 
@@ -121,6 +211,8 @@ public cmd_warmup_start(id)
 
     enable_event(g_hookEventCurWeapon);
 
+    server_cmd("exec ^"%s^"", cfg_warmup_start);
+
     EnableHookChain(g_hookSpawn);
     // EnableHookChain(g_hookKilled);
 
@@ -129,17 +221,7 @@ public cmd_warmup_start(id)
 
 
     DisableHookChain(g_hookRoundRestart);
-    
-    server_cmd("sv_gravity 800");
-    set_cvar_num("amx_maxjumps", 99999);
-    set_cvar_num("ctf_menuarmas", 0);
-
-    alltalk_bak = get_cvar_num("sv_alltalk");
-    set_cvar_num("sv_alltalk", 1);
-    forcerespawn_bak = get_cvar_num("mp_forcerespawn");
-    set_cvar_num("mp_forcerespawn", 1);
-  
-
+        
     if (task_exists(TASK))
     {
         remove_task(TASK);
@@ -165,12 +247,7 @@ public cmd_warmup_end(id)
         remove_task(TASK);
     }
 
-    set_cvar_num("amx_maxjumps", 0);
-    // set_cvar_num("mp_autoteambalance", 2);
-    set_cvar_num("ctf_menuarmas", 1);
-    set_cvar_num("sv_alltalk", alltalk_bak);
-    set_cvar_num("mp_forcerespawn", forcerespawn_bak);
-  
+    server_cmd("exec ^"%s^"", cfg_warmup_end);
   
     client_cmd(0, "stopsound");
     
@@ -180,9 +257,7 @@ public cmd_warmup_end(id)
     client_print_color(0, print_team_red, "%s Estamos no Instagram! ^3@ep1cgamingbr^1", PREFIX);
 
     set_cvar_num("sv_restart", 1)
-    
-    server_cmd("ctf_match_start");
-    
+
     return PLUGIN_HANDLED;
 }
 
@@ -198,9 +273,32 @@ public CBasePlayer_Spawn_Post(const this)
 {
     if(is_user_connected(this))
     {
-        set_entvar(this, var_health, 24.0);
+        set_entvar(this, var_health, 1.0);
+
+        set_task(0.1, "task_setspeed", 1337+this);
     }
 }
+
+public task_setspeed(id)
+{
+    id -= 1337;
+
+    if(is_user_alive(id))
+    {
+        new Float:v_angle[3];
+        new Float:v_forward[3];
+
+        get_entvar(id, var_v_angle, v_angle);
+        angle_vector(v_angle, ANGLEVECTOR_FORWARD, v_forward);
+
+        v_forward[0] *= 250.0;
+        v_forward[1] *= 250.0;
+        v_forward[2] *= 250.0;
+
+        set_entvar(id, var_velocity, v_forward);
+    }
+}
+
 
 public CBasePlayer_Killed_Post(const this)
 {
@@ -231,8 +329,10 @@ public DisableRR()
         new b = random_num(0, 255);
 
         set_dhudmessage(r, g, b, -1.0, 0.7+random_float(-0.05, 0.05), 1, 1.0, 1.0);
-        // ShowSyncHudMsg(0, hudsyncobj, "All Talk ON", r, g, b, 0.03, 0.25, 0, 1.0, 1.0);
         show_dhudmessage(0, "All Talk ON");
+
+        set_hudmessage(.red=r, .green=g, .blue=b, .x=0.25, .y=-1.0, .effects=1, .fxtime=1.0, .holdtime=1.0);
+        ShowSyncHudMsg(0, hudsyncobj, "Segure ^"espaço^" para bunnar!");
     }
     else
     {

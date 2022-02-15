@@ -1,7 +1,7 @@
 #include <amxmodx>
 
 #define PLUGIN  "ep1c_anti_flood"
-#define VERSION "0.1"
+#define VERSION "0.2"
 #define AUTHOR  "lonewolf"
 
 new Float:next_say_time[MAX_PLAYERS + 1];
@@ -23,9 +23,13 @@ public plugin_init()
 
 public say_check_flood(id)
 {
-    new Float:gametime = get_gametime()
+    new message[4];
+    read_args(message, charsmax(message));
+    remove_quotes(message)
 
-    if (next_say_time[id] > gametime)
+    new Float:gametime = get_gametime()
+    
+    if (message[0] && (message[0] != '/') && (next_say_time[id] > gametime))
     {
         // flood_count[id] = min(flood_count[id] + 1, MAX_FLOOD_COUNT);
         flood_count[id]++;

@@ -7,7 +7,7 @@
 #include <fun>
 
 #define PLUGIN  "ep1c: Menu de Armas"
-#define VERSION "1.3"
+#define VERSION "1.5"
 #define AUTHOR  "SHERMAN + lonewolf"
 
 #define TASK_BUYMENU 1096
@@ -27,6 +27,7 @@ new bool:in_buytime = true;
 
 new menu_ids[MAX_PLAYERS + 1];
 
+new enabled;
 
 public plugin_init()
 {
@@ -46,6 +47,8 @@ public plugin_init()
 	RegisterHam(Ham_Killed, "player", "player_killed", true);
 
 	register_event("StatusIcon", "event_player_leave_buyzone", "be", "1=0", "2=buyzone");
+
+	bind_pcvar_num(create_cvar("amx_weaponmenu_enabled", "1"), enabled);
 
 	register_event("HLTV", "event_new_round", "a", "1=0", "2=0");
 	register_say("armas", "menu_guns");
@@ -81,9 +84,14 @@ public event_new_round(id)
 
 public task_buytime(id)
 {
+	if (!enabled)
+	{
+		return;
+	}
+
 	for (new i = 1; i <= MaxClients; ++i)
 	{
-		if (is_user_alive(i) && !bought_this_round[i] && cs_get_user_buyzone(i))
+		if (is_user_alive(i) && !bought_this_round[i] && !do_not_open[i] && cs_get_user_buyzone(i))
 		{
 			// todo: check activity?
 			client_print_color(i, print_team_default, "%s Compra automática pois acabou o tempo de compra!", PREFIX_CHAT);
@@ -127,7 +135,7 @@ public cancel_buymenu(id)
 
 public player_spawn(id)
 {
-	if(is_user_alive(id) && in_buytime)
+	if(is_user_alive(id) && in_buytime && enabled)
 	{
 		bought_this_round[id] = false;
 		set_task(0.6, "task_giveitems", TASK_BUYMENU + id);
@@ -139,7 +147,7 @@ public task_giveitems(id)
 {
 	id -= TASK_BUYMENU;
 
-	if(!is_user_connected(id) || !cs_get_user_buyzone(id))
+	if(!enabled || !is_user_connected(id) || !cs_get_user_buyzone(id))
 	{
 		return;
 	}

@@ -254,7 +254,7 @@ new g_sVoteMap[SELECTMAPS+2][MAX_PLAYERS], g_iMapInMenu[SELECTMAPS+1], g_iVoteCo
 new VarMini,VarShowHP,VarSay,VarAfkKick,VarAfkTime, VarFriendly,VarPlr,OverTimeMoney, VarVoteMd3,VarLockReady,VarMoney,VarSpawnDelay,
 VarChangeMap,VarHostNamePlacar,VarTagReady, VarminKills, VarReadyTime,VarMiado, VarDescriptionPlacar,VarDeadMic, VarBan, 
 VarSelfTK, VarFFVote, VarPunishment, VarLockBombs, VarReset, VarEagleAkc, VarRandomize, VarAdminKick, VarChamados, VarHudMoney, 
-VarLeaver, VarBanLive, VarSurrender, VarLockSurrender, VarBestPlayers, VarCountDown, VarDonateMoney,VarAllowVote, VarMaxDonate, VarFreezePlacar, VarDisable, VarDebug
+VarLeaver, VarBanLive, VarSurrender, VarLockSurrender, VarBestPlayers, VarCountDown, VarDonateMoney,VarAllowVote, VarMaxDonate, VarFreezePlacar, VarDisable, VarDebug, VarLetsGo
 
 new g_iMic, gMsgMoney, g_iMsgMoney, gMaxPlayers, g_iDamage[MAX_PLAYERS + 1][MAX_PLAYERS + 1], g_iHits[MAX_PLAYERS + 1][MAX_PLAYERS + 1]
 
@@ -293,7 +293,10 @@ new const g_szMoneySprites[][sSpriteData] =
 }
 
 new HamHook:g_iSetModel, g_iUserSprites[MAX_PLAYERS + 1][sizeof g_szMoneySprites]
-														   
+
+new donateReceiver[MAX_PLAYERS + 1];
+
+
 public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR)
@@ -350,6 +353,7 @@ public plugin_init()
 	register_clcmd("votekick","vote_grab",ADMIN_LEVEL_A," <number>. Vote to kick.") 
 	register_clcmd("voteban","vote_grab",ADMIN_LEVEL_A," <number>. Vote to ban.") 
 	register_clcmd("votemap","vote_grab",ADMIN_LEVEL_A," <number>. Vote to change a map.") 
+	register_clcmd("VALOR","VALORCmd")
 	
 	register_forward(FM_GetGameDescription, "GameDesc")
 	register_forward(FM_ClientUserInfoChanged, "ClientUserInfoChanged")
@@ -398,6 +402,7 @@ public plugin_init()
 	VarFreezePlacar = register_cvar("pug_freeze_placar", "1")
 	VarDisable = register_cvar("pug_disable", "1")
 	VarDebug = register_cvar("pug_debug", "1")
+	VarLetsGo = register_cvar("pug_letsgo", "1")
 
 	register_message(get_user_msgid("SayText"),"PugMsgSayText")
 	gMsgMoney = get_user_msgid("Money")
@@ -1252,12 +1257,12 @@ public event_deathMsg()
 					if( health + BonusHS > MaxHP ) 
 					{
 						set_user_health(iKiller, MaxHP)
-						CC_SendMatched(iKiller,RED,"Voce matou^x03 %s^x01 com ^x04HS^x01, e ganhou^x04 %i HP.", vicname, OverLoadHP)
+						CC_SendMatched(iKiller,RED,"Você matou^x03 %s^x01 com ^x04HS^x01, e ganhou^x04 %i HP.", vicname, OverLoadHP)
 					}
 					else
 					{
 						set_user_health(iKiller, health + BonusHS)
-						CC_SendMatched(iKiller,RED,"Voce matou^x03 %s^x01 com ^x04HS^x01, e ganhou^x04 %i HP.", vicname, BonusHS)
+						CC_SendMatched(iKiller,RED,"Você matou^x03 %s^x01 com ^x04HS^x01, e ganhou^x04 %i HP.", vicname, BonusHS)
 					}					
 				}
 				else 
@@ -1265,12 +1270,12 @@ public event_deathMsg()
 					if( health + BonusHP > MaxHP ) 
 					{
 						set_user_health(iKiller, MaxHP)
-						CC_SendMatched(iKiller,RED,"Voce matou^x03 %s^x01, e ganhou^x04 %i HP.", vicname, OverLoadHP )
+						CC_SendMatched(iKiller,RED,"Você matou^x03 %s^x01, e ganhou^x04 %i HP.", vicname, OverLoadHP )
 					}
 					else
 					{
 						set_user_health(iKiller, health + BonusHP)
-						CC_SendMatched(iKiller,RED,"Voce matou^x03 %s^x01, e ganhou^x04 %i HP.", vicname, BonusHP)
+						CC_SendMatched(iKiller,RED,"Você matou^x03 %s^x01, e ganhou^x04 %i HP.", vicname, BonusHP)
 					}
 				}
 			}
@@ -1336,7 +1341,7 @@ public PlayerSpawn(id)
 					new iReadyTime = get_pcvar_num(VarReadyTime)
 					set_task(float(iReadyTime), "forceReady", id + TASK_CHECKREADY)
 
-					CC_SendMatched(id, RED, "Bem vindo, voce tem^x04 %d^x01 segundo%s para dar .ready.", iReadyTime, (iReadyTime > 1) ? "s": "")
+					CC_SendMatched(id, RED, "Bem vindo, você tem^x04 %d^x01 segundo%s para dar .ready.", iReadyTime, (iReadyTime > 1) ? "s": "")
 					CC_SendMatched(id, RED, "Caso contrario, sera %s.", szMessage)
 				}
 				return PLUGIN_HANDLED
@@ -1406,7 +1411,7 @@ public forceReady(TaskId)
 			formatex(szMessage, charsmax(szMessage), "auto forcado a dar^x04 .ready")
 		}
 	}
-	CC_SendMatched(id, RED, "Voce foi %s.", szMessage)
+	CC_SendMatched(id, RED, "Você foi %s.", szMessage)
 }
 
 NoReadySpec()
@@ -1421,7 +1426,7 @@ NoReadySpec()
 		{
 			dllfunc(DLLFunc_ClientKill, id)
 			cs_set_user_team(id, CS_TEAM_SPECTATOR)
-			CC_SendMatched(id, RED,"Voce foi transferido para^x03 Spec")
+			CC_SendMatched(id, RED,"Você foi transferido para^x03 Spec")
 		}
 	}
 }
@@ -1441,13 +1446,13 @@ CheckAwayTime(id)
 	if((iMaxAfkTime - WARNING_TIME) <= gAfkTime[id] < iMaxAfkTime) 
 	{
 		new iTimeLeft = iMaxAfkTime - gAfkTime[id]
-		CC_SendMatched(id, RED, "Voce tem^x04 %i^x01 segundos para se mover ou ser expulso por estar^x04 away.", iTimeLeft)
+		CC_SendMatched(id, RED, "Você tem^x04 %i^x01 segundos para se mover ou ser expulso por estar^x04 away.", iTimeLeft)
 		client_cmd(id,"speak away")
 	} 
 	else if(gAfkTime[id] > iMaxAfkTime) 
 	{
 		CC_SendMatched(0, RED, "%s^x01 foi expulso por estar^x04 away base^x01 mais de^x04 %i^x01 segundos", g_dUserData[id][szName], iMaxAfkTime)
-		server_cmd("kick #%d ^"Voce foi expulso por estar AWAY mais de %i segundos^"", get_user_userid(id), iMaxAfkTime)
+		server_cmd("kick #%d ^"Você foi expulso por estar AWAY mais de %i segundos^"", get_user_userid(id), iMaxAfkTime)
 	}
 }
 
@@ -1743,7 +1748,7 @@ ReadyCMD(id)
 		
 	else if(!isTeam(id))
 	{
-		CC_SendMatched(id, RED, "Voce precisa estar em um time.")
+		CC_SendMatched(id, RED, "Você precisa estar em um time.")
 		client_cmd(id, "spk buttons/blip2")
 		return PLUGIN_HANDLED
 	}
@@ -1767,7 +1772,7 @@ ReadyCMD(id)
 	}
 	else if(g_dUserData[id][bIsReady])
 	{
-		CC_SendMatched(id, RED, "Voce ja esta pronto. Mais^x04 %d jogador%s^x01 para comecar.", AlreadyReady, (AlreadyReady > 1) ? "es": "")
+		CC_SendMatched(id, RED, "Você ja esta pronto. Mais^x04 %d jogador%s^x01 para comecar.", AlreadyReady, (AlreadyReady > 1) ? "es": "")
 		client_cmd(id, "spk buttons/blip2")
 		return PLUGIN_HANDLED
 	}
@@ -2119,6 +2124,8 @@ public client_disconnected(id)
 	new LiveBan = get_pcvar_num(VarBanLive)
 	new Float:TimeToRestart = get_gametime()
 
+	donateReceiver[id] = 0;
+
 	if(get_pcvar_num(VarReset) && iPlayersNum <= 0 && (TimeToRestart - gametime) >= 10.0)
 		set_task(1.0, "checkRestart")
 	
@@ -2333,10 +2340,14 @@ public chamarTime()
 	{
 		iNeeded = (iPlrLmt - iNum[CS_TEAM_T])
 
+		new LetsGo = get_pcvar_num(VarLetsGo)
+
 		for(new i; i < iNum[CS_TEAM_SPECTATOR];i++)
 		{
 			iSpecNum++
-			
+			if (!LetsGo)
+				continue;
+
 			id = iPlayers[i]
 		
 			if(!isTeam(id))
@@ -2534,7 +2545,6 @@ public SetMode(iMode)
 			}
 			else set_task(3.0, "threeRRs")
 			
-			set_member_game(m_bGameStarted, true)
 			restartRound(1)
 		}
 		case 1:// Eagle
@@ -2695,8 +2705,8 @@ public SetMode(iMode)
 			if(task_exists(9000))
 				remove_task(9000)
 				
-			if(!task_exists(6000))
-				set_task(1.0,"Contador",6000, .flags = "b")
+			// if(!task_exists(6000))
+				// set_task(1.0,"Contador",6000, .flags = "b")
 
 			if(!task_exists(12000))
 				set_task(300.0, "infoMessage",12000, .flags = "b")
@@ -2767,6 +2777,8 @@ public SetMode(iMode)
 			set_task(4.0,"removeAllRdy")
 		}
 	}
+	
+	set_member_game(m_bGameStarted, true)
 	client_cmd(0, "speak deeoo")
 	execCfg(iMode)
 }
@@ -2869,7 +2881,7 @@ public PUG_AdminMenu(id)
 	}
 	else
 	{
-		CC_SendMatched(id,RED,"Voce nao tem acesso a este comando.")
+		CC_SendMatched(id,RED,"Você nao tem acesso a este comando.")
 		InvalidSound(id)
 	}
 	
@@ -2940,7 +2952,7 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			}
 			else
 			{
-				CC_SendMatched(0, RED,"Ja esta live voce nao pode usar esse comando.")
+				CC_SendMatched(0, RED,"Ja esta live você nao pode usar esse comando.")
 				InvalidSound(id)
 			}
 		}
@@ -3056,7 +3068,7 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			else
 			{
 				
-				CC_SendMatched(id, TEAM_COLOR, "Voce so pode alterar o ready no^x04 aquecimento!")
+				CC_SendMatched(id, TEAM_COLOR, "Você so pode alterar o ready no^x04 aquecimento!")
 				client_cmd(id,"spk buttons/blip2")
 			}
 		}
@@ -3077,7 +3089,7 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			}
 			else
 			{
-				CC_SendMatched(id,GREEN,"Voce nao pode restringir as bombas no^x03 live.")
+				CC_SendMatched(id,GREEN,"Você nao pode restringir as bombas no^x03 live.")
 				client_cmd(0,"speak buttons/blip2")
 			}
 		}
@@ -3097,7 +3109,7 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			}
 			else
 			{
-				CC_SendMatched(id,GREEN,"Voce nao pode restringir o HP no^x03 4fun.")
+				CC_SendMatched(id,GREEN,"Você nao pode restringir o HP no^x03 4fun.")
 				client_cmd(0,"speak buttons/blip2")
 			}
 		}
@@ -3119,7 +3131,7 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			}
 			else
 			{
-				CC_SendMatched(id,GREEN,"Voce nao pode habilitar o so eagle no^x03 live.")
+				CC_SendMatched(id,GREEN,"Você nao pode habilitar o so eagle no^x03 live.")
 				client_cmd(0,"speak buttons/blip2")
 			}
 		}
@@ -3139,7 +3151,7 @@ public PUG_AdminMenuHandler(id, iMenu, iItem)
 			}
 			else
 			{
-				CC_SendMatched(id,GREEN,"Voce nao pode habilitar morto falar com vivo no ^x03 4fun.")
+				CC_SendMatched(id,GREEN,"Você nao pode habilitar morto falar com vivo no ^x03 4fun.")
 				client_cmd(0,"speak buttons/blip2")
 			}
 		}
@@ -3452,7 +3464,7 @@ public Placar()
 	get_pugmode(szModo, charsmax(szModo))
 
 	set_hudmessage(random(256), random(256), random(256), 0.01, 0.23, 0, 1.0, 1.0)
-	ShowSyncHudMsg(0, g_hHuds[hPlacar], "[Modo: %s]^n[%dT - Round: %d]^n[CTs: %d TRs: %d]", szModo, g_iNums[iTempo], g_iNums[iRounds], (g_iNums[iCTsPlacar] + g_iNums[iCTsPlacarOT]), (g_iNums[iTRsPlacar] + g_iNums[iTRsPlacarOT]))
+	ShowSyncHudMsg(0, g_hHuds[hPlacar], "ep1c girls Brasil^n^n[Modo: %s]^n[%dT - Round: %d]^n[CTs: %d TRs: %d]", szModo, g_iNums[iTempo], g_iNums[iRounds], (g_iNums[iCTsPlacar] + g_iNums[iCTsPlacarOT]), (g_iNums[iTRsPlacar] + g_iNums[iTRsPlacarOT]))
 
 	new szAviso[MAX_PLAYERS]
 	
@@ -3692,7 +3704,7 @@ public Say_Cmmds(id)
 			{
 				if(g_dUserData[id][g_iTimeDonated] >= get_pcvar_num(VarMaxDonate))
 				{
-					CC_SendMatched(id, TEAM_COLOR, "Voce ja doou^x04 %i vez%s^x01 neste round.", get_pcvar_num(VarMaxDonate), (get_pcvar_num(VarMaxDonate) > 1) ? "es" : "")
+					CC_SendMatched(id, TEAM_COLOR, "Você ja doou^x04 %i vez%s^x01 neste round.", get_pcvar_num(VarMaxDonate), (get_pcvar_num(VarMaxDonate) > 1) ? "es" : "")
 					client_cmd(id,"spk buttons/blip2")
 					return PLUGIN_HANDLED	
 				}
@@ -3706,7 +3718,7 @@ public Say_Cmmds(id)
 			client_cmd(id,"spk buttons/blip2")
 			return PLUGIN_HANDLED
 		}
-		CC_SendMatched(id, TEAM_COLOR, "Voce so pode doar dinheiro no^x04 live!")
+		CC_SendMatched(id, TEAM_COLOR, "Você so pode doar dinheiro no^x04 live!")
 		client_cmd(id,"spk buttons/blip2")
 		return PLUGIN_HANDLED		
 	}
@@ -3747,7 +3759,7 @@ public Say_Cmmds(id)
 				return PLUGIN_HANDLED
 			}
 		}
-		CC_SendMatched(id, TEAM_COLOR, "Voce so pode resetar seu frag no^x04 aquecimento!")
+		CC_SendMatched(id, TEAM_COLOR, "Você so pode resetar seu frag no^x04 aquecimento!")
 		client_cmd(id,"spk buttons/blip2")
 		return PLUGIN_HANDLED	
 	}
@@ -3755,7 +3767,7 @@ public Say_Cmmds(id)
 	{
 		if(g_bBooleans[bChat])
 		{
-			CC_SendMatched(id, RED, "Say^x03 desativado^x01, voce nao pode utiliza-lo.")
+			CC_SendMatched(id, RED, "Say^x03 desativado^x01, você nao pode utiliza-lo.")
 			InvalidSound(id)
 			return PLUGIN_HANDLED_MAIN
 		}
@@ -3769,7 +3781,7 @@ SurrenderCmd(id)
 	
 	if(!isTeam(id))
 	{
-		CC_SendMatched(id, RED, "Voce precisa estar em um time para se render.")
+		CC_SendMatched(id, RED, "Você precisa estar em um time para se render.")
 		client_cmd(id, "spk buttons/blip2")
 		return PLUGIN_HANDLED
 	}
@@ -3781,13 +3793,13 @@ SurrenderCmd(id)
 	}
 	else if(!g_bBooleans[iLive] || !g_bBooleans[iOvT])
 	{
-		CC_SendMatched(id, RED, "Voce so pode pedir surrender no^x04 live.")
+		CC_SendMatched(id, RED, "Você so pode pedir surrender no^x04 live.")
 		client_cmd(id, "spk buttons/blip2")
 		return PLUGIN_HANDLED
 	}
 	else if(g_dUserData[id][bSurrender])
 	{
-		CC_SendMatched(id, RED, "Voce ja pediu surrender, mais^x04 %d jogadores^x01 do seu time para iniciar votacao.",
+		CC_SendMatched(id, RED, "Você ja pediu surrender, mais^x04 %d jogadores^x01 do seu time para iniciar votacao.",
 		(g_CurTeam[id] == CS_TEAM_T) ? (iNeededPlayers - GetSurrender(CS_TEAM_T)) : (iNeededPlayers - GetSurrender(CS_TEAM_CT)))
 		client_cmd(id, "spk buttons/blip2")
 		return PLUGIN_HANDLED
@@ -3876,7 +3888,7 @@ CheckValidMap(id, map[])
 		}
 		else if(g_iNomMap[id] >= MAX_USER_NOMINATE)
 		{
-			CC_SendMatched(id, RED,"Voce ja atingiu o limite maximo de nomeacoes de^x04 mapas!")
+			CC_SendMatched(id, RED,"Você ja atingiu o limite maximo de nomeacoes de^x04 mapas!")
 			client_cmd(id,"spk buttons/blip2")
 			return PLUGIN_HANDLED
 		}
@@ -4221,7 +4233,7 @@ public mute_menu_handler(id, iMenu, iItem)
 	}
 	
 	g_bPlayerMuted[id][iPlayer] = !g_bPlayerMuted[id][iPlayer]
-	CC_SendMatched(id, RED, "Voce %smutou o^x04 %s.", g_bPlayerMuted[id][iPlayer] ? "": "des", g_dUserData[iPlayer][szName])
+	CC_SendMatched(id, RED, "Você %smutou o^x04 %s.", g_bPlayerMuted[id][iPlayer] ? "": "des", g_dUserData[iPlayer][szName])
 	return PLUGIN_HANDLED
 }
 
@@ -4637,7 +4649,7 @@ public showMoney(TaskId)
 public DonateCmd(id)
 {
 	new szTittle[60]
-	formatex(szTittle, charsmax(szTittle), "\y[\w%s\d - \rMenu de doacao \y ]", Pug_MenuPrefix)
+	formatex(szTittle, charsmax(szTittle), "\y[\w%s\d - \rMenu de doação \y ]", Pug_MenuPrefix)
 	new iMenu = menu_create(szTittle, "donate_handler")
 	
 	new iPlayers[MAX_PLAYERS], iNum
@@ -4649,14 +4661,72 @@ public DonateCmd(id)
 		if(iPlayer != id)
 		{
 			num_to_str(iPlayer, szTempid, charsmax(szTempid))
-		
-			formatex(szItem, charsmax(szItem), "%s", g_dUserData[iPlayer][szName])
+			new iMoney = cs_get_user_money(iPlayer);
+
+			formatex(szItem, charsmax(szItem), "\y$%5d \d- \w%s", iMoney, g_dUserData[iPlayer][szName])
 			menu_additem(iMenu, szItem, szTempid)
 		}
 	}
 	menu_display(id, iMenu)
 	return PLUGIN_HANDLED
 }
+
+
+public VALORCmd(id)
+{
+	if (!is_user_connected(id))
+	{
+		return PLUGIN_HANDLED;
+	}
+
+	new iReceiver = donateReceiver[id]
+	donateReceiver[id] = 0;
+
+	if (!is_user_connected(iReceiver))
+	{
+		return PLUGIN_HANDLED;
+	}
+
+	new szMoney[64];
+  	read_args(szMoney, charsmax(szMoney));
+
+  	trim(szMoney);
+  	remove_quotes(szMoney);
+
+	new iMoneyDonated = str_to_num(szMoney)
+
+	if (!strlen(szMoney) || !iMoneyDonated)
+	{
+		return PLUGIN_HANDLED;
+	}
+
+	new iPlayerMoney = cs_get_user_money(id)
+	// new iMoneyDonated = get_pcvar_num(VarDonateMoney)
+
+	if( iPlayerMoney < iMoneyDonated)
+	{
+		iMoneyDonated = iPlayerMoney;
+	}
+
+	cs_set_user_money( iReceiver, cs_get_user_money(iReceiver) + iMoneyDonated)
+	cs_set_user_money( id, cs_get_user_money(id) - iMoneyDonated)
+
+	new szNameGiver[MAX_PLAYERS]
+	get_user_name( id, szNameGiver, charsmax( szNameGiver))
+
+	new szNameReceiver[MAX_PLAYERS]
+	get_user_name(iReceiver, szNameReceiver, charsmax(szNameReceiver))
+
+	CC_SendMatched(id, TEAM_COLOR, "Você doou ^4$%i^1 para ^3%s!", iMoneyDonated, szNameReceiver)
+	CC_SendMatched(iReceiver, TEAM_COLOR, "^3%s^1 doou ^4$%i^1 para você!", szNameGiver, iMoneyDonated)
+	client_cmd(iReceiver, "spk ^"items/9mmclip1.wav^"")
+	client_cmd(id, "spk ^"items/9mmclip1.wav^"")
+
+	g_dUserData[id][g_iTimeDonated]++
+
+	return PLUGIN_HANDLED
+}
+
 
 public donate_handler(id, iMenu, iItem)
 {
@@ -4675,29 +4745,11 @@ public donate_handler(id, iMenu, iItem)
 		menu_display(id, iMenu)
 		return PLUGIN_HANDLED
 	}
-	new iPlayerMoney = cs_get_user_money(id)
-	new MoneyDonated = get_pcvar_num(VarDonateMoney)
 
-	if( iPlayerMoney < MoneyDonated)
-	{
-		CC_SendMatched(id, TEAM_COLOR, "Voce nao tem dinheiro suficiente.")
-		return PLUGIN_CONTINUE
-	}
-
-	cs_set_user_money( iPlayer, cs_get_user_money(iPlayer) + MoneyDonated)
-	cs_set_user_money( id, cs_get_user_money(id) - MoneyDonated)
-
-	new szNameGiver[MAX_PLAYERS]
-	get_user_name( id, szNameGiver, charsmax( szNameGiver))
-
-	new szNameReceiver[MAX_PLAYERS]
-	get_user_name(iPlayer, szNameReceiver, charsmax(szNameReceiver))
-
-	CC_SendMatched(id, TEAM_COLOR, "Voce doou^x04 $%i^x01 para^x04 %s", MoneyDonated, szNameReceiver)
-	CC_SendMatched(iPlayer, TEAM_COLOR, "%s doou $%i para voce", szNameGiver, MoneyDonated)
-	client_cmd(iPlayer, "spk ^"items/9mmclip1.wav^"")
-
-	g_dUserData[id][g_iTimeDonated]++
+	donateReceiver[id] = iPlayer
+	client_cmd(id, "messagemode VALOR")
+	
+	menu_destroy(iMenu)
 	return PLUGIN_CONTINUE	
 }
 
