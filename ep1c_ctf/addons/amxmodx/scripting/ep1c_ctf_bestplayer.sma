@@ -8,7 +8,7 @@
 //Comment if you're not using Counter-Strike.
 #define USE_CSTRIKE
 
-#define PLUGIN_VERSION "1.3.1"
+#define PLUGIN_VERSION "1.3.2"
 #define MOTD_BEST "addons/amxmodx/configs/BestPlayer/BestPlayer.html"
 #define MOTD_STATS "addons/amxmodx/configs/BestPlayer/BestPlayerStats.html"
 #define MAX_MOTD_LENGTH 1536
@@ -34,6 +34,10 @@
 #define ARG_KNIFEDEATHS "$knifedeaths$"
 #define ARG_DATETIME "$datetime$"
 #define ARG_SCORE "$score$"
+#define ARG_TEAM_A "$team_a$"
+#define ARG_TEAM_B "$team_b$"
+#define ARG_TEAM_A_NAME "$team_a_name$"
+#define ARG_TEAM_B_NAME "$team_b_name$"
 
 #if defined USE_CSTRIKE
 	#include <cstrike>
@@ -50,6 +54,17 @@ new const g_szTeamNames[][] = { "", "CT", "TERRORIST" }
 #if defined client_disconnected
 	#define client_disconnect client_disconnected
 #endif
+
+new const TEAM_NAMES[][32] = 
+{
+	"TIME",
+	"RELA BANDEIRA",
+	"CONFIA",
+	"ARMSTRONG",
+	"BOLSOLULA",
+	"SERIAL KILLER",
+	"TRIKAS"
+};
 
 enum _:Cvars
 {
@@ -406,10 +421,10 @@ apply_replacements(const id, szMessage[], const iLen)
 		
 	#if defined USE_CSTRIKE
 	if(has_argument(szMessage, ARG_TSCORE))
-		replace_num(szMessage, iLen, ARG_TSCORE, g_iTeamScore[1])
+		replace_num(szMessage, iLen, ARG_TSCORE, get_member_game(m_iNumTerroristWins))
 		
 	if(has_argument(szMessage, ARG_CTSCORE))
-		replace_num(szMessage, iLen, ARG_CTSCORE, g_iTeamScore[2])
+		replace_num(szMessage, iLen, ARG_CTSCORE, get_member_game(m_iNumCTWins))
 		
 	if(has_argument(szMessage, ARG_BEST_TEAM))
 		replace_all(szMessage, iLen, ARG_BEST_TEAM, g_szTeams[get_winning_team()])
@@ -439,6 +454,56 @@ apply_replacements(const id, szMessage[], const iLen)
 		new score[12];
   		formatex(score, charsmax(score), "%2d - %2d", get_member_game(m_iNumTerroristWins), get_member_game(m_iNumCTWins));
 		replace_all(szMessage, iLen, ARG_SCORE, score)
+	}
+
+	if(has_argument(szMessage, ARG_TEAM_A))
+	{
+		new team = get_cvar_num("ctf_team_a");
+
+		if (team == 0)
+		{
+			replace_all(szMessage, iLen, ARG_TEAM_A, "ta")
+		}
+		else
+		{
+			new buf[3];
+			format(buf, charsmax(buf), "t%d", team);
+			replace_all(szMessage, iLen, ARG_TEAM_A, buf)
+		}
+	}
+
+	if(has_argument(szMessage, ARG_TEAM_B))
+	{
+		new team = get_cvar_num("ctf_team_b");
+
+		if (team == 0)
+		{
+			replace_all(szMessage, iLen, ARG_TEAM_B, "tb")
+		}
+		else
+		{
+			new buf[3];
+			format(buf, charsmax(buf), "t%d", team);
+			replace_all(szMessage, iLen, ARG_TEAM_B, buf);
+		}
+	}
+
+	if(has_argument(szMessage, ARG_TEAM_A_NAME))
+	{
+		new team = get_cvar_num("ctf_team_a");
+		if  ((team >= 0) && (team < sizeof(TEAM_NAMES)))
+		{
+			replace_all(szMessage, iLen, ARG_TEAM_A_NAME, TEAM_NAMES[team]);
+		}
+	}
+
+	if(has_argument(szMessage, ARG_TEAM_B_NAME))
+	{
+		new team = get_cvar_num("ctf_team_b");
+		if  ((team >= 0) && (team < sizeof(TEAM_NAMES)))
+		{
+			replace_all(szMessage, iLen, ARG_TEAM_B_NAME, TEAM_NAMES[team]);
+		}
 	}
 }
 
