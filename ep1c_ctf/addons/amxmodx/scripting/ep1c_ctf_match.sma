@@ -5,7 +5,7 @@
 #include <bestplayer>
 
 #define PLUGIN  "ep1c_ctf_match"
-#define VERSION "0.6.2"
+#define VERSION "0.7"
 #define AUTHOR  "lonewolf"
 
 #define TASKID_CLIENT_CMD 9352
@@ -14,14 +14,24 @@ new const CHAT_PREFIX[] = "^4[ep1c CTF Match]^1";
 
 enum _:Clans
 {
-  EP1C1,
-  EP1C2
+  TIME,
+	RELA_BANDEIRA,
+	CONFIA,
+	ARMSTRONG,
+	BOLSOLULA,
+	SERIAL_KILLER,
+	TRIKAS
 };
 
 new const clans[Clans][32] =
 {
-  "ep1c Fogueteiros",
-  "ep1c MIND7"
+  "TIME",
+	"RELA BANDEIRA",
+	"CONFIA",
+	"ARMSTRONG",
+	"BOLSOLULA",
+	"SERIAL KILLER",
+	"TRIKAS"
 };
 
 enum _:FlagEvent
@@ -64,6 +74,11 @@ enum _:CTFMatch
 };
 new match[CTFMatch];
 
+new cfg_folder[32]    = "ctf"
+new cfg_on_start[128] = "ctf_on_start.cfg";
+new cfg_on_half[128]  = "ctf_on_half.cfg";
+new cfg_on_end[128]   = "ctf_on_end.cfg";
+
 new countdown_ent;
 new countdown;
 
@@ -76,6 +91,39 @@ new msg_ScoreInfo;
 new kills[MAX_PLAYERS + 1];
 new deaths[MAX_PLAYERS + 1];
 new wins[TeamName];
+
+
+// public plugin_cfg()
+// {
+//   new path[96];
+//   get_configsdir(path, charsmax(path));
+//   format(path, charsmax(path), "%s/%s", path, cfg_folder);
+
+//   if (!dir_exists(path))
+//   {
+//     mkdir(path);
+//   }
+
+//   format(cfg_on_start, charsmax(cfg_on_start), "%s/%s", path, cfg_on_start);
+//   format(cfg_on_half,  charsmax(cfg_on_half),  "%s/%s", path, cfg_on_half);
+//   format(cfg_on_end,   charsmax(cfg_on_end),   "%s/%s", path, cfg_on_end);
+
+//   if (!file_exists(cfg_on_start))
+//   {
+//     set_fail_state("ERROR: Config file not found or created: ^"%s^"", cfg_on_start);
+//   }
+
+//   if (!file_exists(cfg_on_half))
+//   {
+//     set_fail_state("ERROR: Config file not found or created: ^"%s^"", cfg_on_half);
+//   }
+
+//   if (!file_exists(cfg_on_end))
+//   {
+//     set_fail_state("ERROR: Config file not found or created: ^"%s^"", cfg_on_end);
+//   }
+// }
+
 
 public plugin_init()
 {
@@ -100,6 +148,7 @@ public plugin_init()
 
   RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "event_OnRoundFreezeEnd");
   RegisterHookChain(RG_CSGameRules_RestartRound, "event_RestartRound");
+  RegisterHookChain(RG_RoundEnd, "event_RoundEnd");
 
   register_event("CurWeapon", "event_CurWeapon", "b", "1=1", "2!29"); // todo: unregister hook
   
@@ -110,7 +159,7 @@ public plugin_init()
 
 public event_CurWeapon(id)
 {
-  if (is_user_alive(id) && get_pcvar_num(cvars[CTF_KNIFE]))
+  if (is_user_alive(id) && match[CTF_KNIFEROUND])
   {
       engclient_cmd(id, "weapon_knife");
   }
@@ -135,7 +184,7 @@ public menu_ctf(id)
   menu_additem(menu, match[CTF_STARTED] ? "\rFinalizar partida" : "Iniciar partida");
   menu_additem(menu, "\dConfigurar partida");
   menu_additem(menu, (get_cvar_num("mp_freezetime") == 1337) ? "\rDestravar times" : "Travar times na base");
-  menu_additem(menu, (get_pcvar_num(cvars[CTF_KNIFE]) == 0) ? "Iniciar Round Faca" : "\rFinalizar Round Faca");
+  menu_additem(menu, (match[CTF_KNIFEROUND] == 0) ? "Iniciar Round Faca" : "\rFinalizar Round Faca");
   menu_additem(menu, "Insta Restart round");
   // formatex(item, charsmax(item), "Complete Reset: %s", onoff[complete_reset]);
   // menu_additem(menu, item);
@@ -201,41 +250,11 @@ public menu_ctf_handler(id, menu, item)
     {
       if (get_pcvar_num(cvars[CTF_KNIFE]) == 0)
       {
-        set_cvar_float("mp_freezetime", get_pcvar_float(cvars[CTF_FREEZETIME]));
-        set_cvar_num("mp_forcerespawn", 0);
-        set_pcvar_num(cvars[CTF_KNIFE], 1);
-        set_cvar_num("dispenser_enabled", 0);
-        set_cvar_string("mp_round_infinite", "bcdeghijk");
-        set_cvar_num("amx_knife_rr", 0);
-
-        // rg_restart_round();
-        // elog_message("World triggered ^"Round_End^"^n");
-        server_cmd("sv_restart 1");
-
-        client_cmd(0, "spk deeoo");
-        
-        new Float:freezetime = float(get_cvar_num("mp_freezetime"));
-        set_task(freezetime + 1.0, "task_freezetime_delayed");
-
-        set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
-        show_hudmessage(0, "ROUND FACA SEM RESPAWN");
+        match_knife_start();
       }
       else
       {
-        set_cvar_num("mp_freezetime", 1337);
-        set_cvar_num("mp_forcerespawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
-        set_pcvar_num(cvars[CTF_KNIFE], 0);
-        set_cvar_num("dispenser_enabled", 1);
-        set_cvar_string("mp_round_infinite", "bcdefghijk");
-        set_cvar_num("amx_knife_rr", 1);
-
-        // rg_restart_round();
-        // elog_message("World triggered ^"Round_End^"^n");
-        server_cmd("sv_restart 1");
-        client_cmd(0, "spk deeoo");
-
-        set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
-        show_hudmessage(0, "FIM DO ROUND FACA");
+        match_knife_end();
       }
     }
     case 4:
@@ -264,6 +283,44 @@ public menu_ctf_handler(id, menu, item)
   menu_destroy(menu);
   menu_ctf(id);
   return PLUGIN_HANDLED;
+}
+
+
+
+public match_knife_start()
+{
+  set_cvar_float("mp_freezetime", get_pcvar_float(cvars[CTF_FREEZETIME]));
+  set_cvar_num("mp_forcerespawn", 0);
+  set_cvar_num("dispenser_enabled", 0);
+  set_cvar_string("mp_round_infinite", "bcdeghijk");
+  set_cvar_num("amx_knife_rr", 0);
+
+  match[CTF_KNIFEROUND] = 1;
+  
+  server_cmd("sv_restart 1");
+  client_cmd(0, "spk deeoo");
+  
+  set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
+  show_hudmessage(0, "ROUND FACA SEM RESPAWN");
+}
+
+
+public match_knife_end()
+{
+  set_cvar_num("mp_freezetime", 1337);
+  set_cvar_num("mp_forcerespawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
+  
+  set_cvar_num("dispenser_enabled", 1);
+  set_cvar_string("mp_round_infinite", "bcdefghijk");
+  set_cvar_num("amx_knife_rr", 1);
+  
+  match[CTF_KNIFEROUND] = 0;
+  
+  server_cmd("sv_restart 1");
+  client_cmd(0, "spk deeoo");
+
+  set_hudmessage(255, 255, 255, -1.0, 0.29, 1, 6.0, 6.0);
+  show_hudmessage(0, "FIM DO ROUND FACA");
 }
 
 
@@ -313,6 +370,14 @@ public jctf_flag(event, id, flagteam, bool:is_assist)
 
 public event_OnRoundFreezeEnd(id)
 {
+  if (match[CTF_KNIFEROUND] == 1)
+  {
+    new Float:freezetime = float(get_cvar_num("mp_freezetime"));
+    set_task(freezetime + 1.0, "task_freezetime_delayed");
+
+    match[CTF_KNIFEROUND] = 2;
+  }
+
   if (!match[CTF_STARTED])
   {
     return HC_CONTINUE;
@@ -491,20 +556,23 @@ public event_RestartRound(id)
     return HC_CONTINUE;
   }
 
-  if (match[CTF_KNIFEROUND] == 2)
-  {
-    set_cvar_float("mp_roundtime", get_pcvar_float(cvars[CTF_ROUNDTIME]));
-    set_cvar_string("mp_round_infinite", "bcdefghijk"); // Can end by team death;
-    set_cvar_num("mp_force_respawn", config_bak[CTF_FORCERESPAWN]);
-
-    match[CTF_KNIFEROUND] = 0;
-    match[CTF_IS_1STHALF] = 1;
-  }
+  
   else if (match[CTF_IS_2NDHALF])
   {
     set_task(1.0, "task_updatescores_delayed");
   }
   return HC_CONTINUE;
+}
+
+
+public event_RoundEnd()
+{
+  if (match[CTF_KNIFEROUND] == 2)
+  {
+    match[CTF_KNIFEROUND] = 0;
+    
+    match_knife_end();
+  }
 }
 
 
@@ -576,7 +644,7 @@ public match_start()
   wins[TEAM_TERRORIST] = 0;
   wins[TEAM_CT] = 0;
 
-  if (match[CTF_KNIFEROUND])
+  if (0 /*&& match[CTF_KNIFEROUND]*/)
   {
     set_cvar_float("mp_roundtime",  get_pcvar_float(cvars[CTF_ROUNDTIME_KNIFE]));
 
@@ -638,7 +706,8 @@ public match_end()
     server_cmd("amx_warmup_start");
   }
 
-  set_cvar_float("mp_freezetime", float(config_bak[CTF_FREEZETIME]));
+  // set_cvar_float("mp_freezetime", float(config_bak[CTF_FREEZETIME]));
+  set_cvar_float("mp_freezetime", 0.0);
   set_cvar_float("mp_roundtime",  float(config_bak[CTF_ROUNDTIME]));
   set_cvar_num("sv_alltalk",      config_bak[CTF_ALLTALK]);
 
@@ -679,8 +748,8 @@ public generate_motd()
   wins[TEAM_CT]        = get_member_game(m_iNumCTWins);
   
   // invertido mesmo, no camp a bandeira do time adversário é a "sua"
-  new b = get_cvar_num("ctf_team_a");
-  new a = get_cvar_num("ctf_team_b");
+  new a = get_cvar_num("ctf_team_a");
+  new b = get_cvar_num("ctf_team_b");
 
   format(motd_buffer, charsmax(motd_buffer), "[%s] %d x %d [%s]<br>", clans[a], wins[TEAM_TERRORIST], wins[TEAM_CT], clans[b]);
 
@@ -730,7 +799,7 @@ public generate_motd()
   static timestr[64];
   format_time(timestr, charsmax(timestr), "^4%Y/%m/%d^1 - ^4%H:%M:%S^1");
 
-  client_print(0, print_console, "^nA comissão da Copa Didi Libertadores agradece a participação!");
+  client_print(0, print_console, "^nA comissão da ep1c gaming Brasil agradece a participação!");
   client_print(0, print_console, "Fim do jogo: %s", timestr);
   client_print(0, print_console, "^n-----------------^n");
 }
