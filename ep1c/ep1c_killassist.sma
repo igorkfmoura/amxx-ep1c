@@ -73,7 +73,7 @@ new g_iFW_assist;
 
 public plugin_init()
 {
-	register_plugin("Advanced Kill Assists", "1.3", "Xelson + lonewolf")
+	register_plugin("Advanced Kill Assists", "1.4", "Xelson + lonewolf")
 
 	RegisterHookChain(RG_CBasePlayer_Spawn, "CBasePlayer_Spawn_Post", true)
 	RegisterHookChain(RG_CBasePlayer_Killed, "CBasePlayer_Killed_Pre", false)
@@ -275,15 +275,13 @@ public CBasePlayer_Killed_Pre(iVictim, iKiller)
 	
 	if(!is_user_valid(iKiller) && g_ePlayerData[iAssistant][CONNECTED])
 	{
-		static const szWorldName[] = "world"
+		// static const szWorldName[] = "world"
 
-		iExcess = iLen[1] - NAMES_LENGTH - (sizeof szWorldName)
-		if(iExcess > 0) strclip(szName[1], iExcess)
-		formatex(g_szDeathString, charsmax(g_szDeathString), "%s + %s", szWorldName, szName[1])
+		// iExcess = iLen[1] - NAMES_LENGTH - (sizeof szWorldName)
+		// if(iExcess > 0) strclip(szName[1], iExcess)
+		// formatex(g_szDeathString, charsmax(g_szDeathString), "%s + %s", szWorldName, szName[1])
 
-		g_iAssistKiller = iAssistant
-		// rh_update_user_info(iAssistant)
-		set_user_fake_name(iKiller, g_szDeathString)
+		// set_user_fake_name(iVictim, g_szDeathString)
 	}
 	else
 	{
@@ -400,7 +398,10 @@ public CBasePlayer_Killed_Post(iVictim, iKiller)
 	g_iAssistKiller = 0;
 
 	// rh_update_user_info(iAssistKiller);
-	reset_user_info(iKiller);
+	if (is_user_connected(iKiller))
+	{
+		reset_user_info(iKiller);
+	}
 }
 
 // stock strclip(szString[], iSize, iClip)
@@ -424,9 +425,9 @@ stock reset_user_info(id)
 	{
 		if(!is_user_hltv(i) && g_ePlayerData[i][CONNECTED])
 		{
-			message_begin(MSG_ONE, SVC_UPDATEUSERINFO, _, i)
+			message_begin(MSG_ONE_UNRELIABLE, SVC_UPDATEUSERINFO, _, i)
 	#else
-			message_begin(MSG_ALL, SVC_UPDATEUSERINFO)
+			message_begin(MSG_BROADCAST, SVC_UPDATEUSERINFO)
 	#endif
 			write_byte(id - 1)
 			write_long(get_user_userid(id))
@@ -449,9 +450,9 @@ stock set_user_fake_name(const id, const name[])
 	{
 		if(!is_user_hltv(i) && g_ePlayerData[i][CONNECTED])
 		{
-			message_begin(MSG_ONE, SVC_UPDATEUSERINFO, _, i)
+			message_begin(MSG_ONE_UNRELIABLE, SVC_UPDATEUSERINFO, _, i)
 	#else
-			message_begin(MSG_ALL, SVC_UPDATEUSERINFO)
+			message_begin(MSG_BROADCAST, SVC_UPDATEUSERINFO)
 	#endif
 			write_byte(id - 1)
 			write_long(get_user_userid(id))
