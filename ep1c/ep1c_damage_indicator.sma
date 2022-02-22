@@ -4,7 +4,7 @@
 #include <xs>
 
 #define PLUGIN  "ep1c_damage_indicator"
-#define VERSION "0.2.1"
+#define VERSION "0.2.2"
 #define AUTHOR  "lonewolf"
 
 new const PREFIX[] = "^4[ep1c gaming Brasil]^1";
@@ -78,7 +78,7 @@ public cmd_debug_damage(id)
 			{
 				continue;
 			}
-			new target = get_member(j, m_hObserverTarget);
+			new target = get_entvar(i, var_iuser2);
 			if (target == i && is_user_alive(target))
 			{
 				format(buffer, charsmax(buffer), "%s %02d", buffer, j);
@@ -171,7 +171,7 @@ public CBasePlayer_TakeDamage(victim, inflictor, attacker, Float:damage)
 	{
 		if (!disabled[i] && is_user_connected(i) && !is_user_alive(i))
 		{
-			new target = get_member(i, m_hObserverTarget);
+			new target = get_entvar(i, var_iuser2);
 			if (target == victim)
 			{
 				ShowSyncHudMsg(i, hud[TAKEN], "%.0f", damage);
@@ -226,7 +226,7 @@ public CBasePlayer_TakeDamage(victim, inflictor, attacker, Float:damage)
 	{
 		if ((i != victim) && !disabled[i] && is_user_connected(i) && !is_user_alive(i))
 		{
-			new target = get_member(i, m_hObserverTarget);
+			new target = get_entvar(i, var_iuser2);
 			if (target == attacker && is_user_alive(target))
 			{
 				ShowSyncHudMsg(i, hud[GIVEN], "%.0f", damage);
