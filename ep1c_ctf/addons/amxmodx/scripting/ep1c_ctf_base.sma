@@ -12,7 +12,7 @@
 // Infos
 new const MOD_TITLE[]   = "ep1c CTF Base"                    /* Please don't modify. */
 new const MOD_AUTHOR[]  = "Digi || SKVD || yRestrict || lonewolf"    /* If you make major changes, add " & YourName" at the end */
-new const MOD_VERSION[] = "0.1 + 5.1.B"                                    /* If you make major changes, add "custom" at the end but do not modify the actual version number! */
+new const MOD_VERSION[] = "0.2 + 5.1.B"                                    /* If you make major changes, add "custom" at the end but do not modify the actual version number! */
 
 // Features
 #define FEATURE_BUY        true
@@ -2443,11 +2443,13 @@ public player_respawn(id, iStart)
         ShowSyncHudMsg(id, HUDINFO, "%L", id, "RESPAWNING")    
         client_print(id, print_console, "%L", id, "RESPAWNING")
 
-        entity_set_int(id, EV_INT_deadflag, DEAD_RESPAWNABLE)
-        entity_set_int(id, EV_INT_iuser1, 0)
-        entity_think(id)
-        entity_spawn(id)
-        set_user_health(id, 100)
+        rg_round_respawn(id);
+
+        // entity_set_int(id, EV_INT_deadflag, DEAD_RESPAWNABLE)
+        // entity_set_int(id, EV_INT_iuser1, 0)
+        // entity_think(id)
+        // entity_spawn(id)
+        // set_user_health(id, 100)
     }
 }
 #if FEATURE_ADRENALINE == true
@@ -2467,6 +2469,7 @@ public player_cmd_buySpawn(id)
 
         task_remove(id)
         player_respawn(id - TASK_RESPAWN, -1)
+        // rg_round_respawn(id);
     }
 
     return PLUGIN_HANDLED
