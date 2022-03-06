@@ -197,15 +197,15 @@ BAN_PERM = Banir permanentemente
 SLAP_SLAY_MENU = Menu de Tapa/Assassinar
 SLAP_WITH_DMG = Tapa com %d de dano
 SLAY = Matar
-KICK_MENU = Menu Kicks
+KICK_MENU = Menu de Kicks
 ADMIN_TRANSF_1 = ADMIN: transferiu %s para %s
 ADMIN_TRANSF_2 = ADMIN %s: transferiu %s para %s
 TEAM_MENU = Menu de Controle de Time
 TRANSF_TO = Transferir para %s
-TRANSF_SILENT = transferência Stiller
-CL_CMD_MENU = Menu de Comandos no Cliente
+TRANSF_SILENT = Transferência silenciosa
+CL_CMD_MENU = Menu de Comandos
 NO_CMDS = Sem comandos disponiveis
-CANT_PERF_PLAYER = Aquela acao nao pode ser executada com jogador "%s"
+CANT_PERF_PLAYER = Aquela ação não pode ser executada com jogador "%s"
 
 [cz]
 ADMIN_BAN_1 = ADMIN: zabanoval %s
