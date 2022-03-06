@@ -12,7 +12,7 @@
 // Infos
 new const MOD_TITLE[]   = "ep1c CTF Base"                    /* Please don't modify. */
 new const MOD_AUTHOR[]  = "Digi || SKVD || yRestrict || lonewolf"    /* If you make major changes, add " & YourName" at the end */
-new const MOD_VERSION[] = "0.2 + 5.1.B"                                    /* If you make major changes, add "custom" at the end but do not modify the actual version number! */
+new const MOD_VERSION[] = "0.2.1 + 5.1.B"                                    /* If you make major changes, add "custom" at the end but do not modify the actual version number! */
 
 // Features
 #define FEATURE_BUY        true
@@ -2034,10 +2034,17 @@ public player_spawnEquipament(id)
     give_item(id, "ammo_50ae")
     give_item(id, "ammo_50ae")
 
+    new money = cs_get_user_money(id);
+
     player_buyWeapon(id, W_FLASHBANG)
     player_buyWeapon(id, W_FLASHBANG)
     player_buyWeapon(id, W_HEGRENADE)
     player_buyWeapon(id, W_SMOKEGRENADE)
+
+    if (cs_get_user_money(id) != money)
+    {
+        cs_set_user_money(id, money, .flash=0)
+    }
     
     // give_item(id, "weapon_hegrenade")
     // give_item(id, "weapon_flashbang")
@@ -2388,7 +2395,7 @@ public player_killed(id, killer)
 public player_checkTeam(id)
 {
     id += TASK_TEAMBALANCE
-
+ 
     if(!(TEAM_RED <= get_user_team(id) <= TEAM_BLUE) || g_bAlive[id] || !get_pcvar_num(pCvar_mp_autoteambalance))
         return
 
