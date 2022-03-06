@@ -1,8 +1,8 @@
-#include < amxmodx >
-#include < reapi >
+#include <amxmodx>
+#include <reapi>
 
 #define PLUGIN   "ep1c: AutoRestart"
-#define VERSION  "0.2"
+#define VERSION  "0.2.1"
 #define AUTHOR   "Developer + lonewolf"
 
 #define PREFIX   "^4[ep1c gaming Brasil]^1"
@@ -46,7 +46,7 @@ public plugin_init()
 
     // Register: EVENT
     register_event("TeamScore", "event_update_score", "a");
-    register_event("TextMsg",   "event_restarted",    "a", "2=#Game_will_restart_in");
+    register_event("TextMsg",   "event_restarted",    "a", "2=#Game_will_restart_in", "2=#Game_Commencing");
 
     register_logevent("roundStart", 2, "1=Round_Start");
     register_logevent("roundEnd",   2, "1=Round_End");
@@ -92,8 +92,8 @@ public roundStart()
     new swap_rounds = get_pcvar_num (cvars[SWAP_ROUNDS])-1;
     if (rounds==swap_rounds)
     {
-    set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
-    show_dhudmessage(0, "PRÓXIMO ROUND AS EQUIPES TROCARÃO DE LADO");
+        set_dhudmessage(255, 255, 255, -1.0, 0.29, 2, 6.0, 6.0);
+        show_dhudmessage(0, "PRÓXIMO ROUND AS EQUIPES TROCARÃO DE LADO");
     }
     if (team_scores[CS_TEAM_CT] == match_point)
     {
@@ -111,10 +111,11 @@ public roundEnd()
 {
     new max_wins = get_pcvar_num(cvars[MAX_WINS]);
     new swap_rounds = get_pcvar_num (cvars[SWAP_ROUNDS]);
+
     rounds += 1;
-    if (rounds==swap_rounds)
+    if (rounds == swap_rounds)
     {
-    rg_swap_all_players ();	
+        rg_swap_all_players();	
     }
     
     if(team_scores[CS_TEAM_CT] >= max_wins)
@@ -150,11 +151,6 @@ public roundEnd()
 public restart_game()
 {
     server_cmd("sv_restart ^"3^"");
-
-    server_cmd("sv_timeout ^"1^"");
-    server_cmd("wait; wait; wait");
-    server_cmd("sv_timeout ^"99999^"");
-
     client_cmd(0, "spk deeoo");
 
     team_scores[CS_TEAM_T]  = 0;
@@ -201,7 +197,3 @@ stock fade_screen(Float:duration = 1.0, Float:fadetime = 1.0, ScreenFadeFlags:fl
 
 stock float_to_short(Float:value)
 	return clamp(floatround(value * (1<<12)), 0, 0xFFFF);
-
-/* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
-*{\\ rtf1\\ ansi\\ deff0{\\ fonttbl{\\ f0\\ fnil Tahoma;}}\n\\ viewkind4\\ uc1\\ pard\\ lang1046\\ f0\\ fs16 \n\\ par }
-*/
