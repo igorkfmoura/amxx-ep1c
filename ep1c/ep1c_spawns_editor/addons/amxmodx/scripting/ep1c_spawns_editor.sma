@@ -112,7 +112,7 @@ new g_BeamColors[4][3]={{255,0,0},{0,255,0},{200,200,0},{0,0,255}}
 public plugin_init()
 {
    register_plugin(PLUGINNAME, VERSION, AUTHOR)
-   register_dictionary("map_spawns_editor.txt")
+   register_dictionary("ep1c_spawns_editor.txt")
 
    g_LoadInit = true // disabled pfn_keyvalue using
 
