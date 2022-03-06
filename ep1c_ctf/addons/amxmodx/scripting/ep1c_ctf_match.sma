@@ -5,7 +5,7 @@
 #include <bestplayer>
 
 #define PLUGIN  "ep1c_ctf_match"
-#define VERSION "0.7"
+#define VERSION "0.7.1"
 #define AUTHOR  "lonewolf"
 
 #define TASKID_CLIENT_CMD 9352
@@ -291,6 +291,7 @@ public match_knife_start()
 {
   set_cvar_float("mp_freezetime", get_pcvar_float(cvars[CTF_FREEZETIME]));
   set_cvar_num("mp_forcerespawn", 0);
+  set_cvar_num("ctf_respawntime", 0);
   set_cvar_num("dispenser_enabled", 0);
   set_cvar_string("mp_round_infinite", "bcdeghijk");
   set_cvar_num("amx_knife_rr", 0);
@@ -308,7 +309,8 @@ public match_knife_start()
 public match_knife_end()
 {
   set_cvar_num("mp_freezetime", 1337);
-  set_cvar_num("mp_forcerespawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
+  set_cvar_num("mp_forcerespawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]) + 1);
+  set_cvar_num("ctf_respawntime", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
   
   set_cvar_num("dispenser_enabled", 1);
   set_cvar_string("mp_round_infinite", "bcdefghijk");
@@ -653,12 +655,14 @@ public match_start()
 
     set_cvar_string("mp_round_infinite", "bcdeghijk"); // Can end by team death;
     set_cvar_num("mp_forcerespawn", 0);
+    set_cvar_num("ctf_respawntime", 0);
   }
   else
   {
     set_cvar_float("mp_roundtime",  get_pcvar_float(cvars[CTF_ROUNDTIME]));
     set_cvar_string("mp_round_infinite", "bcdefghijk");
-    set_cvar_num("mp_force_respawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
+    set_cvar_num("mp_forcerespawn", get_pcvar_num(cvars[CTF_FORCERESPAWN]) + 1);
+    set_cvar_num("ctf_respawntime", get_pcvar_num(cvars[CTF_FORCERESPAWN]));
 
     match[CTF_IS_1STHALF] = true;
   }
@@ -708,6 +712,7 @@ public match_end()
 
   // set_cvar_float("mp_freezetime", float(config_bak[CTF_FREEZETIME]));
   set_cvar_float("mp_freezetime", 0.0);
+  
   set_cvar_float("mp_roundtime",  float(config_bak[CTF_ROUNDTIME]));
   set_cvar_num("sv_alltalk",      config_bak[CTF_ALLTALK]);
 
