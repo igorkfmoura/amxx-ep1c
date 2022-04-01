@@ -47,7 +47,7 @@ public plugin_init()
   regex = regex_compile(pattern, ret, error, charsmax(error));
   if (regex == REGEX_PATTERN_FAIL)
   {
-    set_fail_state("[%s] Error regex, aborting (%d): %s", ret, error);
+    set_fail_state("[%s] Error regex, aborting (%d): %s", PLUGIN, ret, error);
   }
 
   amx_manager_flags_change();
