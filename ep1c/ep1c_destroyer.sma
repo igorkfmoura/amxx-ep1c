@@ -4,7 +4,7 @@
 #include <amxmisc>
 
 #define PLUGIN  "ep1c_destroyer"
-#define VERSION "4.0"
+#define VERSION "4.1"
 #define AUTHOR  "Hanna + lonewolf"
 
 new const PREFIX[]      = "ep1c gaming Brasil";
@@ -145,7 +145,7 @@ public select_players(id)
 
 public callback_checkflags(id)
 {
-    return (get_user_flags(id) & ADMIN_IMMUNITY) ? ITEM_DISABLED : ITEM_IGNORE;
+    return (get_user_flags(id) & ADMIN_BAN) ? ITEM_IGNORE : ITEM_DISABLED;
 }
 
 public _selected_player(id, menu, item)
