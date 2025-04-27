@@ -11,6 +11,7 @@ This repository contains plugins and server resources used by **ep1c Gaming Bras
 Most plugins were hardcoded in Portuguese (PT-BR), as internationalization was never a priority.
 
 While you'll find several original plugins here, the majority are adaptations of either well-known public plugins or private ones that were purchased or traded.
+
 At the time, it was unfortunately common for people to remove or replace original plugin credits. I did my best to preserve authorship wherever possible.
 
 Some plugins were also copied from my public plugin folder:
@@ -19,6 +20,7 @@ Some plugins were also copied from my public plugin folder:
 These files are shared as-is. Feel free to reach out if you have questions — but please understand that active support is unlikely.
 
 Those were truly good times.
+
 In the end, it was never really about the servers or the plugins — it was about the experience, and the people who shared it with us.
 
 We were just tending to the last ember, hoping it would glow for just a little longer.
@@ -26,6 +28,9 @@ We were just tending to the last ember, hoping it would glow for just a little l
 Cheers,
 
 _ep1c ' lonewolf_
+
 _ep1c ' S H E R M A N_
+
 _ep1c ' xunk_
+
 ...and friends!
