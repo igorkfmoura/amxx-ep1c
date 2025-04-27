@@ -17,6 +17,9 @@ At the time, it was unfortunately common for people to remove or replace origina
 Some plugins were also copied from my public plugin folder:
 - https://github.com/igorkfmoura/amxx-plugins
 
+And you may benefit from:
+- https://github.com/igorkfmoura/cstrike_server_copa_didi
+
 These files are shared as-is. Feel free to reach out if you have questions — but please understand that active support is unlikely.
 
 Those were truly good times.
@@ -33,4 +36,4 @@ _ep1c ' S H E R M A N_
 
 _ep1c ' xunk_
 
-...and friends!
+_...and friends!_
