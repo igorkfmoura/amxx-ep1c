@@ -25,4 +25,7 @@ We were just tending to the last ember, hoping it would glow for just a little l
 
 Cheers,
 
-_ep1c ' lonewolf_ & _ep1c ' S H E R M A N_
+_ep1c ' lonewolf_
+_ep1c ' S H E R M A N_
+_ep1c ' xunk_
+...and friends!
